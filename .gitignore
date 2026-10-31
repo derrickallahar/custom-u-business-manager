@@ -1,0 +1,27 @@
+# NEVER upload secrets or real customer information
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+*.crt
+*.pem
+*.key
+*.p12
+*.pfx
+*password*
+*backup*
+*.csv
+*.xlsx
+*.xls
+*.pdf
+*.zip
+__pycache__/
+*.py[cod]
+.venv/
+.pg_venv/
+venv/
+.idea/
+.vscode/
+.DS_Store
