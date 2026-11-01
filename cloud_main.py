@@ -43,7 +43,20 @@ def required_environment(environment=None):
     ca_b64 = env.get('CUSTOMU_PG_CA_B64', '').strip()
     if not ca_b64 or len(ca_b64) > 300_000:
         raise DeploymentError('CA_CERTIFICATE_B64_REQUIRED')
-    return origin, dsn, ca_b64
+    csrf_key = decode_csrf_key(env.get('CUSTOMU_CSRF_KEY_B64', '').strip())
+    return origin, dsn, ca_b64, csrf_key
+
+
+def decode_csrf_key(b64):
+    # Per-deployment 256-bit random key, stored as an encrypted runtime secret.
+    # Remains identical across container restarts and additional instances.
+    try:
+        key = base64.b64decode(b64, validate=True)
+    except (ValueError, binascii.Error):
+        raise DeploymentError('INVALID_CSRF_KEY_B64') from None
+    if len(key) != 32:
+        raise DeploymentError('CSRF_KEY_MUST_BE_32_BYTES')
+    return key
 
 
 def decode_certificate(b64):
@@ -106,12 +119,12 @@ def verify_only_fictional_data(store):
 def main():
     ca_path=None
     try:
-        origin,dsn,ca_b64=required_environment()
+        origin,dsn,ca_b64,csrf_key=required_environment()
         ca_path=write_ephemeral_certificate(decode_certificate(ca_b64))
         store=StaffStore(dsn,ca_path)
         verify_only_fictional_data(store)
         from cloud_server import run
-        run(store,origin)
+        run(store,origin,csrf_key)
     except (DeploymentError,PilotError) as exc:
         print('CLOUD STAGING STOPPED:',str(exc),file=sys.stderr)
         sys.exit(1)

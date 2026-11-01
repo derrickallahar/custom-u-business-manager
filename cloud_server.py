@@ -8,20 +8,24 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import urlsplit
-import hashlib, hmac, json, secrets, os
+import hashlib, hmac, json, os
 from pilot_core import PilotError, SCHEMA, positive_id
 from staff_auth import StaffStore, _current_actor, role_allowed
 
 ROOT=Path(__file__).resolve().parent
 PORT=int(os.getenv("PORT", "8080"))
 COOKIE="__Host-cu_staging_077"
-CSRF_KEY=secrets.token_bytes(32)  # ephemeral, local only
+# Do not generate a per-process signing secret: App Platform can restart
+# or replace the process while a user's browser session is still valid.
 MAX_BODY=24*1024
 
 class PilotServer(ThreadingHTTPServer):
     allow_reuse_address=True
     daemon_threads=True
-    def __init__(self,address,store,public_origin):
+    def __init__(self,address,store,public_origin,csrf_key):
+        if not isinstance(csrf_key, bytes) or len(csrf_key)!=32:
+            raise ValueError('INVALID_CSRF_SIGNING_KEY')
+        self.csrf_key=csrf_key
         from urllib.parse import urlsplit
         parsed=urlsplit(public_origin)
         if parsed.scheme != "https" or not parsed.netloc or parsed.path not in ("", "/") or parsed.query or parsed.fragment:
@@ -81,7 +85,7 @@ class Handler(BaseHTTPRequestHandler):
         if not token:return None
         return self.server.store.session(token)
     def csrf_token(self):
-        return hmac.new(CSRF_KEY,self.cookie_token().encode(),hashlib.sha256).hexdigest()
+        return hmac.new(self.server.csrf_key,self.cookie_token().encode(),hashlib.sha256).hexdigest()
     def csrf_ok(self):
         return hmac.compare_digest(self.headers.get('X-CustomU-CSRF',''),self.csrf_token())
     def json_body(self):
@@ -217,10 +221,10 @@ class Handler(BaseHTTPRequestHandler):
             self.authorized(user,'staff');return s.assign_job(positive_id(int(path.split('/')[3])),body.get('staff_id'),user['id'])
         raise PilotError('NOT_FOUND',404)
 
-def run(store,public_origin):
+def run(store,public_origin,csrf_key):
     if not 1024 <= PORT <= 65535:
         raise ValueError('INVALID_HTTP_PORT')
-    with PilotServer(('0.0.0.0',PORT),store,public_origin) as server:
+    with PilotServer(('0.0.0.0',PORT),store,public_origin,csrf_key) as server:
         print('Custom U v0.7.7 — FICTIONAL cloud staging, app started. No customer emails.')
         print('Public address configured. Never use real Custom U customer or employee data.')
         try:server.serve_forever(poll_interval=.2)
