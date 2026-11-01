@@ -1,10 +1,10 @@
 'use strict';
 const $=id=>document.getElementById(id);
-const state={csrf:'',me:null,tab:'overview',customers:[],products:[],catalogs:[],quotes:[],invoices:[],jobs:[],staff:[]};
+const state={csrf:'',me:null,tab:'overview',customers:[],products:[],catalogs:[],quotes:[],invoices:[],jobs:[],staff:[],files:[],audit:[]};
 const TAB_PERM={overview:'jobs.view',customers:'customers.view',products:'products.view',
-    catalogs:'catalogs.view',quotes:'quotes.view',invoices:'invoices.view',jobs:'jobs.view'};
+    catalogs:'catalogs.view',quotes:'quotes.view',invoices:'invoices.view',jobs:'jobs.view',files:'files.view'};
 const permit=key=>!!(state.me?.permissions?.[key]);
-const allowed=tab=>!!state.me && (tab==='staff'?state.me.role==='admin':permit(TAB_PERM[tab]));
+const allowed=tab=>!!state.me && (['staff','security'].includes(tab)?state.me.role==='admin':permit(TAB_PERM[tab]));
 function showRole(){document.querySelectorAll('[data-tab]').forEach(b=>b.hidden=!allowed(b.dataset.tab));
   $('staffIdentity').textContent=state.me?`${state.me.full_name} · ${state.me.role.toUpperCase()}`:'NOT SIGNED IN'}
 state.permissionCatalog=null;state.permissionDetail=null;
@@ -23,7 +23,7 @@ async function refresh(){try{
     showRole();
     if(!allowed(state.tab))state.tab='overview';
     document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.tab));
-    $('heading').textContent={overview:'Overview',customers:'Customer Records',products:'Product Library',catalogs:'Catalog Studio',quotes:'Quotes',invoices:'Invoices',jobs:'Production Jobs',staff:'Staff & Roles'}[state.tab];
+    $('heading').textContent={overview:'Overview',customers:'Customer Records',products:'Product Library',catalogs:'Catalog Studio',quotes:'Quotes',invoices:'Invoices',jobs:'Production Jobs',staff:'Staff & Roles',files:'Private Test Files',security:'Security & Backups'}[state.tab];
     const resources=['dashboard','customers','products','catalogs','quotes','invoices','jobs','staff']
       .filter(x=>x==='dashboard'||allowed(x));
     // Clear records no longer available after an administrator revokes access.
@@ -31,9 +31,11 @@ async function refresh(){try{
       if(!resources.includes(name))state[name]=[];
     const values=await Promise.all(resources.map(x=>api('/api/'+x)));
     resources.forEach((x,i)=>state[x]=values[i]);
+    state.files=allowed('files')?await api('/api/private-files'):[];
+    state.audit=allowed('security')&&state.tab==='security'?await api('/api/audit-summary'):[];
     render();
   }catch(err){note('Request failed: '+err.message,true)}}
-function view(tab){if(!allowed(tab))return;state.tab=tab;document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$('heading').textContent={overview:'Overview',customers:'Customer Records',products:'Product Library',catalogs:'Catalog Studio',quotes:'Quotes',invoices:'Invoices',jobs:'Production Jobs',staff:'Staff & Roles'}[tab];note('');refresh();}
+function view(tab){if(!allowed(tab))return;state.tab=tab;document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$('heading').textContent={overview:'Overview',customers:'Customer Records',products:'Product Library',catalogs:'Catalog Studio',quotes:'Quotes',invoices:'Invoices',jobs:'Production Jobs',staff:'Staff & Roles',files:'Private Test Files',security:'Security & Backups'}[tab];note('');refresh();}
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>view(b.dataset.tab)));
 const card=(label,value)=>`<div class="metric"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`;
 function table(headers,rows){return `<div class="tableWrap"><table><thead><tr>${headers.map(h=>'<th>'+esc(h)+'</th>').join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${headers.length}">No fictional records yet.</td></tr>`}</tbody></table></div>`}
@@ -42,7 +44,7 @@ function optionRows(list,key,label){return list.map(a=>`<option value="${esc(a[k
 async function post(path,data,success){try{const d=await api(path,data);note(success||'Saved successfully.');await refresh();return d}catch(e){note(e.message,true);return null}}
 const submit=(form,fn)=>{document.querySelector(form)?.addEventListener('submit',async e=>{e.preventDefault();await fn(Object.fromEntries(new FormData(e.currentTarget)))})};
 const byId=(name,id)=>state[name].find(x=>Number(x.id)===Number(id));
-function render(){if(!state.csrf)return;const target=$('view');if(state.tab==='overview')return target.innerHTML=overview();if(state.tab==='customers'){target.innerHTML=customers();wireCustomers()}if(state.tab==='products')target.innerHTML=products();if(state.tab==='catalogs'){target.innerHTML=catalogs();wireCatalogs()}if(state.tab==='quotes'){target.innerHTML=quotes();wireQuotes()}if(state.tab==='invoices'){target.innerHTML=invoices();wireInvoices()}if(state.tab==='jobs'){target.innerHTML=jobs();wireJobs()}if(state.tab==='staff'){target.innerHTML=staffView();wireStaff()}}
+function render(){if(!state.csrf)return;const target=$('view');if(state.tab==='overview')return target.innerHTML=overview();if(state.tab==='customers'){target.innerHTML=customers();wireCustomers()}if(state.tab==='products')target.innerHTML=products();if(state.tab==='catalogs'){target.innerHTML=catalogs();wireCatalogs()}if(state.tab==='quotes'){target.innerHTML=quotes();wireQuotes()}if(state.tab==='invoices'){target.innerHTML=invoices();wireInvoices()}if(state.tab==='jobs'){target.innerHTML=jobs();wireJobs()}if(state.tab==='staff'){target.innerHTML=staffView();wireStaff()}if(state.tab==='files'){target.innerHTML=filesView();wireFiles()}if(state.tab==='security'){target.innerHTML=securityView()}}
 function overview(){const d=state.dashboard||{};
   let items=d.jobs===undefined?[]:[card('Production jobs',d.jobs||0)];
   for(const [key,label] of [['customers','Fictional customers'],['products','Products'],
@@ -103,3 +105,17 @@ function wireStaff(){submit('#staffForm',async f=>post('/api/staff',f,'Fictional
  });
 }
 $('logoutButton').addEventListener('click',async()=>{try{await api('/api/logout',{})}catch{}state.csrf='';state.me=null;$('app').hidden=true;$('login').hidden=false;$('passwordInput').value='';});
+
+
+function filesView(){return `<div class="panel"><h2>Private test files · fictional staging only</h2><p>Store only synthetic sample PDFs or generated sample PNG/JPEG previews, with names beginning <code>TEST_</code>. Maximum 2 MB per file, 50 files and 40 MB in this pilot. Private bucket is not a full document-management workflow.</p>${permit('files.upload')?`<form id="fileForm" class="formGrid"><label class="wide">Select a fictional TEST_ file<input type="file" id="testFile" accept=".pdf,.png,.jpg,.jpeg" required></label><button type="submit">Upload private test file</button></form>`:'<p>Your account cannot upload test files.</p>'}<p class="detail">The storage feature requires a private Supabase bucket and separate encrypted DigitalOcean runtime configuration. If not configured, uploads return STORAGE_NOT_CONFIGURED.</p></div><div class="panel"><h2>Test file inventory</h2>${table(['File','Size','SHA-256','Uploaded','Action'],state.files.map(f=>`<tr>${td(esc(f.original_name))}${td(esc(f.size_bytes)+' bytes')}${td(esc((f.sha256||'').slice(0,16))+'…')}${td(esc(f.created_at))}${td(`<a href="/api/private-files/${f.id}/download">Download privately</a>`)}</tr>`))}</div>`}
+function wireFiles(){document.querySelector('#fileForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();const input=$('testFile'),f=input?.files?.[0];if(!f)return;
+  if(!/^TEST_[A-Za-z0-9_.-]{1,85}$/.test(f.name)||!f.size||f.size>2_000_000){note('Use fictional TEST_ filename, max 2 MB.',true);return}
+  const ext=f.name.toLowerCase().split('.').at(-1);
+  const mime=ext==='pdf'?'application/pdf':ext==='png'?'image/png':['jpg','jpeg'].includes(ext)?'image/jpeg':'';
+  if(!mime){note('Only PDF, PNG or JPEG allowed',true);return}
+  try{const b64=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result).split(',')[1]);fr.onerror=()=>reject(Error('FILE_READ_FAILED'));fr.readAsDataURL(f)});
+      await post('/api/private-files',{filename:f.name,mime,base64:b64},'Private fictional test file saved and checksum recorded.');
+  }catch(err){note('Upload failed: '+err.message,true)}
+})}
+function securityView(){return `<div class="panel"><h2>Security and encrypted backup rehearsal</h2><p>Use <strong>BACKUP_ENCRYPTED_WINDOWS.bat</strong> locally to create an AES-256-GCM encrypted snapshot of the fictional commercial workflow. Verify it with <strong>VERIFY_ENCRYPTED_BACKUP_WINDOWS.bat</strong>, then restore into a <em>new isolated rehearsal schema</em> using the separate Windows script.</p><div class="note">No automatic backups are enabled in the pilot. These snapshots exclude user password/session tables and Supabase Storage object bytes; they are <strong>not</strong> a complete disaster-recovery backup.</div></div><div class="panel"><h2>Recent audit actions · administrator only</h2>${table(['UTC','Actor ID','Action','Entity','Record ID'],state.audit.map(a=>`<tr>${td(esc(a.created_at))}${td(esc(a.actor_user_id??'system'))}${td(esc(a.action))}${td(esc(a.entity))}${td(esc(a.entity_id??''))}</tr>`))}</div>`}
