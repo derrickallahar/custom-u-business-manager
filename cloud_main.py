@@ -1,4 +1,4 @@
-"""Custom U v0.7.7 — fictional-only cloud staging entry point.
+"""Custom U v0.7.8 — fictional-only cloud staging entry point.
 
 Fail closed if cloud deployment consent, TLS CA, HTTPS origin, or fake-data checks
 are missing. No schema creation, SMTP, or data migration happens at startup.
@@ -123,8 +123,17 @@ def main():
         ca_path=write_ephemeral_certificate(decode_certificate(ca_b64))
         store=StaffStore(dsn,ca_path)
         verify_only_fictional_data(store)
+        # Storage remains OPTIONAL. Never expose the service key to the browser.
+        storage=None
+        storage_url=os.getenv('CUSTOMU_SUPABASE_URL','').strip()
+        storage_key=os.getenv('CUSTOMU_SUPABASE_SERVICE_ROLE_KEY','').strip()
+        if bool(storage_url) != bool(storage_key):
+            raise DeploymentError('STORAGE_RUNTIME_CONFIGURATION_INCOMPLETE')
+        if storage_url:
+            from private_storage import StorageClient
+            storage=StorageClient(storage_url,storage_key)
         from cloud_server import run
-        run(store,origin,csrf_key)
+        run(store,origin,csrf_key,storage)
     except (DeploymentError,PilotError) as exc:
         print('CLOUD STAGING STOPPED:',str(exc),file=sys.stderr)
         sys.exit(1)

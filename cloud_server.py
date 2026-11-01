@@ -1,4 +1,4 @@
-"""Custom U v0.7.7: HTTPS proxy-hosted FICTIONAL data cloud staging.
+"""Custom U v0.7.8: HTTPS proxy-hosted FICTIONAL data cloud staging.
 
 Runs only after explicit environment and database checks in cloud_main.
 NOT APPROVED FOR REAL EMPLOYEES, CUSTOMERS, FILES, OR PAYMENTS.
@@ -9,6 +9,7 @@ from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import urlsplit
 import hashlib, hmac, json, os
+from private_storage import validate_upload, MAX_BYTES
 from pilot_core import PilotError, SCHEMA, positive_id
 from staff_auth import StaffStore, _current_actor, role_allowed
 
@@ -22,7 +23,7 @@ MAX_BODY=24*1024
 class PilotServer(ThreadingHTTPServer):
     allow_reuse_address=True
     daemon_threads=True
-    def __init__(self,address,store,public_origin,csrf_key):
+    def __init__(self,address,store,public_origin,csrf_key,storage=None):
         if not isinstance(csrf_key, bytes) or len(csrf_key)!=32:
             raise ValueError('INVALID_CSRF_SIGNING_KEY')
         self.csrf_key=csrf_key
@@ -34,9 +35,10 @@ class PilotServer(ThreadingHTTPServer):
         self.public_host=parsed.netloc.lower()
         super().__init__(address,Handler)
         self.store=store
+        self.storage=storage
 
 class Handler(BaseHTTPRequestHandler):
-    server_version='CustomUCloudStaging/0.7.7'
+    server_version='CustomUCloudStaging/0.7.8'
     sys_version=''
     def log_message(self,*args):
         pass  # no URLs, cookies, staff names, passwords or payloads in console logs
@@ -88,10 +90,10 @@ class Handler(BaseHTTPRequestHandler):
         return hmac.new(self.server.csrf_key,self.cookie_token().encode(),hashlib.sha256).hexdigest()
     def csrf_ok(self):
         return hmac.compare_digest(self.headers.get('X-CustomU-CSRF',''),self.csrf_token())
-    def json_body(self):
+    def json_body(self, max_body=MAX_BODY):
         try:
             size=int(self.headers.get('Content-Length','-1'))
-            if not 2<=size<=MAX_BODY:raise PilotError('INVALID_REQUEST_SIZE',413)
+            if not 2<=size<=max_body:raise PilotError('INVALID_REQUEST_SIZE',413)
             data=json.loads(self.rfile.read(size))
             if not isinstance(data,dict):raise ValueError()
             return data
@@ -122,6 +124,28 @@ class Handler(BaseHTTPRequestHandler):
             if not user:raise PilotError('LOGIN_REQUIRED',401)
             if path=='/api/session':
                 return self.json({'authenticated':True,'me':user,'csrf':self.csrf_token(),'schema':SCHEMA})
+            if path=='/api/private-files':
+                self.authorized(user,'files.view')
+                return self.json({'data':self.server.store.private_files(),
+                                  'storage_enabled':self.server.storage is not None})
+            if path.startswith('/api/private-files/') and path.endswith('/download'):
+                self.authorized(user,'files.view')
+                if self.server.storage is None:raise PilotError('STORAGE_NOT_CONFIGURED',503)
+                f=self.server.store.private_file(positive_id(int(path.split('/')[3])))
+                # Metadata should be known-safe even if manually edited in DB.
+                from private_storage import validate_safe_name
+                validate_safe_name(f['original_name'],f['mime'])
+                content=self.server.storage.read(f['object_key'])
+                if len(content)!=f['size_bytes'] or hashlib.sha256(content).hexdigest()!=f['sha256']:
+                    raise PilotError('FILE_INTEGRITY_CHECK_FAILED',502)
+                # The name is restricted to safe ASCII at upload, so no header injection.
+                self.send_headers(mime='application/octet-stream',length=len(content),extra={
+                    'Content-Disposition':f'attachment; filename="{f["original_name"]}"'})
+                self.wfile.write(content)
+                return
+            if path=='/api/audit-summary':
+                self.authorized(user,'staff')
+                return self.json({'data':self.server.store.audit_summary()})
             if path=='/api/permission-catalog':
                 self.authorized(user,'staff')
                 from staff_auth import PERMISSION_GROUPS, ROLE_DEFAULTS
@@ -171,8 +195,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.headers.get('Content-Type','').split(';')[0].strip().lower()!='application/json':
             return self.fail('JSON_CONTENT_TYPE_REQUIRED',415)
         try:
-            body=self.json_body()
             path=self.path_only()
+            body=self.json_body(max_body=2_850_000 if path=='/api/private-files' else MAX_BODY)
             if path=='/api/login':
                 user=self.server.store.login(body.get('email'),body.get('password'))
                 if user is None:raise PilotError('INVALID_LOGIN_OR_TEMPORARILY_LOCKED',403)
@@ -197,6 +221,15 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:return self.fail('DATABASE_REQUEST_FAILED',502)
     def mutate(self,path,body,user):
         s=self.server.store
+        if path=='/api/private-files':
+            self.authorized(user,'files.upload')
+            if self.server.storage is None:raise PilotError('STORAGE_NOT_CONFIGURED',503)
+            name,mime,contents=validate_upload(body)
+            key=self.server.storage.save(contents,mime)
+            try:return s.save_private_file(key,name,mime,contents,user['id'])
+            except Exception:
+                self.server.storage.delete_orphan(key)
+                raise
         if path=='/api/staff':self.authorized(user,'staff');return s.create_staff(body,user['id'])
         if path.startswith('/api/staff/') and path.endswith('/permissions'):
             self.authorized(user,'staff');return s.set_staff_permissions(positive_id(int(path.split('/')[3])),body.get('overrides'),user['id'])
@@ -221,11 +254,11 @@ class Handler(BaseHTTPRequestHandler):
             self.authorized(user,'staff');return s.assign_job(positive_id(int(path.split('/')[3])),body.get('staff_id'),user['id'])
         raise PilotError('NOT_FOUND',404)
 
-def run(store,public_origin,csrf_key):
+def run(store,public_origin,csrf_key,storage=None):
     if not 1024 <= PORT <= 65535:
         raise ValueError('INVALID_HTTP_PORT')
-    with PilotServer(('0.0.0.0',PORT),store,public_origin,csrf_key) as server:
-        print('Custom U v0.7.7 — FICTIONAL cloud staging, app started. No customer emails.')
+    with PilotServer(('0.0.0.0',PORT),store,public_origin,csrf_key,storage) as server:
+        print('Custom U v0.7.8 — FICTIONAL cloud staging, app started. No customer emails.')
         print('Public address configured. Never use real Custom U customer or employee data.')
         try:server.serve_forever(poll_interval=.2)
         except KeyboardInterrupt:pass

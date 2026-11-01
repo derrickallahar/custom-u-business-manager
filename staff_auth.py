@@ -7,6 +7,7 @@ from __future__ import annotations
 from contextvars import ContextVar
 from datetime import datetime, timedelta, timezone
 import hashlib
+import json
 import hmac
 import re
 import secrets
@@ -79,14 +80,16 @@ PERMISSION_GROUPS = (
     ('payments.record','Payments: record test payments'),
     ('jobs.view','Production: view'),
     ('jobs.update','Production: update stage'),
+    ('files.view','Private test files: view/download'),
+    ('files.upload','Private test files: upload'),
 )
 PERMISSION_KEYS = tuple(k for k,_ in PERMISSION_GROUPS)
 ROLE_DEFAULTS = {
     'admin': set(PERMISSION_KEYS),
     'sales': {'customers.view','customers.create','products.view','catalogs.view','catalogs.create',
-              'quotes.view','quotes.create','quotes.approve','jobs.view'},
+              'quotes.view','quotes.create','quotes.approve','jobs.view','files.view','files.upload'},
     'office': set(PERMISSION_KEYS),
-    'production': {'jobs.view','jobs.update'},
+    'production': {'jobs.view','jobs.update','files.view','files.upload'},
 }
 
 def effective_permissions(role, overrides=None):
@@ -120,6 +123,57 @@ class StaffStore(Store):
         if uid is None:
             raise PilotError('ACTOR_CONTEXT_REQUIRED', 500)
         return uid
+
+    def private_files(self):
+        with self.connection() as conn:
+            with conn.cursor() as c:
+                c.execute(f'''SELECT id, original_name, mime, size_bytes, sha256,
+                              uploaded_by, created_at FROM "{SCHEMA}"."pilot_private_files_078"
+                              ORDER BY id DESC LIMIT 100''')
+                return c.fetchall()
+
+    def private_file(self, file_id):
+        with self.connection() as conn:
+            with conn.cursor() as c:
+                c.execute(f'''SELECT id, object_key, original_name, mime, size_bytes, sha256
+                              FROM "{SCHEMA}"."pilot_private_files_078" WHERE id=%s''', (positive_id(file_id),))
+                row=c.fetchone()
+                if not row:raise PilotError('FILE_NOT_FOUND',404)
+                return row
+
+    def save_private_file(self, object_key, original_name, mime, content, actor):
+        import hashlib
+        if not isinstance(content,bytes) or not 1<=len(content)<=2_000_000:
+            raise PilotError('FILE_TOO_LARGE',413)
+        digest=hashlib.sha256(content).hexdigest()
+        with self.connection() as conn:
+            with conn.cursor() as c:
+                # Serialize quota checks across simultaneous staff uploads.
+                c.execute('SELECT pg_advisory_xact_lock(780078)')
+                c.execute(f'''SELECT COUNT(*) AS n, COALESCE(SUM(size_bytes),0) AS used
+                              FROM "{SCHEMA}"."pilot_private_files_078"''')
+                r=c.fetchone()
+                if r['n']>=50 or r['used']+len(content)>40_000_000:
+                    raise PilotError('FICTIONAL_STORAGE_QUOTA_REACHED',409)
+                c.execute(f'''INSERT INTO "{SCHEMA}"."pilot_private_files_078"
+                              (object_key,original_name,mime,size_bytes,sha256,uploaded_by,created_at)
+                              VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id''',
+                          (object_key,original_name,mime,len(content),digest,actor,now()))
+                f_id=c.fetchone()['id']
+                c.execute(f'''INSERT INTO "{SCHEMA}"."audit"
+                              (actor_user_id,action,entity,entity_id,metadata,created_at)
+                              VALUES(%s,%s,%s,%s,%s,%s)''',
+                          (actor,'test_file_upload','pilot_private_file',f_id,
+                           json.dumps({'sha256':digest,'size_bytes':len(content)}),now()))
+                return {'id':f_id,'sha256':digest,'size_bytes':len(content)}
+
+    def audit_summary(self):
+        with self.connection() as conn:
+            with conn.cursor() as c:
+                # Hide metadata because older operations may include unreviewed content.
+                c.execute(f'''SELECT a.id,a.actor_user_id,a.action,a.entity,a.entity_id,a.created_at
+                              FROM "{SCHEMA}"."audit" a ORDER BY a.id DESC LIMIT 60''')
+                return c.fetchall()
 
     def login(self, email, password):
         email = staff_email(email)
