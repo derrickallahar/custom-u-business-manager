@@ -5,7 +5,7 @@ const TAB_PERM={overview:'jobs.view',customers:'customers.view',products:'produc
     catalogs:'catalogs.view',quotes:'quotes.view',invoices:'invoices.view',jobs:'jobs.view',files:'files.view'};
 const permit=key=>!!(state.me?.permissions?.[key]);
 const allowed=tab=>!!state.me && (['staff','security'].includes(tab)?state.me.role==='admin':permit(TAB_PERM[tab]));
-function showRole(){document.querySelectorAll('[data-tab]').forEach(b=>b.hidden=!allowed(b.dataset.tab));
+function showRole(){const historyLink=$('historyPreviewLink');if(historyLink)historyLink.hidden=state.me?.role!=='admin';document.querySelectorAll('[data-tab]').forEach(b=>b.hidden=!allowed(b.dataset.tab));
   $('staffIdentity').textContent=state.me?`${state.me.full_name} · ${state.me.role.toUpperCase()}`:'NOT SIGNED IN'}
 state.permissionCatalog=null;state.permissionDetail=null;
 
@@ -136,7 +136,7 @@ function wireDocuments(){document.querySelectorAll('[data-document]').forEach(bu
     if(!row)throw Error('Document no longer available.');
     const dialog=document.createElement('dialog');
     dialog.style.cssText='width:min(950px,90vw);max-height:85vh;overflow:auto;border:1px solid #ccd3df;border-radius:12px;padding:24px';
-    dialog.innerHTML='<button type="button" data-close>Close details</button>'+documentDetails(kind,row);
+    dialog.innerHTML='<button type="button" data-close>Close details</button>'+documentDetails(kind,row)+`<p><a href="/documents/${kind}/${Number(row.id)}" target="_blank" rel="noopener">Open printable test preview</a></p>`;
     document.body.appendChild(dialog);
     dialog.querySelector('[data-close]').addEventListener('click',()=>dialog.close());
     dialog.addEventListener('close',()=>{dialog.remove();button.focus()},{once:true});
