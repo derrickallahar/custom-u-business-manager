@@ -214,7 +214,7 @@ class Store:
         return self.read('quotes','id,number,customer_id,catalog_id,status,total_cents,lines_json,created_at','id DESC')
 
     def invoices(self):
-        return self.read('invoices','id,number,customer_id,quote_id,status,total_cents,paid_cents,due_date,created_at','id DESC')
+        return self.read('invoices','id,number,customer_id,quote_id,status,total_cents,paid_cents,due_date,created_at,lines_json','id DESC')
 
     def jobs(self):
         return self.read('jobs','id,number,customer_id,quote_id,status,title,ticket_json,assigned_to_user_id,created_at','id DESC')
