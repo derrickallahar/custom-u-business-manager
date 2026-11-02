@@ -122,6 +122,27 @@ class Handler(BaseHTTPRequestHandler):
         try:
             user=self.user()
             if not user:raise PilotError('LOGIN_REQUIRED',401)
+            if path in ('/history', '/history.js', '/api/history-preview'):
+                self.authorized(user,'staff')
+                if path=='/api/history-preview':
+                    from history_preview import RECORDS
+                    return self.json({'data':RECORDS})
+                name='history.html' if path=='/history' else 'history.js'
+                data=(ROOT/'static'/name).read_bytes()
+                mime='text/html; charset=utf-8' if path=='/history' else 'text/javascript; charset=utf-8'
+                self.send_headers(mime=mime,length=len(data));self.wfile.write(data);return
+            if path.startswith('/documents/'):
+                parts=path.split('/')
+                if len(parts)!=4 or parts[2] not in ('quotes','invoices'):
+                    raise PilotError('NOT_FOUND',404)
+                kind=parts[2]
+                self.authorized(user,kind+'.view')
+                ident=positive_id(int(parts[3]))
+                record=next((r for r in getattr(self.server.store,kind)() if r['id']==ident),None)
+                if record is None:raise PilotError('NOT_FOUND',404)
+                from hosted_documents import render_document
+                data=render_document(kind,record)
+                self.send_headers(mime='text/html; charset=utf-8',length=len(data));self.wfile.write(data);return
             if path=='/api/session':
                 return self.json({'authenticated':True,'me':user,'csrf':self.csrf_token(),'schema':SCHEMA})
             if path=='/api/private-files':
