@@ -36,9 +36,11 @@ class PilotServer(ThreadingHTTPServer):
         super().__init__(address,Handler)
         self.store=store
         self.storage=storage
+        from history_archive import Archive
+        self.history=Archive(storage)
 
 class Handler(BaseHTTPRequestHandler):
-    server_version='CustomUCloudStaging/0.7.8'
+    server_version='CustomUCloudStaging/0.8.9'
     sys_version=''
     def log_message(self,*args):
         pass  # no URLs, cookies, staff names, passwords or payloads in console logs
@@ -122,11 +124,17 @@ class Handler(BaseHTTPRequestHandler):
         try:
             user=self.user()
             if not user:raise PilotError('LOGIN_REQUIRED',401)
-            if path in ('/history', '/history.js', '/api/history-preview'):
+            if path in ('/history', '/history.js', '/api/history-preview', '/api/history') or path.startswith('/api/history/'):
                 self.authorized(user,'staff')
-                if path=='/api/history-preview':
-                    from history_preview import RECORDS
-                    return self.json({'data':RECORDS})
+                if path in ('/api/history','/api/history-preview'):
+                    return self.json(self.server.history.listing(urlsplit(self.path).query))
+                if path.startswith('/api/history/records/'):
+                    return self.json({'data':self.server.history.detail(path.removeprefix('/api/history/records/'))})
+                if path.startswith('/api/history/files/'):
+                    name,data=self.server.history.pdf(path.removeprefix('/api/history/files/'))
+                    self.send_headers(mime='application/pdf',length=len(data),extra={'Content-Disposition':'attachment; filename="'+name+'"'})
+                    self.wfile.write(data);return
+                if path not in ('/history','/history.js'):raise PilotError('NOT_FOUND',404)
                 name='history.html' if path=='/history' else 'history.js'
                 data=(ROOT/'static'/name).read_bytes()
                 mime='text/html; charset=utf-8' if path=='/history' else 'text/javascript; charset=utf-8'
@@ -226,6 +234,9 @@ class Handler(BaseHTTPRequestHandler):
                     'Set-Cookie':f'{COOKIE}={token}; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800'})
             user=self.user()
             if not user:raise PilotError('LOGIN_REQUIRED',401)
+            if path=='/api/history' or path.startswith('/api/history/'):
+                self.authorized(user,'staff')
+                raise PilotError('HISTORY_READ_ONLY',405)
             if not self.csrf_ok():raise PilotError('CSRF_REJECTED',403)
             if path=='/api/logout':
                 self.server.store.logout(self.cookie_token())

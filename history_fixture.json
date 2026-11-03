@@ -1,0 +1,48 @@
+{
+  "format": "custom-u-history-089",
+  "data_class": "fictional",
+  "records": [
+    {
+      "kind": "invoice",
+      "number": "TEST-H-1001",
+      "customer": "TEST Archive Customer",
+      "status": "past_due",
+      "total": "110.00",
+      "balance": "60.00",
+      "details": "Historical summary only; item details unavailable. Payment allocations unknown.",
+      "id": "record-1",
+      "file_ids": [
+        "test-pdf"
+      ]
+    },
+    {
+      "kind": "quote",
+      "number": "TEST-Q-1001",
+      "customer": "TEST Archive Customer",
+      "status": "draft",
+      "total": "220.00",
+      "balance": "220.00",
+      "details": "Historical summary only; item details unavailable.",
+      "id": "record-2",
+      "file_ids": []
+    },
+    {
+      "kind": "payment",
+      "number": "TEST-P-1001",
+      "customer": "TEST Archive Customer",
+      "status": "Completed",
+      "total": "50.00",
+      "balance": "",
+      "details": "Unallocated historical reference. Not posted to live invoices.",
+      "id": "record-3",
+      "file_ids": []
+    }
+  ],
+  "files": {
+    "test-pdf": {
+      "name": "TEST_history_089.pdf",
+      "sha256": "b593debe83806f9a4c7e52d2c497296ccb73c2bd39cf0381c3300b2332edce77",
+      "base64": "JVBERi0xLjMKJZOMi54gUmVwb3J0TGFiIEdlbmVyYXRlZCBQREYgZG9jdW1lbnQgKG9wZW5zb3VyY2UpCjEgMCBvYmoKPDwKL0YxIDIgMCBSCj4+CmVuZG9iagoyIDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhIC9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nIC9OYW1lIC9GMSAvU3VidHlwZSAvVHlwZTEgL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDcgMCBSIC9NZWRpYUJveCBbIDAgMCA1OTUuMjc1NiA4NDEuODg5OCBdIC9QYXJlbnQgNiAwIFIgL1Jlc291cmNlcyA8PAovRm9udCAxIDAgUiAvUHJvY1NldCBbIC9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUkgXQo+PiAvUm90YXRlIDAgL1RyYW5zIDw8Cgo+PiAKICAvVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovUGFnZU1vZGUgL1VzZU5vbmUgL1BhZ2VzIDYgMCBSIC9UeXBlIC9DYXRhbG9nCj4+CmVuZG9iago1IDAgb2JqCjw8Ci9BdXRob3IgKGFub255bW91cykgL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MTEwMzE3MzI1NS0wNScwMCcpIC9DcmVhdG9yIChhbm9ueW1vdXMpIC9LZXl3b3JkcyAoKSAvTW9kRGF0ZSAoRDoyMDI2MTEwMzE3MzI1NS0wNScwMCcpIC9Qcm9kdWNlciAoUmVwb3J0TGFiIFBERiBMaWJyYXJ5IC0gXChvcGVuc291cmNlXCkpIAogIC9TdWJqZWN0ICh1bnNwZWNpZmllZCkgL1RpdGxlIChGaWN0aW9uYWwgaGlzdG9yeSBkb3dubG9hZCB0ZXN0KSAvVHJhcHBlZCAvRmFsc2UKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0NvdW50IDEgL0tpZHMgWyAzIDAgUiBdIC9UeXBlIC9QYWdlcwo+PgplbmRvYmoKNyAwIG9iago8PAovRmlsdGVyIFsgL0FTQ0lJODVEZWNvZGUgL0ZsYXRlRGVjb2RlIF0gL0xlbmd0aCAxODQKPj4Kc3RyZWFtCkdhclcwYm1LJWYoZSswX2BFPzY3YyVKdEg5LCVQLmFObTpKUjErdE0hQVdnLlpfJ1tFXDhXNz5fcFBFJnFZZUZOPGddZCddZyw/VjBGM2VtNyhlWkpZOFNqVS50cShQRURvTjxVVlM+JkEnKGNsO2lwKWNnYE1XUig9WyheNzR1W0o6RjVqOj9EPShmPXQoSWdccShYV1hSMT1URFFnUkFUbV5tJWsmLmZjJkgoVllTZTlVLT42fj5lbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA4CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDA2MSAwMDAwMCBuIAowMDAwMDAwMDkyIDAwMDAwIG4gCjAwMDAwMDAxOTkgMDAwMDAgbiAKMDAwMDAwMDQwMiAwMDAwMCBuIAowMDAwMDAwNDcwIDAwMDAwIG4gCjAwMDAwMDA3NTQgMDAwMDAgbiAKMDAwMDAwMDgxMyAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9JRCAKWzxiOGIzZDQ4MjdiZjlmODgzM2I2ZjkwZDI2N2RkYTkzZD48YjhiM2Q0ODI3YmY5Zjg4MzNiNmY5MGQyNjdkZGE5M2Q+XQolIFJlcG9ydExhYiBnZW5lcmF0ZWQgUERGIGRvY3VtZW50IC0tIGRpZ2VzdCAob3BlbnNvdXJjZSkKCi9JbmZvIDUgMCBSCi9Sb290IDQgMCBSCi9TaXplIDgKPj4Kc3RhcnR4cmVmCjEwODcKJSVFT0YK"
+    }
+  }
+}
