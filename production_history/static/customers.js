@@ -4,7 +4,7 @@ const fields={c:['name','email','phone','address','tax_id'],p:['name','title','e
 let customer=null,contact=null,page=1,dirty=false,busy=false,epoch=0;
 const errors={VERSION_CONFLICT:'This record changed in another window. Reopen it before saving again.',ID_CONFLICT:'This save conflicts with an existing record. Reopen the customer.',CUSTOMER_INACTIVE:'Activate and save the customer before adding or editing contacts.',NAME_REQUIRED:'Enter a name.',INVALID_EMAIL:'Check the email address.',CUSTOMERS_NOT_ENABLED:'Customer management has not been enabled yet.'};
 function status(s){el('status').textContent=s;}
-function clearPrivate(){epoch++;customer=contact=null;dirty=false;el('workspace').hidden=true;el('rows').replaceChildren();el('contact-list').replaceChildren();el('customer-form').reset();el('contact-form').reset();el('identity').textContent='';}
+function clearPrivate(){epoch++;customer=contact=null;dirty=false;el('workspace').hidden=true;el('rows').replaceChildren();el('contact-list').replaceChildren();el('customer-form').reset();el('contact-form').reset();el('identity').textContent='';el('backup-form').reset();el('backup-form').hidden=true;}
 async function api(url,body){
  const r=await fetch(url,{credentials:'same-origin',cache:'no-store',method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});
  const data=await r.json();
@@ -28,3 +28,18 @@ el('prev').onclick=()=>run(async()=>{page--;await list();});el('next').onclick=(
 el('logout').onclick=()=>run(async()=>{if(!mayLeave())return;clearPrivate();await api('/api/logout',{});status('Signed out. Use the sign-in link above to return.');});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 run(async()=>{const r=await api('/api/session');if(!r.crm_enabled){status(errors.CUSTOMERS_NOT_ENABLED);return;}el('identity').textContent=r.me.email;el('workspace').hidden=false;await list();status('Ready. Add customers for new work; archive records are not imported automatically.');});
+
+el('show-backup').onclick=()=>{el('backup-form').hidden=!el('backup-form').hidden;if(!el('backup-form').hidden)el('backup-password').focus();};
+el('backup-form').onsubmit=e=>{e.preventDefault();run(async()=>{
+ try {
+  if(el('backup-password').value!==el('backup-confirm').value)throw Error('The two backup passphrases do not match.');
+  status('Preparing encrypted backup…');
+  const r=await fetch('/api/customers/backup',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({passphrase:el('backup-password').value})});
+  if(!r.ok){if(r.status===401||r.status===403){clearPrivate();throw Error('Access ended. Sign in again.');}throw Error(r.status===429?'Please wait 30 seconds before another backup.':'Backup failed. No successful backup has been confirmed.');}
+  const blob=await r.blob();
+  const match=(r.headers.get('Content-Disposition')||'').match(/filename="(CustomU_CRM_[A-Za-z0-9_]+\.cucrm)"/);
+  if(!match)throw Error('Unexpected backup response. Please try again.');
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=match[1];document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  status('Download started. Check your Downloads folder, then run the local recovery check.');el('backup-form').hidden=true;
+ } finally {el('backup-password').value='';el('backup-confirm').value='';}
+});};
