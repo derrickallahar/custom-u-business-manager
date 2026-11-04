@@ -1,4 +1,4 @@
-"""Production history connection 091. Read-only; no billing operations."""
+"""Production history connection 091. History plus administrator CRM 093; no billing operations."""
 import hashlib, hmac, json, os, re, secrets, threading, time
 from pathlib import Path
 from urllib import request as http, error
@@ -51,7 +51,8 @@ class Supabase:
         try:self.call('/auth/v1/logout?scope=local',token,{})
         except Failure:pass
 
-def create_app(provider=None,origin=None,digest=None):
+def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
+    crm_enabled = os.getenv("CUSTOMU_PRODUCTION_CRM_ENABLED", "") == "1" if crm_enabled is None else crm_enabled
     origin=(origin or os.getenv('CUSTOMU_PRODUCTION_ORIGIN','')).rstrip('/')
     parts=urlsplit(origin)
     if parts.scheme!='https' or not parts.hostname or parts.username or parts.password or parts.path or parts.query or parts.fragment or not re.fullmatch(r'[A-Za-z0-9.-]+(?::443)?',parts.netloc):
@@ -104,7 +105,7 @@ def create_app(provider=None,origin=None,digest=None):
     @app.errorhandler(Exception)
     def unexpected(e):return jsonify(error='REQUEST_FAILED'),503
     @app.get('/healthz')
-    def health():return jsonify(status='ok',service='production-history-091')
+    def health():return jsonify(status='ok',service='production-history-crm-093')
     @app.get('/')
     def index():return app.response_class((ROOT/'static/index.html').read_bytes(),mimetype='text/html')
     @app.get('/app.js')
@@ -133,7 +134,7 @@ def create_app(provider=None,origin=None,digest=None):
             if len(sessions)>=100:raise Failure('SESSION_CAPACITY_REACHED',429)
             sessions.pop(hashlib.sha256(old.encode()).hexdigest(),None)
             sessions[key]={'token':token,'expires':time.time()+ttl}
-        r=jsonify(me=me,archive_configured=bool(digest))
+        r=jsonify(me=me,archive_configured=bool(digest),crm_enabled=bool(crm_enabled))
         r.set_cookie(COOKIE,sid,secure=True,httponly=True,samesite='Strict',max_age=ttl,path='/')
         return r
     @app.post('/api/logout')
@@ -144,7 +145,7 @@ def create_app(provider=None,origin=None,digest=None):
         r=jsonify(signed_out=True);r.delete_cookie(COOKIE,secure=True,httponly=True,samesite='Strict',path='/');return r
     @app.get('/api/session')
     def who():
-        _,me=session();return jsonify(me=me,archive_configured=bool(digest))
+        _,me=session();return jsonify(me=me,archive_configured=bool(digest),crm_enabled=bool(crm_enabled))
     @app.get('/api/history')
     def listing():
         rec,_=session();return jsonify(archive(rec).listing(request.query_string.decode('utf-8')))
@@ -155,4 +156,6 @@ def create_app(provider=None,origin=None,digest=None):
     def pdf(ident):
         rec,_=session();name,blob=archive(rec).pdf(ident)
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
+    from crm_api import install
+    install(app,provider,session,crm_enabled,ROOT,Failure)
     return app
