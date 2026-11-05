@@ -163,6 +163,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
         if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
         name,blob=archive(rec).pdf(ident)
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
+    from jobs_api import install as install_jobs
+    install_jobs(app,provider,session,crm_enabled,ROOT,Failure)
     from crm_api import install
     install(app,provider,session,crm_enabled,ROOT,Failure)
     from backup_api import install as install_backup

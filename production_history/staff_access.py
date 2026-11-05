@@ -1,5 +1,5 @@
 """Explicit staff capabilities; SQL independently enforces the same restrictions."""
-KEYS=('customers.view','customers.create','customers.edit','quotes.view','quotes.create','quotes.edit','quotes.approve','invoices.view','invoices.create','invoices.edit','invoices.issue','payments.view','payments.record','payments.reverse')
+KEYS=('customers.view','customers.create','customers.edit','quotes.view','quotes.create','quotes.edit','quotes.approve','invoices.view','invoices.create','invoices.edit','invoices.issue','payments.view','payments.record','payments.reverse','jobs.view','jobs.create','jobs.edit','jobs.progress')
 
 def can(me,key):
     return isinstance(me,dict) and (me.get('role')=='admin' or isinstance(me.get('permissions'),dict) and me['permissions'].get(key) is True)
@@ -9,6 +9,9 @@ def allowed(me,area,payload=None):
     if not can(me,area+'.view'):return False
     if payload is None:return True
     op=payload.get('op')
+    if area=='jobs':
+        op='list' if payload is None else payload.get('op')
+        return op in ('list','get') or op in ('sources','create') and can(me,'jobs.create') and can(me,'quotes.view') or op=='save' and can(me,'jobs.edit') or op=='transition' and can(me,'jobs.edit' if payload.get('status')=='cancelled' else 'jobs.progress')
     if area=='customers':
         return op in ('list','get') or op in ('save_customer','save_contact') and (can(me,'customers.create') or can(me,'customers.edit'))
     if area=='quotes':

@@ -29,14 +29,14 @@ el('filter').onsubmit=e=>{e.preventDefault();page=1;load();};
 el('prev').onclick=()=>{page--;load();};
 el('next').onclick=()=>{page++;load();};
 
-function clearUser(){for(const id of ['customers-link','quotes-link','invoices-link','payments-link','statements-link','staff-link'])el(id).hidden=true;
+function clearUser(){for(const id of ['customers-link','quotes-link','invoices-link','payments-link','statements-link','staff-link','jobs-link'])el(id).hidden=true;
  el('quotes-link').hidden=true;el('invoices-link').hidden=true;
  sequence++;if(controller)controller.abort();el('rows').replaceChildren();el('detail').replaceChildren();
  el('viewer').hidden=true;el('login').hidden=false;el('identity').textContent='';el('login-status').textContent='Sign in to continue.';
 }
 function showUser(result){
  const admin=result.me.role==='admin',can=k=>admin||result.me.permissions?.[k]===true;
- for(const name of ['customers','quotes','invoices','payments'])el(name+'-link').hidden=!result.crm_enabled||!can(name+'.view');
+ for(const name of ['customers','quotes','invoices','payments','jobs'])el(name+'-link').hidden=!result.crm_enabled||!can(name+'.view');
  el('staff-link').hidden=!result.crm_enabled||!admin;el('statements-link').hidden=!result.crm_enabled||!admin;
  el('login').hidden=true;el('viewer').hidden=false;el('identity').textContent=result.me.email;
  el('home-heading').textContent=admin?'Workspace and historical records':'Workspace';
