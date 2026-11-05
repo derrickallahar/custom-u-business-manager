@@ -1,19 +1,20 @@
+from staff_access import allowed
 """Administrator customer/contact routes. All durable writes use the 093 RPC."""
 import json
 from flask import request, jsonify
 
 
 def install(app, provider, session, enabled, root, failure):
-    def gate():
+    def gate(payload=None,admin=False):
         rec, me = session()
         if not enabled:
             raise failure('CUSTOMERS_NOT_ENABLED', 409)
-        if me.get('role') != 'admin':
+        if (admin and me.get('role')!='admin') or not allowed(me,'customers',payload):
             raise failure('ACCESS_DENIED', 403)
         return rec
 
     def rpc(payload):
-        rec = gate()
+        rec = gate(payload)
         result = json.loads(provider.call('/rest/v1/rpc/custom_u_crm_093',
                             rec['token'], {'payload': payload}, limit=1000000))
         if not isinstance(result, dict):
@@ -23,6 +24,7 @@ def install(app, provider, session, enabled, root, failure):
                       'VERSION_CONFLICT': 409, 'ID_CONFLICT': 409,
                       'CUSTOMER_INACTIVE': 409}.get(result['error'], 400)
             raise failure(result['error'], status)
+        if not allowed(provider.access(rec['token']),'customers',payload):raise failure('ACCESS_DENIED',403)
         return jsonify(result)
 
     @app.get('/customers')

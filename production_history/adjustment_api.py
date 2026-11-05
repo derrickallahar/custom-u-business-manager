@@ -13,7 +13,8 @@ def install(app,provider,session,enabled,root,failure):
         rec=gate();r=parse(provider.call('/rest/v1/rpc/custom_u_adjustments_100',rec['token'],{'payload':payload},limit=8*1024*1024))
         if not isinstance(r,dict):raise failure('INVALID_PROVIDER_RESPONSE')
         if 'error' in r:raise failure(r['error'],{'ACCESS_DENIED':403,'NOT_FOUND':404,'BALANCE_CHANGED':409,'VERSION_CONFLICT':409,'ID_CONFLICT':409,'CREDIT_LOCKED':409,'CREDIT_CHANGED':409,'ALREADY_REVERSED':409,'FINALISED_INVOICE_REQUIRED':409}.get(r['error'],400))
-        provider.access(rec['token']);return r
+        if provider.access(rec['token']).get('role')!='admin':raise failure('ACCESS_DENIED',403)
+        return r
     @app.get('/credits')
     def adjustment_page():return app.response_class((root/'static/credits.html').read_bytes(),mimetype='text/html')
     @app.get('/credits.js')

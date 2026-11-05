@@ -28,7 +28,7 @@ def install(app,provider,session,enabled,failure):
                 raise failure(snapshot['error'],403 if snapshot['error']=='ACCESS_DENIED' else 503)
             if snapshot.get('format')!='custom-u-crm-snapshot-094' or not isinstance(snapshot.get('records'),list) or not isinstance(snapshot.get('audit'),list):raise failure('INVALID_BACKUP_RESPONSE')
             # Membership may have been revoked while a larger snapshot was being fetched.
-            provider.access(rec['token'])
+            if provider.access(rec['token']).get('role')!='admin':raise failure('ACCESS_DENIED',403)
             encrypted=encrypt(raw,password)
             filename='CustomU_CRM_'+datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')+'_'+hashlib.sha256(encrypted).hexdigest()[:8]+'.cucrm'
             response=make_response(encrypted)

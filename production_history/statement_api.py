@@ -24,7 +24,7 @@ def install(app,provider,session,enabled,root,failure):
         if customer and raw.get('customer_id')!=customer:raise failure('INVALID_REPORT_RESPONSE')
         try:data=build(raw,mode=='test')
         except (ValueError,KeyError,TypeError,OverflowError):raise failure('INVALID_REPORT_RESPONSE') from None
-        provider.access(rec['token'])
+        if provider.access(rec['token']).get('role')!='admin':raise failure('ACCESS_DENIED',403)
         return data
     def listing():
         data=fetch()

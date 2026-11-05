@@ -1,5 +1,6 @@
 """Private history, administrator CRM, saved quotes, invoices and manual payment records."""
 import hashlib, hmac, json, os, re, secrets, threading, time
+from staff_access import KEYS
 from pathlib import Path
 from urllib import request as http, error
 from urllib.parse import urlsplit
@@ -41,10 +42,10 @@ class Supabase:
         return json.loads(self.call('/auth/v1/token?grant_type=password',body={'email':email,'password':password}))
     def access(self,token):
         user=json.loads(self.call('/auth/v1/user',token))
-        member=json.loads(self.call('/rest/v1/rpc/custom_u_history_access_091',token,{}))
-        if not isinstance(member,dict) or member.get('user_id')!=user.get('id') or member.get('role')!='admin' or member.get('bucket_private') is not True:
+        member=json.loads(self.call('/rest/v1/rpc/custom_u_session_access_102',token,{}))
+        if not isinstance(user,dict) or not isinstance(user.get('id'),str) or not user['id'] or not isinstance(member,dict) or member.get('user_id')!=user.get('id') or member.get('role') not in ('admin','sales','office','production') or not isinstance(member.get('permissions'),dict) or member.get('bucket_private') is not True:
             raise Failure('ACCESS_DENIED',403)
-        return {'email':user.get('email',''),'role':'admin'}
+        return {'email':user.get('email',''),'role':member['role'],'permissions':{k:v for k,v in member['permissions'].items() if k in KEYS and v is True}}
     def archive(self,token,digest):
         return self.call('/storage/v1/object/authenticated/'+BUCKET+'/history091/'+digest+'.json',token,limit=10000000)
     def logout(self,token):
@@ -105,7 +106,7 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     @app.errorhandler(Exception)
     def unexpected(e):return jsonify(error='REQUEST_FAILED'),503
     @app.get('/healthz')
-    def health():return jsonify(status='ok',service='production-statements-101')
+    def health():return jsonify(status='ok',service='production-staff-102')
     @app.get('/')
     def index():return app.response_class((ROOT/'static/index.html').read_bytes(),mimetype='text/html')
     @app.get('/app.js')
@@ -148,13 +149,19 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
         _,me=session();return jsonify(me=me,archive_configured=bool(digest),crm_enabled=bool(crm_enabled))
     @app.get('/api/history')
     def listing():
-        rec,_=session();return jsonify(archive(rec).listing(request.query_string.decode('utf-8')))
+        rec,me=session()
+        if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
+        return jsonify(archive(rec).listing(request.query_string.decode('utf-8')))
     @app.get('/api/history/records/<ident>')
     def detail(ident):
-        rec,_=session();return jsonify(data=archive(rec).detail(ident))
+        rec,me=session()
+        if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
+        return jsonify(data=archive(rec).detail(ident))
     @app.get('/api/history/files/<ident>')
     def pdf(ident):
-        rec,_=session();name,blob=archive(rec).pdf(ident)
+        rec,me=session()
+        if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
+        name,blob=archive(rec).pdf(ident)
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
     from crm_api import install
     install(app,provider,session,crm_enabled,ROOT,Failure)
@@ -173,4 +180,6 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_adjustments(app,provider,session,crm_enabled,ROOT,Failure)
     from statement_api import install as install_statements
     install_statements(app,provider,session,crm_enabled,ROOT,Failure)
+    from staff_api import install as install_staff
+    install_staff(app,provider,session,crm_enabled,ROOT,Failure)
     return app

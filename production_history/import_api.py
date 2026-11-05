@@ -35,6 +35,7 @@ def install(app, provider, session, enabled, root, failure, reviewed=False):
         if 'error' in result:
             code = result['error']
             raise failure(code, 403 if code == 'ACCESS_DENIED' else 409)
+        if provider.access(rec['token']).get('role')!='admin':raise failure('ACCESS_DENIED',403)
         return result
 
     @app.get(page_path, endpoint='import_page_'+suffix)

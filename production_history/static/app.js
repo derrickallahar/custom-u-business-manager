@@ -1,7 +1,7 @@
 'use strict';
 const el=id=>document.getElementById(id);
 let page=1,sequence=0,controller;
-async function request(url,signal){const r=await fetch(url,{credentials:'same-origin',cache:'no-store',signal});if(!r.ok){if(r.status===401||r.status===403)clearUser();throw Error(r.status===401||r.status===403?'Access denied. Sign in as an administrator.':'History unavailable. Please try again.');}return r.json();}
+async function request(url,signal){const r=await fetch(url,{credentials:'same-origin',cache:'no-store',signal});if(!r.ok){if(r.status===401||r.status===403)clearUser();throw Error(r.status===401||r.status===403?'Access denied. Sign in with your staff account.':'History unavailable. Please try again.');}return r.json();}
 async function load(){
  const ticket=++sequence;if(controller)controller.abort();controller=new AbortController();
  el('rows').replaceChildren();el('detail').replaceChildren();el('prev').disabled=true;el('next').disabled=true;el('status').textContent='Loading…';
@@ -29,24 +29,26 @@ el('filter').onsubmit=e=>{e.preventDefault();page=1;load();};
 el('prev').onclick=()=>{page--;load();};
 el('next').onclick=()=>{page++;load();};
 
-function clearUser(){
+function clearUser(){for(const id of ['customers-link','quotes-link','invoices-link','payments-link','statements-link','staff-link'])el(id).hidden=true;
  el('quotes-link').hidden=true;el('invoices-link').hidden=true;
  sequence++;if(controller)controller.abort();el('rows').replaceChildren();el('detail').replaceChildren();
  el('viewer').hidden=true;el('login').hidden=false;el('identity').textContent='';el('login-status').textContent='Sign in to continue.';
 }
 function showUser(result){
- el('customers-link').hidden=!result.crm_enabled;
- el('quotes-link').hidden=!result.crm_enabled;el('invoices-link').hidden=!result.crm_enabled;
+ const admin=result.me.role==='admin',can=k=>admin||result.me.permissions?.[k]===true;
+ for(const name of ['customers','quotes','invoices','payments'])el(name+'-link').hidden=!result.crm_enabled||!can(name+'.view');
+ el('staff-link').hidden=!result.crm_enabled||!admin;el('statements-link').hidden=!result.crm_enabled||!admin;
  el('login').hidden=true;el('viewer').hidden=false;el('identity').textContent=result.me.email;
- el('filter').hidden=!result.archive_configured;el('pages').hidden=!result.archive_configured;
- if(result.archive_configured){page=1;load();}
- else{el('status').textContent='Your administrator login is connected. No history archive has been imported yet.';}
+ el('home-heading').textContent=admin?'Workspace and historical records':'Workspace';
+ for(const id of ['filter','pages','archive-table','archive-notice'])el(id).hidden=!admin||!result.archive_configured;
+ if(admin&&result.archive_configured){page=1;load();}
+ else{el('status').textContent=admin?'Your administrator login is connected. No history archive has been imported yet.':'Choose an available area above. If no links are available, ask your administrator to assign access.';}
 }
 el('login').onsubmit=async e=>{
  e.preventDefault();el('sign-in').disabled=true;el('login-status').textContent='Signing in…';
  try{
  const response=await fetch('/api/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:el('email').value,password:el('password').value})});
- if(!response.ok)throw Error(response.status===429?'Please wait a minute before trying again.':'Sign-in failed or administrator access is unavailable.');
+ if(!response.ok)throw Error(response.status===429?'Please wait a minute before trying again.':'Sign-in failed or staff access is unavailable.');
  showUser(await response.json());
  }catch(e){el('login-status').textContent=e.message;}finally{el('password').value='';el('sign-in').disabled=false;}
 };
