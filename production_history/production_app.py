@@ -1,4 +1,4 @@
-"""Private history, administrator CRM and saved quotes; no invoicing or payment operations."""
+"""Private history, administrator CRM, saved quotes, invoices and manual payment records."""
 import hashlib, hmac, json, os, re, secrets, threading, time
 from pathlib import Path
 from urllib import request as http, error
@@ -105,7 +105,7 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     @app.errorhandler(Exception)
     def unexpected(e):return jsonify(error='REQUEST_FAILED'),503
     @app.get('/healthz')
-    def health():return jsonify(status='ok',service='production-invoices-098')
+    def health():return jsonify(status='ok',service='production-payments-099')
     @app.get('/')
     def index():return app.response_class((ROOT/'static/index.html').read_bytes(),mimetype='text/html')
     @app.get('/app.js')
@@ -167,4 +167,6 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_quotes(app,provider,session,crm_enabled,ROOT,Failure)
     from invoice_api import install as install_invoices
     install_invoices(app,provider,session,crm_enabled,ROOT,Failure)
+    from payment_api import install as install_payments
+    install_payments(app,provider,session,crm_enabled,ROOT,Failure)
     return app

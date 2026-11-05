@@ -1,4 +1,4 @@
-"""Workspace backup container shared by 097/098; snapshot JSON carries its version."""
+"""Workspace backup container shared by 097/098/099; snapshot JSON carries its version."""
 import os
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from backup_codec import key_for, parse, passphrase_bytes
