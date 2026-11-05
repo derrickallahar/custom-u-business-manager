@@ -105,7 +105,7 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     @app.errorhandler(Exception)
     def unexpected(e):return jsonify(error='REQUEST_FAILED'),503
     @app.get('/healthz')
-    def health():return jsonify(status='ok',service='production-history-crm-095')
+    def health():return jsonify(status='ok',service='production-history-crm-096')
     @app.get('/')
     def index():return app.response_class((ROOT/'static/index.html').read_bytes(),mimetype='text/html')
     @app.get('/app.js')
@@ -162,4 +162,5 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_backup(app,provider,session,crm_enabled,Failure)
     from import_api import install as install_import
     install_import(app,provider,session,crm_enabled,ROOT,Failure)
+    install_import(app,provider,session,crm_enabled,ROOT,Failure,reviewed=True)
     return app
