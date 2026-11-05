@@ -30,13 +30,13 @@ el('prev').onclick=()=>{page--;load();};
 el('next').onclick=()=>{page++;load();};
 
 function clearUser(){
- el('quotes-link').hidden=true;
+ el('quotes-link').hidden=true;el('invoices-link').hidden=true;
  sequence++;if(controller)controller.abort();el('rows').replaceChildren();el('detail').replaceChildren();
  el('viewer').hidden=true;el('login').hidden=false;el('identity').textContent='';el('login-status').textContent='Sign in to continue.';
 }
 function showUser(result){
  el('customers-link').hidden=!result.crm_enabled;
- el('quotes-link').hidden=!result.crm_enabled;
+ el('quotes-link').hidden=!result.crm_enabled;el('invoices-link').hidden=!result.crm_enabled;
  el('login').hidden=true;el('viewer').hidden=false;el('identity').textContent=result.me.email;
  el('filter').hidden=!result.archive_configured;el('pages').hidden=!result.archive_configured;
  if(result.archive_configured){page=1;load();}

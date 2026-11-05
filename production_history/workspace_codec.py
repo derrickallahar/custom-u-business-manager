@@ -1,4 +1,4 @@
-"""097 workspace backup container; distinct header and extension from CRM-only 094."""
+"""Workspace backup container shared by 097/098; snapshot JSON carries its version."""
 import os
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from backup_codec import key_for, parse, passphrase_bytes
