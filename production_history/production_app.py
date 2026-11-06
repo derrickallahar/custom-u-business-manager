@@ -40,7 +40,9 @@ class Supabase:
         except (error.URLError,TimeoutError):raise Failure('PROVIDER_UNAVAILABLE') from None
     def artwork_blob(self,path,token,data=None):
         if not re.fullmatch(r'[0-9a-f-]{36}/[0-9a-f-]{36}',path):raise Failure('INVALID_FILE_PATH',400)
-        headers={'apikey':self.key,'Authorization':'Bearer '+token,'Content-Type':'application/octet-stream','x-upsert':'false','Cache-Control':'no-store'}
+        headers={'apikey':self.key,'Authorization':'Bearer '+token,'Cache-Control':'no-store'}
+        if data is None:headers['Accept']='application/octet-stream'
+        else:headers.update({'Content-Type':'application/octet-stream','x-upsert':'false'})
         endpoint='/storage/v1/object/'+('authenticated/' if data is None else '')+'custom-u-artwork-104/'+path
         req=http.Request(PROJECT+endpoint,headers=headers,data=data,method='GET' if data is None else 'POST')
         try:
@@ -74,8 +76,24 @@ class Supabase:
                 if status==429:raise Failure('PLEASE_WAIT_AND_TRY_AGAIN',429) from None
                 if 500<=status<=599:raise Failure('ARTWORK_UPLOAD_UNCERTAIN',503) from None
                 raise Failure('ARTWORK_UPLOAD_HTTP_'+str(status),409) from None
-            if status in (400,401,403,404):raise Failure('FILE_UNAVAILABLE',409) from None
-            raise Failure('PROVIDER_REQUEST_FAILED') from None
+            # Preserve a bounded, allowlisted read failure category and HTTP status.
+            # The provider's raw error message may contain private object paths.
+            read_codes={
+                'AccessDenied':'ACCESS_DENIED','Unauthorized':'ACCESS_DENIED',
+                'InvalidJWT':'AUTH_REJECTED','InvalidToken':'AUTH_REJECTED','ExpiredToken':'AUTH_REJECTED',
+                'NoSuchBucket':'BUCKET_NOT_FOUND','BucketNotFound':'BUCKET_NOT_FOUND',
+                'NoSuchKey':'OBJECT_NOT_FOUND','NotFound':'OBJECT_NOT_FOUND','not_found':'OBJECT_NOT_FOUND',
+                'InvalidRequest':'REQUEST_REJECTED','InvalidKey':'INVALID_PATH',
+                'DatabaseError':'DATABASE_ERROR','InternalError':'SERVICE_ERROR',
+            }
+            reason=read_codes.get(code) if isinstance(code,str) else None
+            if reason is None:
+                # Legacy Storage responses use generic error categories.
+                message=detail.get('message')
+                if message in ('Object not found','The resource was not found'):reason='OBJECT_NOT_FOUND'
+                elif message=='Bucket not found':reason='BUCKET_NOT_FOUND'
+                else:reason={401:'AUTH_REJECTED',403:'ACCESS_DENIED',404:'NOT_FOUND',429:'RATE_LIMITED'}.get(status,'HTTP_ERROR')
+            raise Failure('ARTWORK_READ_'+reason+'_HTTP_'+str(status),409) from None
         except (error.URLError,TimeoutError):raise Failure('PROVIDER_UNAVAILABLE') from None
     def login(self,email,password):
         return json.loads(self.call('/auth/v1/token?grant_type=password',body={'email':email,'password':password}))

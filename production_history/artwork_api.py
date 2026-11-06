@@ -77,6 +77,23 @@ def install(app,provider,session,enabled,root,failure):
             else:bytes_for(rec,f);r={'data':f,'existing':True}
             check(rec,'artwork.upload');return jsonify(r)
         finally:upload_lock.release()
+    @app.post('/api/artwork/<job>/<ident>/finish')
+    def artwork_finish(job,ident):
+        identity(job,ident);rec=gate('artwork.upload')
+        body=request.get_json()
+        if not isinstance(body,dict) or set(body)!={'confirm'} or body['confirm'] is not True:raise failure('CONFIRM_REQUIRED',400)
+        if not upload_lock.acquire(blocking=False):raise failure('UPLOAD_BUSY',429)
+        try:
+            listing=rpc(rec,{'op':'list','job_id':job},'artwork.upload')
+            if listing['job']['status'] not in ('planning','on_hold'):raise failure('ARTWORK_JOB_LOCKED',409)
+            f=next((x for x in listing['files'] if x['id']==ident and x['job_id']==job),None)
+            if f is None:raise failure('NOT_FOUND',404)
+            # GET only: no new reservation or object upload. Finalize only after
+            # exact size/hash verification and a fresh permission check.
+            bytes_for(rec,f);check(rec,'artwork.upload')
+            r=rpc(rec,{'op':'store','job_id':job,'id':ident},'artwork.upload') if f['status']=='pending' else {'data':f,'existing':True}
+            check(rec,'artwork.upload');return jsonify(r)
+        finally:upload_lock.release()
     @app.post('/api/artwork/<job>/approval')
     def artwork_approval(job):
         identity(job);rec=gate('artwork.approve');body=request.get_json()
