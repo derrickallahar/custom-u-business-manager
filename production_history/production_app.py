@@ -38,6 +38,22 @@ class Supabase:
             if status in (400,401,403):raise Failure('SIGN_IN_OR_ACCESS_REJECTED',401) from None
             raise Failure('PROVIDER_REQUEST_FAILED') from None
         except (error.URLError,TimeoutError):raise Failure('PROVIDER_UNAVAILABLE') from None
+    def artwork_blob(self,path,token,data=None):
+        if not re.fullmatch(r'[0-9a-f-]{36}/[0-9a-f-]{36}',path):raise Failure('INVALID_FILE_PATH',400)
+        headers={'apikey':self.key,'Authorization':'Bearer '+token,'Content-Type':'application/octet-stream','x-upsert':'false','Cache-Control':'no-store'}
+        endpoint='/storage/v1/object/'+('authenticated/' if data is None else '')+'custom-u-artwork-104/'+path
+        req=http.Request(PROJECT+endpoint,headers=headers,data=data,method='GET' if data is None else 'POST')
+        try:
+            with self.opener.open(req,timeout=30) as r:
+                raw=r.read(6000001 if data is None else 100001)
+                if len(raw)>(6000000 if data is None else 100000):raise Failure('RESPONSE_TOO_LARGE')
+                return raw
+        except error.HTTPError as e:
+            status=e.code;e.close()
+            if data is not None:raise Failure('ARTWORK_UPLOAD_FAILED',409) from None
+            if status in (400,401,403,404):raise Failure('FILE_UNAVAILABLE',409) from None
+            raise Failure('PROVIDER_REQUEST_FAILED') from None
+        except (error.URLError,TimeoutError):raise Failure('PROVIDER_UNAVAILABLE') from None
     def login(self,email,password):
         return json.loads(self.call('/auth/v1/token?grant_type=password',body={'email':email,'password':password}))
     def access(self,token):
@@ -163,6 +179,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
         if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
         name,blob=archive(rec).pdf(ident)
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
+    from artwork_api import install as install_artwork
+    install_artwork(app,provider,session,crm_enabled,ROOT,Failure)
     from jobs_api import install as install_jobs
     install_jobs(app,provider,session,crm_enabled,ROOT,Failure)
     from crm_api import install

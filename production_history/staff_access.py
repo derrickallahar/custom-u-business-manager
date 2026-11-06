@@ -1,5 +1,5 @@
 """Explicit staff capabilities; SQL independently enforces the same restrictions."""
-KEYS=('customers.view','customers.create','customers.edit','quotes.view','quotes.create','quotes.edit','quotes.approve','invoices.view','invoices.create','invoices.edit','invoices.issue','payments.view','payments.record','payments.reverse','jobs.view','jobs.create','jobs.edit','jobs.progress')
+KEYS=('customers.view','customers.create','customers.edit','quotes.view','quotes.create','quotes.edit','quotes.approve','invoices.view','invoices.create','invoices.edit','invoices.issue','payments.view','payments.record','payments.reverse','jobs.view','jobs.create','jobs.edit','jobs.progress','artwork.view','artwork.upload','artwork.approve')
 
 def can(me,key):
     return isinstance(me,dict) and (me.get('role')=='admin' or isinstance(me.get('permissions'),dict) and me['permissions'].get(key) is True)
