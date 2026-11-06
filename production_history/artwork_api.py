@@ -60,11 +60,19 @@ def install(app,provider,session,enabled,root,failure):
             if not 1<=len(raw)<=MAX_FILE:raise failure('FILE_SIZE_LIMIT',400)
             f=rpc(rec,{'op':'reserve','job_id':job,'id':body['id'],'filename':body['filename'],'size_bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()},'artwork.upload')['data']
             if f['status']!='stored':
-                # A lost response may leave bytes already uploaded. Never overwrite.
+                # Only duplicate/uncertain uploads may be recovered by reading back
+                # the same reserved path. A definite rejection is not a lost reply.
+                upload_error=None
                 try:provider.artwork_blob(f['object_path'],rec['token'],raw)
                 except failure as e:
-                    if e.code not in ('ARTWORK_UPLOAD_FAILED','PROVIDER_UNAVAILABLE'):raise
-                bytes_for(rec,f)
+                    if e.code not in ('ARTWORK_OBJECT_EXISTS','ARTWORK_UPLOAD_UNCERTAIN','PROVIDER_UNAVAILABLE'):raise
+                    upload_error=e
+                try:bytes_for(rec,f)
+                except failure as e:
+                    if e.code=='FILE_INTEGRITY_FAILED':raise
+                    if upload_error and upload_error.code!='ARTWORK_OBJECT_EXISTS':raise upload_error from None
+                    if e.code=='FILE_UNAVAILABLE':raise failure('ARTWORK_VERIFY_UNAVAILABLE',409) from None
+                    raise
                 r=rpc(rec,{'op':'store','job_id':job,'id':f['id']},'artwork.upload')
             else:bytes_for(rec,f);r={'data':f,'existing':True}
             check(rec,'artwork.upload');return jsonify(r)

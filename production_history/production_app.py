@@ -49,8 +49,31 @@ class Supabase:
                 if len(raw)>(6000000 if data is None else 100000):raise Failure('RESPONSE_TOO_LARGE')
                 return raw
         except error.HTTPError as e:
-            status=e.code;e.close()
-            if data is not None:raise Failure('ARTWORK_UPLOAD_FAILED',409) from None
+            status=e.code;detail={}
+            try:
+                raw=e.read(16385)
+                if len(raw)<=16384:
+                    parsed=json.loads(raw)
+                    if isinstance(parsed,dict):detail=parsed
+            except (ValueError,UnicodeError,OSError):pass
+            finally:e.close()
+            # Never expose raw provider messages, URLs, headers or credentials.
+            # Older Storage versions use 'error'; current versions use 'code'.
+            code=detail.get('code') or detail.get('error')
+            if data is not None:
+                if code in ('KeyAlreadyExists','ResourceAlreadyExists','Duplicate'):
+                    raise Failure('ARTWORK_OBJECT_EXISTS',409) from None
+                if code in ('AccessDenied','Unauthorized') or status==403:
+                    raise Failure('ARTWORK_UPLOAD_ACCESS_DENIED',409) from None
+                if code in ('InvalidJWT','InvalidToken','ExpiredToken') or status==401:
+                    raise Failure('ARTWORK_STORAGE_AUTH_REJECTED',409) from None
+                if code in ('NoSuchBucket','BucketNotFound'):
+                    raise Failure('ARTWORK_BUCKET_MISSING',409) from None
+                if code=='InvalidMimeType':raise Failure('ARTWORK_STORAGE_TYPE_REJECTED',409) from None
+                if code=='EntityTooLarge' or status==413:raise Failure('FILE_SIZE_LIMIT',400) from None
+                if status==429:raise Failure('PLEASE_WAIT_AND_TRY_AGAIN',429) from None
+                if 500<=status<=599:raise Failure('ARTWORK_UPLOAD_UNCERTAIN',503) from None
+                raise Failure('ARTWORK_UPLOAD_HTTP_'+str(status),409) from None
             if status in (400,401,403,404):raise Failure('FILE_UNAVAILABLE',409) from None
             raise Failure('PROVIDER_REQUEST_FAILED') from None
         except (error.URLError,TimeoutError):raise Failure('PROVIDER_UNAVAILABLE') from None
