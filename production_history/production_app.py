@@ -220,6 +220,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
         if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
         name,blob=archive(rec).pdf(ident)
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
+    from product_api import install as install_products
+    install_products(app,provider,session,crm_enabled,ROOT,Failure)
     from artwork_api import install as install_artwork
     install_artwork(app,provider,session,crm_enabled,ROOT,Failure)
     from jobs_api import install as install_jobs
