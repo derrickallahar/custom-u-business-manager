@@ -136,21 +136,64 @@ def fetch_public(value, *, image=False):
         finally: connection.close()
     raise ImportProblem('SUPPLIER_REDIRECT_LIMIT')
 
+def image_attributes(attrs):
+    """One displayed product image, with its larger copies ordered first."""
+    choices=[attrs.get('data-old-hires'),attrs.get('data-zoom-image')]
+    try:
+        dynamic=json.loads(attrs.get('data-a-dynamic-image','{}'))
+        if isinstance(dynamic,dict):
+            ranked=[]
+            for link,size in list(dynamic.items())[:40]:
+                if isinstance(link,str) and isinstance(size,list) and len(size)==2 and all(type(n) in (int,float) and 0<n<=100000 for n in size):ranked.append((size[0]*size[1],link))
+            choices.extend(link for _,link in sorted(ranked,reverse=True))
+    except (ValueError,TypeError,RecursionError):pass
+    for key in ('data-srcset','srcset'):
+        ranked=[]
+        for item in (attrs.get(key) or '').split(',')[:40]:
+            match=re.fullmatch(r'\s*(\S+)\s+(\d+(?:\.\d+)?)([wx])\s*',item)
+            if match:ranked.append((float(match.group(2)),match.group(1)))
+        choices.extend(link for _,link in sorted(ranked,reverse=True))
+    choices.extend(attrs.get(key) for key in ('data-src','data-original','src'))
+    return [x for x in choices if isinstance(x,str) and 0<len(x)<=2048]
+
+def initial_gallery(script):
+    """Read only literal JSON for the initially selected gallery; never run JS."""
+    marker=re.compile(r'''["']colorImages["']\s*:\s*\{\s*["']initial["']\s*:\s*''')
+    for position,match in enumerate(marker.finditer(script)):
+        if position>=4:break
+        try:rows,_=json.JSONDecoder().raw_decode(script,match.end())
+        except (ValueError,RecursionError):continue
+        if not isinstance(rows,list):continue
+        result=[]
+        for row in rows[:24]:
+            if isinstance(row,dict):result.append([row.get(key) for key in ('hiRes','large','mainUrl') if isinstance(row.get(key),str)])
+        if result:return result
+    return []
+
 class Page(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
-        self.meta={};self.json_blocks=[];self.script=None;self.title=[];self.in_title=False
+        self.meta={};self.json_blocks=[];self.script=None;self.script_json=False;self.script_blocks=0;self.title=[];self.in_title=False;self.image_groups=[];self.gallery_groups=[];self.image_links=[]
     def handle_starttag(self,tag,attrs):
         a=dict(attrs)
         if tag=='meta':
             key=(a.get('property') or a.get('name') or '').lower()
             if key and len(self.meta)<200: self.meta.setdefault(key,[]).append((a.get('content') or '')[:12000])
+            if 'image' in (a.get('itemprop') or '').split() and len(self.image_links)<24:self.image_links.append(a.get('content'))
+        if tag=='link' and ('image_src' in (a.get('rel') or '').split() or 'image' in (a.get('itemprop') or '').split()) and len(self.image_links)<24:self.image_links.append(a.get('href'))
+        if tag=='img' and (a.get('id') in ('landingImage','imgBlkFront','ebooksImgBlkFront') or 'image' in (a.get('itemprop') or '').split()) and len(self.image_groups)<24:self.image_groups.append(image_attributes(a))
         if tag=='title': self.in_title=True
-        if tag=='script': self.script=[] if (a.get('type') or '').split(';')[0].strip().lower()=='application/ld+json' and len(self.json_blocks)<20 else None
+        if tag=='script':
+            self.script_json=(a.get('type') or '').split(';')[0].strip().lower()=='application/ld+json'
+            self.script=[] if self.script_json and len(self.json_blocks)<20 or not self.script_json and self.script_blocks<40 else None
+            self.script_blocks+=1
     def handle_endtag(self,tag):
         if tag=='title': self.in_title=False
         if tag=='script' and self.script is not None:
-            self.json_blocks.append(''.join(self.script));self.script=None
+            content=''.join(self.script)
+            if self.script_json:self.json_blocks.append(content)
+            elif len(self.gallery_groups)<24:self.gallery_groups.extend(initial_gallery(content)[:24-len(self.gallery_groups)])
+            self.script=None
     def handle_data(self,data):
         if self.script is not None:self.script.append(data)
         elif self.in_title:self.title.append(data)
@@ -222,17 +265,23 @@ def parse_page(raw,url):
         except (InvalidOperation,ValueError):pass
     candidates=[]
     values=product.get('image',[]);values=values if isinstance(values,list) else [values]
-    values+=page.meta.get('og:image',[])+page.meta.get('og:image:secure_url',[])
-    for value in values[:50]:
-        if isinstance(value,dict):value=value.get('url') or value.get('contentUrl')
-        if not isinstance(value,str):continue
-        try:candidate=public_url(urljoin(url,value))
-        except ImportProblem:continue
-        if candidate not in candidates:candidates.append(candidate)
+    values+=page.meta.get('og:image',[])+page.meta.get('og:image:secure_url',[])+page.meta.get('twitter:image',[])+page.meta.get('twitter:image:src',[])+page.image_links
+    groups=[[value] for value in values[:50]]+page.image_groups+page.gallery_groups
+    for group in groups:
+        for value in group:
+            if isinstance(value,dict):value=value.get('url') or value.get('contentUrl')
+            if not isinstance(value,str) or not value.strip() or len(value)>2048:continue
+            try:candidate=public_url(urljoin(url,value.strip()))
+            except (ValueError,ImportProblem):continue
+            # Unsupported data/GIF/SVG placeholders are not usable raster choices.
+            if urlsplit(candidate).path.lower().endswith(('.gif','.svg','.ico')):continue
+            if candidate not in candidates:candidates.append(candidate)
+            break
         if len(candidates)>=12:break
     if not name and not description and not candidates:raise ImportProblem('SUPPLIER_NO_PRODUCT_DETAILS')
     warnings=['Review every field. Availability, quantity breaks, options, taxes and freight may change the supplier price.']
     if not products:warnings.append('No structured product data was found; this is a page summary and may describe a collection rather than one product.')
     if len(products)>1:warnings.append('This page contains several products or variants. The first product is shown; confirm the exact item and options.')
     if not source['cost']:warnings.append('No unambiguous supplier price was found. Enter it manually if needed.')
+    if not candidates:warnings.append('No supported product image links were found in the page received. You can upload a PNG, JPG or WebP image manually.')
     return {'source_url':source['url'],'product':{'name':name,'description':description,'category':clean(product.get('category'),80)},'supplier':source,'images':candidates,'warnings':warnings}
