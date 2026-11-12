@@ -17,7 +17,9 @@ def install(app, provider, session, enabled, root, failure):
             raise failure('CUSTOMERS_NOT_ENABLED', 409)
         if not permitted(me, payload):
             raise failure('ACCESS_DENIED', 403)
-        result = parse(provider.call('/rest/v1/rpc/custom_u_products_105', rec['token'], {'payload': payload}, limit=1024*1024))
+        # Legacy five-field saves remain compatible and cannot erase supplier data.
+        version = '105' if payload.get('op') == 'save' and 'supplier' not in payload else '106'
+        result = parse(provider.call('/rest/v1/rpc/custom_u_products_'+version, rec['token'], {'payload': payload}, limit=2*1024*1024))
         if not isinstance(result, dict):
             raise failure('INVALID_PROVIDER_RESPONSE')
         if 'error' in result:
@@ -45,8 +47,8 @@ def install(app, provider, session, enabled, root, failure):
 
     @app.post('/api/products/save')
     def product_save():
-        request.max_content_length = 16384
+        request.max_content_length = 65536
         body = request.get_json()
-        if not isinstance(body, dict) or set(body) != {'op', 'id', 'version', 'active', 'data'} or body['op'] != 'save' or type(body['version']) is not int or type(body['active']) is not bool:
+        if not isinstance(body, dict) or set(body) not in ({'op', 'id', 'version', 'active', 'data'}, {'op', 'id', 'version', 'active', 'data','supplier','supplier_version'}) or body['op'] != 'save' or type(body['version']) is not int or type(body['active']) is not bool or 'supplier_version' in body and type(body['supplier_version']) is not int:
             raise failure('INVALID_REQUEST', 400)
         return jsonify(rpc(body))

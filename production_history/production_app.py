@@ -153,7 +153,7 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     @app.after_request
     def headers(r):
         r.headers.update({'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Vary':'Cookie','Strict-Transport-Security':'max-age=31536000',
-          'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+          'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
           'X-Robots-Tag':'noindex, nofollow','Cross-Origin-Resource-Policy':'same-origin'})
         return r
     @app.errorhandler(Failure)
@@ -222,6 +222,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
     from product_api import install as install_products
     install_products(app,provider,session,crm_enabled,ROOT,Failure)
+    from product_media_api import install as install_product_media
+    install_product_media(app,provider,session,crm_enabled,Failure)
     from artwork_api import install as install_artwork
     install_artwork(app,provider,session,crm_enabled,ROOT,Failure)
     from jobs_api import install as install_jobs
