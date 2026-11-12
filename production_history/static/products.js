@@ -77,6 +77,8 @@ el('logout').onclick=()=>run(async()=>{if(!leave())return;clear();await api('/ap
 Object.assign(errors,{
  INVALID_SUPPLIER:'Check the supplier URL, currency and unit cost. Use a three-letter currency such as USD when entering a cost.',
  SUPPLIER_URL_INVALID:'Use a complete public HTTPS product link without a login or password in the address.',
+ SUPPLIER_INPUT_URL_INVALID:'The pasted link could not be read as a public HTTPS address. Paste the product address beginning with https://, without any surrounding sentence or login details.',
+ SUPPLIER_REDIRECT_INVALID:'Your original link was accepted, but the supplier redirected to an address the importer cannot follow. Use the final public HTTPS product address from your browser, or enter the details manually.',
  SUPPLIER_ADDRESS_BLOCKED:'This link is not a permitted public website. Enter the details manually.',
  SUPPLIER_UNAVAILABLE:'The supplier could not be reached. You can enter the details manually and upload your own image.',
  SUPPLIER_TIMEOUT:'The supplier took too long to respond. Try later or enter the details manually.',

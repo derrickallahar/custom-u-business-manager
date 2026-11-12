@@ -22,6 +22,23 @@ SOURCE_LIMITS = {'supplier':160,'url':2048,'sku':100,'cost':10,'currency':3,'col
 class ImportProblem(ValueError):
     pass
 
+def input_url(value):
+    """Remove common clipboard wrappers, then apply the strict URL policy.
+
+    This is only for an explicitly submitted link. Redirects and addresses
+    from the supplier page still use public_url without clipboard cleanup.
+    """
+    if not isinstance(value,str) or len(value)>4096:
+        raise ImportProblem('SUPPLIER_INPUT_URL_INVALID')
+    value=value.strip().strip('\u200b\ufeff').strip()
+    markdown=re.fullmatch(r'\[[^\]\r\n]{0,2048}\]\((https://[^\s]+)\)',value)
+    if markdown:value=markdown.group(1)
+    elif value.startswith('<https://') and value.endswith('>'):value=value[1:-1]
+    # A Markdown-escaped ampersand is not a URL path separator.
+    value=value.replace('\\&','&')
+    try:return public_url(value)
+    except ImportProblem:raise ImportProblem('SUPPLIER_INPUT_URL_INVALID') from None
+
 def public_url(value):
     if not isinstance(value, str) or not 1 <= len(value) <= 2048 or re.search(r'[\s\x00-\x1f\x7f\\]', value):
         raise ImportProblem('SUPPLIER_URL_INVALID')
@@ -71,7 +88,7 @@ class PinnedHTTPS(http.client.HTTPSConnection):
             raise
 
 def fetch_public(value, *, image=False):
-    url=public_url(value); deadline=time.monotonic()+20; limit=MAX_DOWNLOAD if image else MAX_HTML
+    url=input_url(value); deadline=time.monotonic()+20; limit=MAX_DOWNLOAD if image else MAX_HTML
     for hop in range(4):
         p=urlsplit(url);addresses=public_addresses(p.hostname)
         remaining=deadline-time.monotonic()
@@ -86,7 +103,9 @@ def fetch_public(value, *, image=False):
             if response.status in (301,302,303,307,308):
                 location=response.getheader('Location','')
                 if not location or hop==3: raise ImportProblem('SUPPLIER_REDIRECT_LIMIT')
-                url=public_url(urljoin(url,location));continue
+                try:url=public_url(urljoin(url,location.strip()))
+                except (ValueError,ImportProblem):raise ImportProblem('SUPPLIER_REDIRECT_INVALID') from None
+                continue
             if response.status!=200:
                 raise ImportProblem('SUPPLIER_PAGE_RESTRICTED' if response.status in (401,403,429) else 'SUPPLIER_UNAVAILABLE')
             content_type=response.getheader('Content-Type','').split(';')[0].strip().lower()
