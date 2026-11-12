@@ -226,6 +226,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_product_media(app,provider,session,crm_enabled,Failure)
     from mockup_api import install as install_mockups
     install_mockups(app,provider,session,crm_enabled,ROOT,Failure)
+    from client_catalogue_api import install as install_catalogues
+    install_catalogues(app,provider,session,crm_enabled,ROOT,Failure)
     from artwork_api import install as install_artwork
     install_artwork(app,provider,session,crm_enabled,ROOT,Failure)
     from jobs_api import install as install_jobs
