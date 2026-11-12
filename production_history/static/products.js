@@ -111,13 +111,30 @@ function validatedSupplier(){
 }
 function supplierMatches(s,p){return s&&s.id===p.id&&Number.isInteger(s.version)&&s.version>=1&&[p.supplier_version,p.supplier_version+1].includes(s.version)&&s.data&&Object.keys(supplierLimits).every(k=>typeof s.data[k]==='string'&&(k==='cost'&&p.supplier.cost!==''?Number(s.data[k])===Number(p.supplier.cost):s.data[k]===p.supplier[k]));}
 function clearCandidate(){candidate=null;if(candidateObjectURL){URL.revokeObjectURL(candidateObjectURL);candidateObjectURL=null;}el('candidate-image').removeAttribute('src');el('candidate-review').hidden=true;el('candidate-info').textContent='';}
-function clearImport(){importPreview=null;clearCandidate();el('supplier-url').value='';el('candidate-list').replaceChildren();el('candidate-status').textContent='';el('candidate-controls').hidden=true;el('import-preview').textContent='';el('import-status').textContent='';el('import-review').hidden=true;}
+function clearImportReport(){el('import-diagnostics').hidden=true;el('import-diagnostics').open=false;el('import-report').value='';el('import-report-status').textContent='';el('import-report-label').hidden=true;el('download-import-report').hidden=true;}
+function showImportReport(report){
+ clearImportReport();if(me?.role!=='admin')return;
+ el('import-diagnostics').hidden=false;
+ if(!report||report.report_format!=='custom-u-supplier-import-1'){
+  el('import-report-status').textContent='This server did not provide an import report. Deploy all production_history files from update 106.3, then try Preview supplier details again.';return;
+ }
+ el('import-report').value=JSON.stringify(report,null,2);el('import-report-label').hidden=false;el('download-import-report').hidden=false;
+ el('import-report-status').textContent='This report describes the same page used for this preview. It contains counts and version information, without page contents, login details or URL query strings. Download it to help investigate missing image choices.';
+}
+el('download-import-report').onclick=()=>run(async()=>{
+ const current=await api('/api/session');me=current.me;
+ if(me?.role!=='admin'){clearImportReport();return;}
+ if(!el('import-report').value)return;
+ const url=URL.createObjectURL(new Blob([el('import-report').value+'\n'],{type:'application/json'}));
+ const link=document.createElement('a');link.href=url;link.download='CustomU_Supplier_Import_Report_106_3.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+function clearImport(){importPreview=null;clearCandidate();clearImportReport();el('supplier-url').value='';el('candidate-list').replaceChildren();el('candidate-status').textContent='';el('candidate-controls').hidden=true;el('import-preview').textContent='';el('import-status').textContent='';el('import-review').hidden=true;}
 async function messageWork(id,fn){el(id).textContent='Working…';try{await fn();}catch(e){if(me)el(id).textContent=e.message;throw e;}}
 el('preview-supplier').onclick=()=>run(()=>messageWork('import-status',async()=>{
- clearCandidate();importPreview=null;el('import-review').hidden=true;el('candidate-list').replaceChildren();el('candidate-status').textContent='';el('candidate-controls').hidden=true;
+ clearCandidate();clearImportReport();importPreview=null;el('import-review').hidden=true;el('candidate-list').replaceChildren();el('candidate-status').textContent='';el('candidate-controls').hidden=true;
  const r=await api('/api/products/import-preview',{url:el('supplier-url').value.trim()});
  if(!r||!r.product||!r.supplier||!Object.keys(supplierLimits).every(k=>typeof r.supplier[k]==='string')||!['name','description','category'].every(k=>typeof r.product[k]==='string')||!Array.isArray(r.images)||r.images.length>12||!r.images.every(x=>typeof x==='string'&&x.startsWith('https://'))||!Array.isArray(r.warnings)||!r.warnings.every(x=>typeof x==='string'))throw Error('The supplier preview could not be verified.');
- importPreview=r;const parts=['Product: '+r.product.name,'Description: '+r.product.description,'Category: '+r.product.category,'Supplier: '+r.supplier.supplier,'Supplier code: '+r.supplier.sku,'Supplier cost: '+(r.supplier.cost?r.supplier.currency+' '+r.supplier.cost:'Not found'),'Colours: '+r.supplier.colours,'Sizes: '+r.supplier.sizes,'Specifications: '+r.supplier.specifications,...r.warnings];
+ importPreview=r;showImportReport(r.diagnostics);const parts=['Product: '+r.product.name,'Description: '+r.product.description,'Category: '+r.product.category,'Supplier: '+r.supplier.supplier,'Supplier code: '+r.supplier.sku,'Supplier cost: '+(r.supplier.cost?r.supplier.currency+' '+r.supplier.cost:'Not found'),'Colours: '+r.supplier.colours,'Sizes: '+r.supplier.sizes,'Specifications: '+r.supplier.specifications,...r.warnings];
  el('import-preview').textContent=parts.join('\n\n');for(const [i,url] of r.images.entries()){const option=document.createElement('option');option.value=url;option.textContent='Image '+(i+1)+' — '+new URL(url).hostname;el('candidate-list').append(option);}el('candidate-controls').hidden=r.images.length===0;el('candidate-status').textContent=r.images.length?r.images.length+' supplier image '+(r.images.length===1?'choice':'choices')+' found. Choose one and click Preview selected image. Confirm it shows the correct product and option.':'No supplier images were found in the page received. You can save the product details, then use Choose image under Product images to upload a PNG, JPG or WebP.';el('import-review').hidden=false;el('import-status').textContent='Preview ready. Nothing has been saved. Review it, then apply the details.';
 }));
 el('apply-import').onclick=()=>{

@@ -19,7 +19,9 @@ def install(app,provider,session,enabled,failure):
         if not permission(me,action):raise failure('ACCESS_DENIED',403)
         return rec
     def check(rec,action='view'):
-        if not permission(provider.access(rec['token']),action):raise failure('ACCESS_DENIED',403)
+        me=provider.access(rec['token'])
+        if not permission(me,action):raise failure('ACCESS_DENIED',403)
+        return me
     def ident(value):
         if not isinstance(value,str) or not UUID.fullmatch(value):raise failure('INVALID_ID',400)
     def rpc(rec,payload,action='view'):
@@ -44,7 +46,10 @@ def install(app,provider,session,enabled,failure):
     def import_preview():
         rec=gate('import');value=body({'url'});begin(rec,True)
         try:
-            raw,url,_=fetch_public(value['url']);result=parse_page(raw,url);check(rec,'import');return jsonify(result)
+            raw,url,mime=fetch_public(value['url']);result=parse_page(raw,url,diagnostics=True);me=check(rec,'import')
+            if me.get('role')=='admin':result['diagnostics']['content_type']=mime
+            else:result.pop('diagnostics',None)
+            return jsonify(result)
         except ImportProblem as e:raise failure(str(e),400) from None
         finally:work_lock.release()
     @app.post('/api/products/import-image')

@@ -4,6 +4,7 @@ Every connection is pinned to a DNS address checked before connecting; TLS still
 validates the original hostname. Redirects repeat the complete address check.
 """
 import html
+import hashlib
 import http.client
 import ipaddress
 import json
@@ -17,6 +18,7 @@ from urllib.parse import urlsplit, urlunsplit, urljoin, quote
 
 MAX_HTML = 2_000_000
 MAX_DOWNLOAD = 12_000_000
+IMPORT_VERSION = '106.3'
 SOURCE_LIMITS = {'supplier':160,'url':2048,'sku':100,'cost':10,'currency':3,'colours':800,'sizes':800,'specifications':4000}
 
 class ImportProblem(ValueError):
@@ -174,6 +176,7 @@ class Page(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.meta={};self.json_blocks=[];self.script=None;self.script_json=False;self.script_blocks=0;self.title=[];self.in_title=False;self.image_groups=[];self.gallery_groups=[];self.image_links=[]
+        self.image_tags=0;self.main_image_tags=0;self.json_script_tags=0;self.gallery_scripts_checked=0;self.gallery_marker_scripts=0;self.late_gallery_scripts=0
     def handle_starttag(self,tag,attrs):
         a=dict(attrs)
         if tag=='meta':
@@ -181,18 +184,30 @@ class Page(HTMLParser):
             if key and len(self.meta)<200: self.meta.setdefault(key,[]).append((a.get('content') or '')[:12000])
             if 'image' in (a.get('itemprop') or '').split() and len(self.image_links)<24:self.image_links.append(a.get('content'))
         if tag=='link' and ('image_src' in (a.get('rel') or '').split() or 'image' in (a.get('itemprop') or '').split()) and len(self.image_links)<24:self.image_links.append(a.get('href'))
-        if tag=='img' and (a.get('id') in ('landingImage','imgBlkFront','ebooksImgBlkFront') or 'image' in (a.get('itemprop') or '').split()) and len(self.image_groups)<24:self.image_groups.append(image_attributes(a))
+        if tag=='img':
+            self.image_tags+=1
+            if a.get('id') in ('landingImage','imgBlkFront','ebooksImgBlkFront') or 'image' in (a.get('itemprop') or '').split():
+                self.main_image_tags+=1
+                if len(self.image_groups)<24:self.image_groups.append(image_attributes(a))
         if tag=='title': self.in_title=True
         if tag=='script':
             self.script_json=(a.get('type') or '').split(';')[0].strip().lower()=='application/ld+json'
-            self.script=[] if self.script_json and len(self.json_blocks)<20 or not self.script_json and self.script_blocks<40 else None
+            # The entire response is capped at MAX_HTML. Inspect ordinary scripts
+            # throughout it: analytics/bootstrap scripts can precede the gallery.
+            self.script=[] if self.script_json and len(self.json_blocks)<20 or not self.script_json else None
+            if self.script_json:self.json_script_tags+=1
             self.script_blocks+=1
     def handle_endtag(self,tag):
         if tag=='title': self.in_title=False
         if tag=='script' and self.script is not None:
             content=''.join(self.script)
             if self.script_json:self.json_blocks.append(content)
-            elif len(self.gallery_groups)<24:self.gallery_groups.extend(initial_gallery(content)[:24-len(self.gallery_groups)])
+            else:
+                self.gallery_scripts_checked+=1
+                if 'colorImages' in content:
+                    self.gallery_marker_scripts+=1
+                    if self.script_blocks>40:self.late_gallery_scripts+=1
+                if len(self.gallery_groups)<24:self.gallery_groups.extend(initial_gallery(content)[:24-len(self.gallery_groups)])
             self.script=None
     def handle_data(self,data):
         if self.script is not None:self.script.append(data)
@@ -217,10 +232,11 @@ def clean(value,limit):
     except Exception:value=str(value)
     return re.sub(r'[\s\x00-\x1f\x7f]+',' ',html.unescape(value)).strip()[:limit]
 
-def parse_page(raw,url):
+def parse_page(raw,url,*,diagnostics=False):
     if not isinstance(raw,bytes) or len(raw)>MAX_HTML:raise ImportProblem('SUPPLIER_FILE_TOO_LARGE')
     page=Page()
-    try:page.feed(raw.decode('utf-8-sig',errors='replace'))
+    decoded=raw.decode('utf-8-sig',errors='replace')
+    try:page.feed(decoded);page.close()
     except Exception:raise ImportProblem('SUPPLIER_CONTENT_UNSUPPORTED') from None
     products=[];nodes=0
     def walk(obj,depth=0):
@@ -267,14 +283,16 @@ def parse_page(raw,url):
     values=product.get('image',[]);values=values if isinstance(values,list) else [values]
     values+=page.meta.get('og:image',[])+page.meta.get('og:image:secure_url',[])+page.meta.get('twitter:image',[])+page.meta.get('twitter:image:src',[])+page.image_links
     groups=[[value] for value in values[:50]]+page.image_groups+page.gallery_groups
+    rejected=0;unsupported=0;usable_values=0
     for group in groups:
         for value in group:
             if isinstance(value,dict):value=value.get('url') or value.get('contentUrl')
             if not isinstance(value,str) or not value.strip() or len(value)>2048:continue
+            usable_values+=1
             try:candidate=public_url(urljoin(url,value.strip()))
-            except (ValueError,ImportProblem):continue
+            except (ValueError,ImportProblem):rejected+=1;continue
             # Unsupported data/GIF/SVG placeholders are not usable raster choices.
-            if urlsplit(candidate).path.lower().endswith(('.gif','.svg','.ico')):continue
+            if urlsplit(candidate).path.lower().endswith(('.gif','.svg','.ico')):unsupported+=1;continue
             if candidate not in candidates:candidates.append(candidate)
             break
         if len(candidates)>=12:break
@@ -284,4 +302,26 @@ def parse_page(raw,url):
     if len(products)>1:warnings.append('This page contains several products or variants. The first product is shown; confirm the exact item and options.')
     if not source['cost']:warnings.append('No unambiguous supplier price was found. Enter it manually if needed.')
     if not candidates:warnings.append('No supported product image links were found in the page received. You can upload a PNG, JPG or WebP image manually.')
-    return {'source_url':source['url'],'product':{'name':name,'description':description,'category':clean(product.get('category'),80)},'supplier':source,'images':candidates,'warnings':warnings}
+    result={'source_url':source['url'],'product':{'name':name,'description':description,'category':clean(product.get('category'),80)},'supplier':source,'images':candidates,'warnings':warnings}
+    if diagnostics:
+        # Counts and fixed labels only: no raw page, query string, image links,
+        # cookies, credentials, product/customer text or executable content.
+        marker_main=any(x in decoded for x in ('landingImage','imgBlkFront','ebooksImgBlkFront'))
+        marker_gallery='colorImages' in decoded
+        finding='IMAGE_CHOICES_FOUND' if candidates else 'IMAGE_LINKS_REJECTED' if usable_values else 'IMAGE_MARKUP_NOT_EXTRACTED' if marker_main or marker_gallery else 'NO_RECOGNISED_PRODUCT_IMAGE_DATA'
+        result['diagnostics']={
+            'report_format':'custom-u-supplier-import-1','server_version':IMPORT_VERSION,
+            'source_host':urlsplit(source['url']).hostname,'received_bytes':len(raw),
+            'response_sha256':hashlib.sha256(raw).hexdigest(),'finding':finding,
+            'html_img_tags':page.image_tags,'recognised_product_img_tags':page.main_image_tags,
+            'script_tags':page.script_blocks,'gallery_scripts_checked':page.gallery_scripts_checked,
+            'scripts_with_gallery_marker':page.gallery_marker_scripts,
+            'gallery_marker_scripts_after_first_40':page.late_gallery_scripts,
+            'gallery_image_groups':len(page.gallery_groups),'json_ld_script_tags':page.json_script_tags,
+            'json_ld_blocks_checked':len(page.json_blocks),'structured_product_records':len(products),
+            'image_metadata_values':sum(len(page.meta.get(key,[])) for key in ('og:image','og:image:secure_url','twitter:image','twitter:image:src'))+len(page.image_links),
+            'image_url_values_checked':usable_values,'image_urls_rejected':rejected,
+            'unsupported_image_urls':unsupported,'image_choices':len(candidates),
+            'raw_main_image_marker':marker_main,'raw_gallery_marker':marker_gallery,
+            'closing_html_tag_seen':bool(re.search(r'</html\s*>',decoded,re.I))}
+    return result
