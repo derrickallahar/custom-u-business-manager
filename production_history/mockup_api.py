@@ -39,10 +39,17 @@ def install(app,provider,session,enabled,root,failure):
     def mockup_preview():
         rec=gate(True);v=body({'product_id','image_id','logo','config'})
         ident(v['product_id']);ident(v['image_id'])
-        if not isinstance(v['logo'],str) or len(v['logo'])>16_000_000:raise failure('INVALID_IMAGE',400)
+        if not isinstance(v['logo'],(str,dict)) or (isinstance(v['logo'],str) and len(v['logo'])>16_000_000):raise failure('INVALID_IMAGE',400)
         if not lock.acquire(blocking=False):raise failure('PRODUCT_IMAGE_BUSY',429)
         try:
-            try:raw=base64.b64decode(v['logo'],validate=True);config=configuration(v['config']);logo=encode_image(raw)
+            try:
+                config=configuration(v['config'])
+                if isinstance(v['logo'],dict):
+                    # Reopened designs reuse their validated saved copy without
+                    # another lossy encode on each edit.
+                    if set(v['logo'])!={'sha256','width','height','size_bytes','content_base64'}:raise ValueError()
+                    checked_bytes(v['logo']);logo=v['logo']
+                else:logo=encode_image(base64.b64decode(v['logo'],validate=True))
             except (ValueError,TypeError):raise failure('INVALID_MOCKUP',400) from None
             image=rpc(rec,{'op':'source','product_id':v['product_id'],'image_id':v['image_id']},True)['data']
             try:result=render(image,logo,config)
