@@ -11,7 +11,7 @@ SCOPE='Current finalised invoices created in Custom U only. ShopVox archive bala
 def day(v):
     need(isinstance(v,str) and len(v)==10);d=date.fromisoformat(v);need(d.isoformat()==v);return d
 
-def build(raw,test_mode):
+def build_101(raw,test_mode):
     need(isinstance(raw,dict) and raw.get('format')=='custom-u-statements-101' and type(raw.get('test_mode')) is bool and raw['test_mode']==test_mode)
     as_of=day(raw['as_of']);timestamp(raw['generated_at']);need(isinstance(raw['invoices'],list) and len(raw['invoices'])<=5000)
     out={k:raw[k] for k in ('format','test_mode','as_of','generated_at','seller')};out['scope']=SCOPE;rows=[];seen=set();by_id={}
@@ -53,3 +53,37 @@ def report(data,q='',status='all',page=1):
     for r in rows:groups[r['customer_id']].append(r)
     customers=[{'id':k,'name':v[0]['customer_name'],**totals(v)} for k,v in groups.items()];customers.sort(key=lambda x:(x['name'].casefold(),x['id']))
     return {**{k:data[k] for k in ('format','test_mode','as_of','generated_at','seller','scope')},'q':q.strip(),'status':status,'totals':totals(rows),'total':len(customers),'page':page,'data':customers[(page-1)*50:page*50],'all_customers':customers}
+
+
+def build(raw,test_mode):
+    if raw.get('format')!='custom-u-statements-111':return build_101(raw,test_mode)
+    from legacy_rules import validate_state
+    state=raw['legacy'];need(state['mode']==('test' if test_mode else 'live'))
+    legacy=validate_state(state);base={k:v for k,v in raw.items() if k!='legacy'};base['format']='custom-u-statements-101'
+    customer=raw.get('customer_id')
+    if customer and not base['invoices']:
+        plain={k:v for k,v in base.items() if k not in ('customer_id','customer','activity')};out=build_101(plain,test_mode)
+        ident(customer);need(text(raw['customer']['name'],200,False,True)==raw['customer']['name']);need(base['activity']==[])
+        out.update(customer_id=customer,customer=raw['customer'],activity=[])
+    else:out=build_101(base,test_mode)
+    out['format']='custom-u-statements-111'
+    out['scope']='Current finalised Custom U invoices plus imported ShopVox opening balances in the selected mode. Paid and credited figures include retained source totals and later records. Rehearsals are excluded. Refunds due remain separate. No late fees are calculated.'
+    seen={x['id'] for x in out['invoices']};as_of=day(out['as_of'])
+    for item in legacy:
+        if customer and item['customer_id']!=customer:continue
+        need(item['id'] not in seen);seen.add(item['id'])
+        r={'id':item['id'],'number':'ShopVox '+item['number'],'customer_id':item['customer_id'],'customer_name':raw['customer']['name'] if customer else item['customer_name'],'invoice_customer_name':item['source_customer'],'title':'Imported opening balance · '+state['book']['as_of'],'invoice_date':item['invoice_date'],'due_date':item['due_date'],'is_test':test_mode,'source':'legacy','total_cents':item['total_cents'],'credit_cents':item['credit_cents']+item['subsequent_credit_cents'],'payment_cents':item['paid_cents']+item['subsequent_paid_cents'],'refund_cents':0,'balance_cents':item['remaining_cents'],'refund_due_cents':0}
+        r['adjusted_cents']=r['total_cents']-r['credit_cents'];r['net_paid_cents']=r['payment_cents'];need(r['adjusted_cents']-r['net_paid_cents']==r['balance_cents'])
+        age=max((as_of-day(r['due_date'])).days,0) if r['balance_cents'] else 0;r['days_overdue']=age
+        bucket=BUCKETS[0 if age==0 else 1 if age<=30 else 2 if age<=60 else 3 if age<=90 else 4];r.update({k:r['balance_cents'] if k==bucket else 0 for k in BUCKETS});out['invoices'].append(r)
+        if customer:
+            out['activity'].append({'id':r['id'],'invoice_id':r['id'],'invoice_number':r['number'],'kind':'legacy_opening','number':r['number'],'effective_date':state['book']['as_of'],'recorded_at':state['book']['created_at'],'amount_cents':item['opening_cents'],'effect_cents':item['opening_cents'],'status':'issued','reference':'Opening balance after historical payments and credits'})
+            for e in item['activity']:
+                out['activity'].append({'id':e['id'],'invoice_id':r['id'],'invoice_number':r['number'],'kind':'legacy_'+e['kind'],'number':e['reference'],'effective_date':e['effective_date'],'recorded_at':e['created_at'],'amount_cents':e['amount_cents'],'effect_cents':e['amount_cents']*(1 if e['kind']=='reversal' else -1),'status':'recorded','reference':e['reason']+(' (reversed by a later correction)' if e['reversed'] else '')})
+    need(len(out['invoices'])<=6000)
+    out['invoices'].sort(key=lambda x:(x['due_date'],x['number']));out['totals']=totals(out['invoices'])
+    if customer:
+        need(out['invoices'] and len(out['activity'])<=10000)
+        out['activity'].sort(key=lambda a:(a['effective_date'],a['recorded_at'],a['kind'],a['id']))
+        need(sum(a['effect_cents'] for a in out['activity'])==out['totals']['balance_cents']-out['totals']['refund_due_cents'])
+    return out

@@ -255,4 +255,6 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_email(app,provider,session,crm_enabled,ROOT,Failure)
     from opening_api import install as install_opening
     install_opening(app,provider,session,crm_enabled,ROOT,Failure)
+    from legacy_api import install as install_legacy
+    install_legacy(app,provider,session,crm_enabled,ROOT,Failure)
     return app

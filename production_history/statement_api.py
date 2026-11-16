@@ -18,10 +18,11 @@ def install(app,provider,session,enabled,root,failure):
         if customer:
             if not re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',customer):raise failure('INVALID_ID',400)
             payload['customer_id']=customer
-        raw=parse(provider.call('/rest/v1/rpc/custom_u_statements_101',rec['token'],{'payload':payload},limit=8*1024*1024))
+        raw=parse(provider.call('/rest/v1/rpc/custom_u_statements_111',rec['token'],{'payload':payload},limit=20*1024*1024))
         if not isinstance(raw,dict):raise failure('INVALID_PROVIDER_RESPONSE')
         if 'error' in raw:raise failure(raw['error'],{'ACCESS_DENIED':403,'NO_ISSUED_INVOICES':404,'INVALID_REQUEST':400,'INVALID_ID':400}.get(raw['error'],409))
         if customer and raw.get('customer_id')!=customer:raise failure('INVALID_REPORT_RESPONSE')
+        if raw.get('format')!='custom-u-statements-111':raise failure('INVALID_REPORT_RESPONSE')
         try:data=build(raw,mode=='test')
         except (ValueError,KeyError,TypeError,OverflowError):raise failure('INVALID_REPORT_RESPONSE') from None
         if provider.access(rec['token']).get('role')!='admin':raise failure('ACCESS_DENIED',403)
