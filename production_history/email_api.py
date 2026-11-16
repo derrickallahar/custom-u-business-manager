@@ -1,5 +1,5 @@
 """Explicit review then send. Persist a single attempt before any provider call."""
-import base64,hashlib,uuid
+import base64,hashlib,uuid,re
 from flask import request,jsonify,make_response
 from reportlab.platypus.doctemplate import LayoutError
 from staff_access import can
@@ -9,6 +9,24 @@ from document_pdf import render_document
 from catalogue_pdf import render_catalogue
 
 AREAS={'quote':'quotes','invoice':'invoices','catalogue':'products'}
+def key_check(value,pattern):
+    if not value:return 'MISSING'
+    if value!=value.strip():return 'EXTRA_WHITESPACE'
+    return 'FORMAT_OK' if re.fullmatch(pattern,value) else 'INVALID_FORMAT'
+
+def local_setup(config):
+    # Only fixed labels leave the server: no values, fragments, hashes or lengths.
+    if config is None:return 'EMAIL_SETTINGS_INVALID',{'resend_key':'NOT_CHECKED','signing_key':'NOT_CHECKED','database':'NOT_CHECKED'}
+    checks={'resend_key':key_check(config.api_key,r're_[A-Za-z0-9_-]{10,200}'),'signing_key':key_check(config.secret,r'[a-f0-9]{64}'),'database':'NOT_CHECKED'}
+    for key,prefix in [('resend_key','EMAIL_API_KEY_'),('signing_key','EMAIL_SIGNING_KEY_')]:
+        if checks[key]!='FORMAT_OK':return prefix+checks[key],checks
+    return 'EMAIL_DATABASE_NOT_CHECKED',checks
+
+SETUP_FAILURES={'EMAIL_SERVER_AUTH_REQUIRED':'EMAIL_SETUP_SIGNATURE_REJECTED',
+    'PROVIDER_UNAVAILABLE':'EMAIL_DATABASE_UNREACHABLE',
+    'PROVIDER_REQUEST_FAILED':'EMAIL_DATABASE_REQUEST_FAILED',
+    'SIGN_IN_OR_ACCESS_REJECTED':'EMAIL_DATABASE_ACCESS_REJECTED',
+    'PLEASE_WAIT_AND_TRY_AGAIN':'EMAIL_DATABASE_BUSY'}
 def permitted(me,kind,write=False):
     area=AREAS.get(kind) if isinstance(kind,str) else None
     return bool(area and can(me,area+'.view') and (kind!='catalogue' or can(me,'customers.view')) and (not write or can(me,area+'.send')))
@@ -68,12 +86,23 @@ def install(app,provider,session,enabled,root,failure):
         q=r.get('quote_snapshot',r);contact=q.get('contact_snapshot') or {};buyer=q.get('customer_snapshot') or {}
         test=bool(not config or config.test_mode or kind=='invoice' and r.get('is_test'))
         number=r.get('number',r.get('title','Catalogue'))
+        setup_code,setup_checks=local_setup(config)
         configured=False
         if config and config.ready:
-            try:configured=call(rec,{'op':'health'},True,me).get('ready') is True
-            except failure:pass
+            try:
+                identifier(me.get('user_id',''))
+            except ValueError:setup_code='EMAIL_SETUP_SESSION_INVALID'
+            else:
+                try:
+                    configured=call(rec,{'op':'health'},True,me).get('ready') is True
+                    setup_code='EMAIL_SETUP_READY' if configured else 'EMAIL_DATABASE_RESPONSE_INVALID'
+                except failure as exc:
+                    if exc.code in ('ACCESS_DENIED','LOGIN_REQUIRED'):raise
+                    setup_code=SETUP_FAILURES.get(exc.code,'EMAIL_DATABASE_CHECK_FAILED')
+                except (ValueError,TypeError,KeyError):setup_code='EMAIL_DATABASE_RESPONSE_INVALID'
+            setup_checks['database']=setup_code
         checked(rec,kind)
-        return jsonify(kind=kind,id=ident,number=number,version=r['version'],ready=ready,send_allowed=permitted(me,kind,True),configured=configured,test_delivery=test,
+        return jsonify(build='109.1',setup_code=setup_code,setup_checks=setup_checks,kind=kind,id=ident,number=number,version=r['version'],ready=ready,send_allowed=permitted(me,kind,True),configured=configured,test_delivery=test,
           recipient=(config.test_to if config else '') if test else contact.get('email') or buyer.get('email') or '',sender=config.sender if config else '',reply_to=config.reply_to if config else '',
           subject=('TEST - ' if test else '')+'Custom U '+kind.title()+': '+number,
           message='Hello,\n\nPlease find your '+kind+' attached for review.\n\nKind regards,\nCustom U',test_recipient=config.test_to if config else '')
