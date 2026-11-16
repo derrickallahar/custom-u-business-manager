@@ -38,7 +38,7 @@ def render_document(kind, record):
     story += [p(seller['name'],'title'),p(details(seller,['address','email','phone','website']),'small')]
     if seller.get('tax_id'):story += [p('VAT ID: '+seller['tax_id'],'small')]
     story += [Spacer(1,12),p(title+' '+number,'heading')]
-    dates=('Invoice date: '+m['invoice_date']+'   |   Due: '+m['due_date']+('\nEarlier supply/payment: '+m['supply_date'] if m['supply_date'] else '')+'\nSource quote: '+q['number']) if invoice else 'Quote date: '+d['quote_date']+'   |   Valid until: '+d['valid_until']
+    dates=('Invoice date: '+m['invoice_date']+'   |   Due: '+m['due_date']+('\nEarlier supply/payment: '+m['supply_date'] if m['supply_date'] else '')+('\nSource quote: '+q['number'] if record['quote_id'] else '')) if invoice else 'Quote date: '+d['quote_date']+'   |   Valid until: '+d['valid_until']
     story += [p(dates+'\nRevision: '+str(record['version'])+'   |   Currency: BSD   |   Unit prices before VAT','small'),Spacer(1,12)]
     parties=Table([[p('BILLED TO' if invoice else 'PREPARED FOR','label'),p('CONTACT','label')],[p(details(buyer,['name','address','email','phone'])+('\nVAT ID: '+buyer['tax_id'] if buyer.get('tax_id') else '')),p(details(contact,['name','title','email','phone']))]],colWidths=[300,240],hAlign='LEFT')
     parties.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),0),('BOTTOMPADDING',(0,0),(-1,-1),6)]))
@@ -61,7 +61,7 @@ def render_document(kind, record):
     totals += [('VAT',d['tax_cents']),('Invoice total' if invoice else 'Quote total',d['total_cents'])]
     sums=Table([[p(k),p(money(v),'label' if i==len(totals)-1 else 'body')] for i,(k,v) in enumerate(totals)],colWidths=[150,150],hAlign='RIGHT')
     sums.setStyle(TableStyle([('LINEBELOW',(0,0),(-1,-1),.4,HexColor('#dedee4')),('VALIGN',(0,0),(-1,-1),'TOP')]))
-    story += [KeepTogether([sums,Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+d['deposit_percent']+'%): '+money(d['deposit_cents']),'small')])]
+    story += [KeepTogether([sums]+([Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+d['deposit_percent']+'%): '+money(d['deposit_cents']),'small')] if not invoice or record['quote_id'] else []))]
     for heading,text in [('Notes',m.get('notes') if invoice else d['notes']),('Terms',m.get('terms') if invoice else d['terms'])]:
         if text:story += [Spacer(1,12),p(heading,'label'),p(text)]
     ending=('Test document only. No amount is payable.' if test else 'Draft for review. Not an issued invoice.' if draft else 'This document states the invoice total. Payments received are acknowledged separately.') if invoice else 'This is a quotation, not a tax invoice or payment receipt.'

@@ -17,7 +17,7 @@ def allowed(me,area,payload=None):
     if area=='quotes':
         return op in ('list','get','profile') or op=='issue' and can(me,'quotes.approve') or op=='save' and can(me,'customers.view') and (can(me,'quotes.create') or can(me,'quotes.edit'))
     if area=='invoices':
-        return op in ('list','get') or op=='create' and can(me,'invoices.create') and can(me,'quotes.view') or op=='save' and can(me,'invoices.edit') or op=='issue' and can(me,'invoices.issue')
+        return op in ('list','get') or op=='create_direct' and can(me,'invoices.create') or op=='save_direct' and can(me,'invoices.edit') or op=='sources' and (can(me,'invoices.create') or can(me,'invoices.edit')) or op=='create' and can(me,'invoices.create') and can(me,'quotes.view') or op=='save' and can(me,'invoices.edit') or op=='issue' and can(me,'invoices.issue')
     if area=='payments':
         return can(me,'invoices.view') and (op in ('list','invoice','receipt') or op=='record' and can(me,'payments.record') or op=='reverse' and can(me,'payments.reverse'))
     return False

@@ -2,7 +2,7 @@
 from datetime import date
 from decimal import Decimal
 import re
-from quote_rules import need,text,validate_saved_quote
+from quote_rules import need,text,validate_saved_quote,normalize_profile
 FIELDS={'invoice_date','due_date','supply_date','document_type','billing_address','billing_tax_id','notes','terms','tax_codes'}
 
 def normalize_details(d,q):
@@ -23,7 +23,18 @@ def normalize_details(d,q):
     return out
 
 def validate_invoice_document(r):
-    q=r['quote_snapshot'];validate_saved_quote(q['data']);need(q['status']=='issued' and r['quote_id']==q['id'] and r['quote_version']==q['version'])
+    q=r['quote_snapshot'];validate_saved_quote(q['data'])
+    if r['quote_id'] is None:
+        need(r['quote_version'] is None and set(q)=={'source','customer_id','contact_id','customer_snapshot','customer_version','contact_snapshot','contact_version','seller_snapshot','seller_version','data'} and q['source']=='direct')
+        need(isinstance(q['customer_id'],str) and re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',q['customer_id']) is not None)
+        need(type(q['customer_version']) is int and q['customer_version']>0 and type(q['seller_version']) is int and q['seller_version']>0)
+        need(isinstance(q['customer_snapshot'],dict) and isinstance(q['customer_snapshot'].get('name'),str))
+        need(normalize_profile(q['seller_snapshot'])==q['seller_snapshot'])
+        if q['contact_id'] is None:need(q['contact_snapshot'] is None and q['contact_version'] is None)
+        else:need(isinstance(q['contact_id'],str) and re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',q['contact_id']) is not None and type(q['contact_version']) is int and q['contact_version']>0 and isinstance(q['contact_snapshot'],dict))
+        need(q['data']['quote_date']==r['details']['invoice_date'] and q['data']['valid_until']==r['details']['due_date'] and q['data']['deposit_percent']=='0.00')
+        need(q['data']['terms']==r['details']['terms'] and q['data']['notes']==r['details']['notes'])
+    else:need(q['status']=='issued' and r['quote_id']==q['id'] and r['quote_version']==q['version'])
     need(normalize_details(r['details'],q['data'])==r['details']);need(type(r['is_test']) is bool and r['status'] in ('draft','issued'))
     if r['status']=='issued':
         need(bool(q['seller_snapshot']['tax_id'].strip()) and '' not in r['details']['tax_codes'])
