@@ -257,4 +257,6 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_opening(app,provider,session,crm_enabled,ROOT,Failure)
     from legacy_api import install as install_legacy
     install_legacy(app,provider,session,crm_enabled,ROOT,Failure)
+    from reminder_api import install as install_reminders
+    install_reminders(app,provider,session,crm_enabled,ROOT,Failure)
     return app

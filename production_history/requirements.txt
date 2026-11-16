@@ -11,3 +11,4 @@ cryptography==50.0.2
 Pillow==13.0.0
 reportlab==4.4.9
 charset-normalizer==3.5.2
+tzdata==2026.6

@@ -29,7 +29,7 @@ el('filter').onsubmit=e=>{e.preventDefault();page=1;load();};
 el('prev').onclick=()=>{page--;load();};
 el('next').onclick=()=>{page++;load();};
 
-function clearUser(){for(const id of ['legacy-link','opening-link','customers-link','quotes-link','invoices-link','payments-link','statements-link','staff-link','jobs-link','products-link'])el(id).hidden=true;
+function clearUser(){for(const id of ['reminders-link','legacy-link','opening-link','customers-link','quotes-link','invoices-link','payments-link','statements-link','staff-link','jobs-link','products-link'])el(id).hidden=true;
  el('quotes-link').hidden=true;el('invoices-link').hidden=true;
  sequence++;if(controller)controller.abort();el('rows').replaceChildren();el('detail').replaceChildren();
  el('viewer').hidden=true;el('login').hidden=false;el('identity').textContent='';el('login-status').textContent='Sign in to continue.';
@@ -37,6 +37,7 @@ function clearUser(){for(const id of ['legacy-link','opening-link','customers-li
 function showUser(result){
  const admin=result.me.role==='admin',can=k=>admin||result.me.permissions?.[k]===true;
  for(const name of ['customers','quotes','invoices','payments','jobs','products'])el(name+'-link').hidden=!result.crm_enabled||!can(name+'.view');
+ el('reminders-link').hidden=!result.crm_enabled||!admin;
  el('legacy-link').hidden=!result.crm_enabled||!admin;
  el('opening-link').hidden=!result.crm_enabled||!admin;
  el('staff-link').hidden=!result.crm_enabled||!admin;el('statements-link').hidden=!result.crm_enabled||!admin;
