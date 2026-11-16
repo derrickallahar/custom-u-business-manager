@@ -26,6 +26,16 @@ def install(app,provider,session,enabled,root,failure):
     def invoice_listing():return jsonify(rpc({'op':'list','q':request.args.get('q',''),'page':request.args.get('page','1')}))
     @app.get('/api/invoices/defaults')
     def invoice_defaults():gate();return jsonify(terms=INVOICE_TERMS)
+    @app.get('/api/invoices/customer-terms/<quote_id>')
+    def invoice_customer_terms(quote_id):
+        from staff_access import can
+        rec=gate({'op':'create'})
+        if not can(provider.access(rec['token']),'invoices.create'):raise failure('ACCESS_DENIED',403)
+        result=parse(provider.call('/rest/v1/rpc/custom_u_invoice_terms_113',rec['token'],{'quote_id':quote_id},limit=10000))
+        if not isinstance(result,dict):raise failure('INVALID_PROVIDER_RESPONSE')
+        if 'error' in result:raise failure(result['error'],403 if result['error']=='ACCESS_DENIED' else 400)
+        if not can(provider.access(rec['token']),'invoices.create'):raise failure('ACCESS_DENIED',403)
+        return jsonify(result)
     @app.get('/api/invoices/<ident>')
     def invoice_detail(ident):return jsonify(rpc({'op':'get','id':ident}))
     @app.post('/api/invoices/save')

@@ -3,8 +3,11 @@ from datetime import date,datetime
 from zoneinfo import ZoneInfo
 from html import escape
 from email_delivery import address,identifier,checked_pdf,clean
+from reminder_rules_112 import settings as settings112,invoice as invoice112
+from reminder_text import DEFAULT_MESSAGES,validate_messages,stage_label
 
 FIELDS={'enabled','days','repeat_days','send_hour','excluded_customers','excluded_invoices'}
+NEW_FIELDS=FIELDS|{'credit_reminders','messages'}
 SETTINGS=FIELDS|{'mode','version','updated_by','updated_at'}
 INVOICE={'source','id','number','customer_id','customer_name','due_date','total_cents','balance_cents','customer_active','recipient'}
 PACKET={'id','invoice','stage','recipient','sender','reply_to','subject','message','pdf_filename','pdf_sha256','pdf_base64'}
@@ -21,35 +24,40 @@ def stamp(value):
 def defaults(mode):
     return {'mode':mode,'version':0,'enabled':False,'days':[3,7,14,30],'repeat_days':15,'send_hour':9,'excluded_customers':[],'excluded_invoices':[],'updated_by':None,'updated_at':None}
 
-def settings(value,full=True):
-    need(isinstance(value,dict) and set(value)==(SETTINGS if full else FIELDS))
-    need(type(value['enabled']) is bool and isinstance(value['days'],list) and 1<=len(value['days'])<=12)
-    need(all(type(d) is int and 1<=d<=365 for d in value['days']) and value['days']==sorted(set(value['days'])))
-    need(type(value['repeat_days']) is int and 0<=value['repeat_days']<=365 and type(value['send_hour']) is int and 0<=value['send_hour']<=23)
-    for name,limit in [('excluded_customers',1000),('excluded_invoices',6000)]:
-        xs=value[name];need(isinstance(xs,list) and len(xs)<=limit and all(isinstance(x,str) for x in xs) and len(xs)==len(set(xs)))
-        for x in xs:
-            if name=='excluded_customers':identifier(x)
-            else:
-                source,ident=x.split(':');need(source in ('native','legacy'));identifier(ident)
-    if full:
-        need(value['mode'] in ('test','live') and type(value['version']) is int and value['version']>=0)
-        if value['version']==0:need(value==defaults(value['mode']))
-        else:identifier(value['updated_by']);stamp(value['updated_at'])
-    return value
+def upgraded(cfg):
+    if 'messages' in cfg:return cfg
+    return {**cfg,'enabled':False,'days':[d for d in cfg['days'] if d!=3] or [7,14,30],
+            'credit_reminders':True,'messages':dict(DEFAULT_MESSAGES)}
 
-def stage_for(age,cfg):
+def settings(value,full=True):
+    if isinstance(value,dict) and 'messages' not in value:return settings112(value,full)
+    need(isinstance(value,dict) and set(value)==(SETTINGS|{'credit_reminders','messages'} if full else NEW_FIELDS))
+    base={k:v for k,v in value.items() if k not in ('credit_reminders','messages')}
+    # New settings enter history only on an explicit user save (version >= 1).
+    if full:need(type(value['version']) is int and value['version']>=1)
+    settings112(base,full)
+    need(type(value['credit_reminders']) is bool)
+    validate_messages(value['messages']);return value
+
+def credit_eligible(row,cfg):
+    return bool(row and cfg.get('credit_reminders') and type(row.get('customer_terms_days')) is int and row['customer_terms_days']>0 and 'invoice_date' in row and (day(row['due_date'])-day(row['invoice_date'])).days==row['customer_terms_days'])
+
+def stage_for(age,cfg,row=None):
+    if age in (-15,0) and credit_eligible(row,cfg) and age>=-row['customer_terms_days']:return age
     due=[d for d in cfg['days'] if d<=age]
     if not due:return None
     last=max(cfg['days']);interval=cfg['repeat_days']
     return last+((age-last)//interval)*interval if interval and age>=last+interval else max(due)
 
 def invoice(r):
-    need(isinstance(r,dict) and set(r)==INVOICE and r['source'] in ('native','legacy'));identifier(r['id']);identifier(r['customer_id']);day(r['due_date'])
-    for k in ('number','customer_name'):need(clean(r[k],200,True)==r[k])
-    need(type(r['customer_active']) is bool)
-    for k in ('total_cents','balance_cents'):need(type(r[k]) is int and 0<=r[k]<=99999999999)
-    need(r['balance_cents']<=r['total_cents'] and isinstance(r['recipient'],str));return r
+    need(isinstance(r,dict))
+    if 'invoice_date' in r:
+        need(set(r)==INVOICE|{'invoice_date','customer_terms_days','customer_version'});day(r['invoice_date']);need(day(r['invoice_date'])<=day(r['due_date']))
+        need(r['customer_terms_days'] is None or type(r['customer_terms_days']) is int and 0<=r['customer_terms_days']<=365)
+        need(type(r['customer_version']) is int and r['customer_version']>0)
+        invoice112({k:v for k,v in r.items() if k in INVOICE})
+    else:invoice112(r)
+    return r
 
 def validate_reminders(obj):
     configs=obj['reminder_settings'];rows=obj['reminder_deliveries'];audits=obj['reminder_audit']
@@ -57,6 +65,7 @@ def validate_reminders(obj):
     need(isinstance(rows,list) and len(rows)<=2000 and isinstance(audits,list) and len(audits)<=20000)
     expected={};used=set();dates=set();members={m['user_id'] for m in obj['staff_members']}
     sources={'native':{r['id']:r for r in obj['invoices']},'legacy':{r['id']:r for r in obj['legacy_entries']}}
+    customer_versions={(a['after_record']['id'],a['after_record']['version']):a['after_record'] for a in obj['crm']['audit']}
     for cfg in configs:
         settings(cfg)
         if cfg['version']:expected['settings/'+cfg['mode']]=cfg;need(cfg['updated_by'] in members)
@@ -66,7 +75,10 @@ def validate_reminders(obj):
         r=invoice(row['invoice']);original=sources[r['source']].get(r['id']);need(original is not None and r['balance_cents']>0 and r['customer_active'])
         if r['source']=='native':need(original['is_test']==(row['mode']=='test') and original['number']==r['number'] and original['details']['due_date']==r['due_date'] and original['quote_snapshot']['customer_id']==r['customer_id'])
         else:need(original['mode']==row['mode'] and 'ShopVox '+original['number']==r['number'] and original['due_date']==r['due_date'] and original['customer_id']==r['customer_id'])
-        age=(day(row['sent_date'])-day(r['due_date'])).days;need(type(row['stage']) is int and row['stage']==stage_for(age,cfg))
+        if 'messages' in cfg:
+            customer=customer_versions.get((r['customer_id'],r.get('customer_version')));need(customer is not None and customer['kind']=='customer' and customer['data'].get('payment_terms_days')==r['customer_terms_days'])
+            need('invoice_date' in r and r['invoice_date']==(original['details']['invoice_date'] if r['source']=='native' else original['invoice_date']))
+        age=(day(row['sent_date'])-day(r['due_date'])).days;need(type(row['stage']) is int and row['stage']==stage_for(age,cfg,r))
         need(day(row['sent_date'])==stamp(row['created_at']).astimezone(ZoneInfo('America/Nassau')).date() and stamp(row['updated_at'])>=stamp(row['created_at']))
         need(r['customer_id'] not in cfg['excluded_customers'] and r['source']+':'+r['id'] not in cfg['excluded_invoices'])
         for k in ('recipient','reply_to'):need(address(row[k])==row[k])
@@ -103,6 +115,10 @@ def history_html(obj):
     esc=lambda x:escape(str(x))
     parts=['<!doctype html><meta charset="utf-8"><title>Custom U recovered reminders</title><style>body{font:16px system-ui;max-width:1100px;margin:40px auto}td,th{padding:10px;text-align:left;border-bottom:1px solid #ccc}h1{color:#b72030}</style><h1>Recovered reminder history</h1><p>Local recovery only. Opening this file does not schedule or send email.</p>']
     for cfg in obj['reminder_settings']:parts.append('<p>'+esc(cfg['mode'].upper())+' schedule: '+esc(', '.join(map(str,cfg['days'])))+' days overdue; repeat every '+esc(cfg['repeat_days'])+' days after the last stage (0 = off); '+esc(cfg['send_hour'])+':00 Bahamas time. Saved enabled: '+esc(cfg['enabled'])+'</p>')
+    for cfg in obj['reminder_settings']:
+        if 'messages' in cfg:
+            parts.append('<p>Credit reminders before and on the due date: '+esc(cfg['credit_reminders'])+'. Eligibility uses the payment terms saved on the customer and the invoice’s agreed dates.</p>')
+            for name,body in cfg['messages'].items():parts.append('<h2>'+esc(name)+'</h2><pre style="white-space:pre-wrap">'+esc(body)+'</pre>')
     parts.append('<table><tr><th>Mode / date</th><th>Invoice</th><th>Stage</th><th>Recipient / state</th><th>Retained PDF</th></tr>')
-    for r in obj['reminder_deliveries']:parts.append('<tr><td>'+esc(r['mode'].upper()+' / '+r['sent_date'])+'</td><td>'+esc(r['invoice']['number'])+'</td><td>'+esc(r['stage'])+' days</td><td>'+esc(r['recipient']+' / '+r['state'])+'</td><td><a href="'+esc(r['id'])+'.pdf">Open reminder</a></td></tr>')
+    for r in obj['reminder_deliveries']:parts.append('<tr><td>'+esc(r['mode'].upper()+' / '+r['sent_date'])+'</td><td>'+esc(r['invoice']['number'])+'</td><td>'+esc(stage_label(r['stage']))+'</td><td>'+esc(r['recipient']+' / '+r['state'])+'</td><td><a href="'+esc(r['id'])+'.pdf">Open reminder</a></td></tr>')
     return ''.join(parts)+'</table>'

@@ -1,6 +1,6 @@
 """Default wording for NEW Custom U documents. Does not alter historical terms."""
 PAYMENT_TERMS = (
-    'Payment is due on the date shown. Approved credit accounts have 30-day terms unless otherwise agreed in writing. '
+    'Payment is due on the date shown. Agreed credit terms are reflected in the invoice due date. '
     'Overdue balances are subject to a late fee of 1.5% per month after the due date. '
     'Where a deposit is required, work begins only after the required deposit is received.'
 )

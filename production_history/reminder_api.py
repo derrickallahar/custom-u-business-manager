@@ -4,8 +4,9 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import request,jsonify,make_response
 from email_delivery import checked_pdf,identifier
-from reminder_rules import settings,day
+from reminder_rules import settings,day,NEW_FIELDS
 from reminder_worker import Runner,ReminderError
+from reminder_text import validate_messages
 
 def install(app,provider,session,enabled,root,failure):
     app.extensions['reminder_runner_factory']=lambda:Runner(provider)
@@ -19,7 +20,7 @@ def install(app,provider,session,enabled,root,failure):
         if value not in ('test','live'):raise failure('INVALID_MODE',400)
         return value
     def call(rec,payload):
-        result=json.loads(provider.call('/rest/v1/rpc/custom_u_reminders_112',rec['token'],{'payload':payload},limit=10000000))
+        result=json.loads(provider.call('/rest/v1/rpc/custom_u_reminders_113',rec['token'],{'payload':payload},limit=10000000))
         if not isinstance(result,dict):raise failure('REMINDER_RESPONSE_INVALID',503)
         if result.get('error'):raise failure(result['error'],403 if result['error']=='ACCESS_DENIED' else 409)
         check(rec);return result
@@ -36,12 +37,15 @@ def install(app,provider,session,enabled,root,failure):
     @app.get('/api/reminders')
     def reminders_state():
         rec,me=gate();result=state(rec,mode(request.args.get('mode','test')),request.args.get('as_of',current_date()))
-        return jsonify(**result,live_enabled=live_ready(),test_recipient=os.getenv('CUSTOMU_EMAIL_TEST_RECIPIENT','derrick@custom-u.com'),build='112')
+        return jsonify(**result,live_enabled=live_ready(),test_recipient=os.getenv('CUSTOMU_EMAIL_TEST_RECIPIENT','derrick@custom-u.com'),build='113')
     @app.post('/api/reminders/settings')
     def reminders_save():
         request.max_content_length=200000;rec,_=gate();data=request.get_json()
         if not isinstance(data,dict) or set(data)!={'mode','expected_version','settings'}:raise failure('INVALID_REQUEST',400)
         chosen=mode(data['mode'])
+        if not isinstance(data['settings'],dict) or set(data['settings'])!=NEW_FIELDS:raise failure('INVALID_SCHEDULE',400)
+        try:validate_messages(data['settings']['messages'])
+        except (ValueError,TypeError,KeyError):raise failure('INVALID_REMINDER_MESSAGES',400) from None
         try:settings(data['settings'],False)
         except (ValueError,TypeError,KeyError):raise failure('INVALID_SCHEDULE',400) from None
         if chosen=='live' and data['settings']['enabled'] and not live_ready():raise failure('REMINDER_LIVE_DISABLED',409)
@@ -51,7 +55,7 @@ def install(app,provider,session,enabled,root,failure):
         rec,_=gate();chosen=mode(request.args.get('mode','test'));result=state(rec,chosen,request.args.get('as_of',current_date()))
         found=next((c for c in result['candidates'] if c['invoice']['id']==request.args.get('id') and c['invoice']['source']==request.args.get('source')),None)
         if not found or found['stage'] is None or found['invoice']['balance_cents']<=0:raise failure('REMINDER_NOT_DUE',409)
-        try:packet=app.extensions['reminder_runner_factory']().packet(found,result['as_of'],chosen)
+        try:packet=app.extensions['reminder_runner_factory']().packet(found,result['as_of'],chosen,result['settings'])
         except (ValueError,ReminderError):raise failure('REMINDER_PREVIEW_UNAVAILABLE',409) from None
         check(rec);return jsonify(data=packet,preview_only=True)
     @app.post('/api/reminders/run-test')
