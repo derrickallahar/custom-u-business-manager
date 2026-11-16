@@ -102,7 +102,7 @@ class Supabase:
         member=json.loads(self.call('/rest/v1/rpc/custom_u_session_access_102',token,{}))
         if not isinstance(user,dict) or not isinstance(user.get('id'),str) or not user['id'] or not isinstance(member,dict) or member.get('user_id')!=user.get('id') or member.get('role') not in ('admin','sales','office','production') or not isinstance(member.get('permissions'),dict) or member.get('bucket_private') is not True:
             raise Failure('ACCESS_DENIED',403)
-        return {'email':user.get('email',''),'role':member['role'],'permissions':{k:v for k,v in member['permissions'].items() if k in KEYS and v is True}}
+        return {'user_id':user['id'],'email':user.get('email',''),'role':member['role'],'permissions':{k:v for k,v in member['permissions'].items() if k in KEYS and v is True}}
     def archive(self,token,digest):
         return self.call('/storage/v1/object/authenticated/'+BUCKET+'/history091/'+digest+'.json',token,limit=10000000)
     def logout(self,token):
@@ -251,4 +251,6 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_statements(app,provider,session,crm_enabled,ROOT,Failure)
     from staff_api import install as install_staff
     install_staff(app,provider,session,crm_enabled,ROOT,Failure)
+    from email_api import install as install_email
+    install_email(app,provider,session,crm_enabled,ROOT,Failure)
     return app
