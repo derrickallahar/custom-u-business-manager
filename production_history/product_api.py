@@ -40,6 +40,10 @@ def install(app, provider, session, enabled, root, failure):
     def product_script():
         return app.response_class((root/'static/products.js').read_bytes(), mimetype='text/javascript')
 
+    @app.get('/flyer-picker.js')
+    def flyer_picker_script():
+        return app.response_class((root/'static/flyer-picker.js').read_bytes(), mimetype='text/javascript')
+
     @app.get('/api/products')
     def product_list():
         return jsonify(rpc({'op': 'list', 'q': request.args.get('q', ''), 'page': request.args.get('page', '1'), 'state': request.args.get('state', 'active')}))
