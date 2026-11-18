@@ -2,6 +2,7 @@
 from flask import request, jsonify
 from staff_access import can
 from workspace_codec import parse
+from area_pricing import calculate as calculate_area, PRODUCT_ID as AREA_PRODUCT_ID
 
 
 def install(app, provider, session, enabled, root, failure):
@@ -43,6 +44,21 @@ def install(app, provider, session, enabled, root, failure):
     @app.get('/flyer-picker.js')
     def flyer_picker_script():
         return app.response_class((root/'static/flyer-picker.js').read_bytes(), mimetype='text/javascript')
+
+    @app.get('/area-picker.js')
+    def area_picker_script():
+        return app.response_class((root/'static/area-picker.js').read_bytes(), mimetype='text/javascript')
+
+    @app.post('/api/products/area-price')
+    def area_price():
+        # Uses the same authenticated, rechecked product-view permission as reads.
+        # Only the current saved product rate is accepted; client rates are not inputs.
+        result = rpc({'op': 'get', 'id': AREA_PRODUCT_ID})
+        try:
+            answer = calculate_area(request.get_json(), result.get('data'))
+        except ValueError as error:
+            raise failure(str(error), 400) from None
+        return jsonify(answer)
 
     @app.get('/api/products')
     def product_list():
