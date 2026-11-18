@@ -5,6 +5,9 @@ from workspace_codec import parse
 
 
 def install(app, provider, session, enabled, root, failure):
+    from product_csv_api import install as install_csv
+    install_csv(app, provider, session, enabled, root, failure)
+
     def permitted(me, payload):
         key = 'products.view'
         if payload.get('op') == 'save':
