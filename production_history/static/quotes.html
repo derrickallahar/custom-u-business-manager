@@ -30,7 +30,14 @@
 <p data-area="detail" class="muted" role="status" aria-live="polite"></p>
 <p data-area="price" class="summary" role="status" aria-live="polite"></p>
 <button type="button" data-area="add" disabled>Add vinyl item</button>
-<p class="muted">The calculated total is added as 1 Job. Use the dimensions and piece count above to price each size.</p></details><details id="flyer-picker" class="line"><summary>Choose a flyer run</summary>
+<p class="muted">The calculated total is added as 1 Job. Use the dimensions and piece count above to price each size.</p></details><details id="brochure-picker" class="line"><summary>Choose a brochure run</summary>
+<p>Production sheet: 11 × 17 inches. Paper: 100 lb text. Folded options include double-sided printing. Choose copies and printing / fold; the item is added as <strong>1 Run</strong> at the whole-run price.</p>
+<button type="button" data-brochure="load">Load saved brochure prices</button>
+<div class="grid"><label>Printing / fold<select data-brochure="format" disabled></select></label>
+<label>Copies in one run<select data-brochure="copies" disabled></select></label></div>
+<p data-brochure="note" class="muted" role="status" aria-live="polite"></p>
+<p data-brochure="price" class="summary" role="status" aria-live="polite"></p>
+<button type="button" data-brochure="add" disabled>Add brochure run</button></details><details id="flyer-picker" class="line"><summary>Choose a flyer run</summary>
 <p>Choose the copy count here. The item will be added as <strong>1 Run</strong> at the whole-run price.</p>
 <button type="button" data-flyer="load">Load saved flyer prices</button>
 <div class="grid"><label>Flyer size<select data-flyer="size" disabled></select></label>
@@ -43,4 +50,4 @@
 <label>Notes<textarea id="q-notes" maxlength="2000"></textarea></label><label>Terms<textarea id="q-terms" maxlength="2000"></textarea></label></fieldset>
 <div class="actions"><button id="save" type="submit" class="primary">Save draft</button><a id="email-link" hidden>Email / history</a> <a id="print" target="_blank" rel="noopener" hidden>Open saved print preview</a><a id="create-job" hidden>Create / open job</a><a id="create-invoice" hidden>Create / open invoice</a><button id="duplicate" type="button" hidden>Copy to new draft</button></div>
 <section id="issue-section" hidden><p>Finalising locks the saved quote. Review the print preview and amounts first.</p><label><input id="issue-confirm" type="checkbox"> I have checked the saved quote, VAT and terms and want to finalise it.</label><button id="issue" type="button" disabled>Finalise saved quote</button></section>
-</form></section><script src="/flyer-picker.js"></script><script src="/area-picker.js"></script><script src="/quotes.js"></script></main></body></html>
+</form></section><script src="/brochure-picker.js"></script><script src="/flyer-picker.js"></script><script src="/area-picker.js"></script><script src="/quotes.js"></script></main></body></html>

@@ -45,6 +45,10 @@ def install(app, provider, session, enabled, root, failure):
     def product_script():
         return app.response_class((root/'static/products.js').read_bytes(), mimetype='text/javascript')
 
+    @app.get('/brochure-picker.js')
+    def brochure_picker_script():
+        return app.response_class((root/'static/brochure-picker.js').read_bytes(), mimetype='text/javascript')
+
     @app.get('/flyer-picker.js')
     def flyer_picker_script():
         return app.response_class((root/'static/flyer-picker.js').read_bytes(), mimetype='text/javascript')
