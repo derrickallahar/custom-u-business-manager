@@ -7,13 +7,14 @@
 <fieldset id="fields"><fieldset id="direct-fields" hidden disabled>
 <h3>Customer and items</h3><label>Find a customer<input id="customer-search" type="search" maxlength="200" placeholder="Customer name"></label><button id="customer-search-button" type="button">Find customer</button><div id="customer-results"></div><p id="customer-count" class="muted"></p><p id="selected-customer"></p><label>Contact<select id="contact"><option value="">No specific contact</option></select></label><button id="load-contacts" type="button">Refresh contact choices</button>
 <label>Invoice title *<input id="direct-title" required maxlength="160"></label>
-<section id="product-picker"><h3>Add a saved product</h3><label>Find a product<input id="product-search" type="search" maxlength="200" placeholder="Code or name"></label><button id="product-search-button" type="button">Find product</button><div id="product-results"></div><details id="area-picker" class="line"><summary>Price permanent adhesive vinyl by size</summary>
-<p>Digitally printed permanent adhesive vinyl, including UV lamination.</p>
+<section id="product-picker"><h3>Add a saved product</h3><label>Find a product<input id="product-search" type="search" maxlength="200" placeholder="Code or name"></label><button id="product-search-button" type="button">Find product</button><div id="product-results"></div><details id="area-picker" class="line"><summary>Price vinyl by size</summary>
+<label>Vinyl product<select data-area="product_id"></select></label>
+<p data-area="product-note">Choose the vinyl product to calculate.</p>
 <div class="grid"><label>Width of one piece<input data-area="width" type="number" min="0.001" max="100000" step="0.001" inputmode="decimal"></label>
 <label>Height of one piece<input data-area="height" type="number" min="0.001" max="100000" step="0.001" inputmode="decimal"></label>
 <label>Dimension units<select data-area="dimension_unit"><option value="in">Inches</option><option value="ft">Feet</option></select></label>
 <label>Number of pieces<input data-area="pieces" type="number" min="1" max="1000000" step="1" value="1" inputmode="numeric"></label>
-<label>Lamination finish (optional)<select data-area="finish"><option value="">Not specified</option><option value="Matte">Matte</option><option value="Gloss">Gloss</option></select></label></div>
+<label><span data-area="finish-label">Lamination finish (optional)</span><select data-area="finish"><option value="">Not specified</option><option value="Matte">Matte</option><option value="Gloss">Gloss</option></select></label></div>
 <button type="button" data-area="calculate">Calculate vinyl price</button>
 <p data-area="detail" class="muted" role="status" aria-live="polite"></p>
 <p data-area="price" class="summary" role="status" aria-live="polite"></p>

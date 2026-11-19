@@ -2,7 +2,7 @@
 from flask import request, jsonify
 from staff_access import can
 from workspace_codec import parse
-from area_pricing import calculate as calculate_area, PRODUCT_ID as AREA_PRODUCT_ID
+from area_pricing import calculate as calculate_area, selected_product as selected_area_product
 
 
 def install(app, provider, session, enabled, root, failure):
@@ -15,12 +15,16 @@ def install(app, provider, session, enabled, root, failure):
             key = 'products.create' if payload.get('version') == 0 else 'products.edit'
         return can(me, 'products.view') and can(me, key)
 
-    def rpc(payload):
+    def gate(payload):
         rec, me = session()
         if not enabled:
             raise failure('CUSTOMERS_NOT_ENABLED', 409)
         if not permitted(me, payload):
             raise failure('ACCESS_DENIED', 403)
+        return rec
+
+    def rpc(payload):
+        rec = gate(payload)
         # Legacy five-field saves remain compatible and cannot erase supplier data.
         version = '105' if payload.get('op') == 'save' and 'supplier' not in payload else '106'
         result = parse(provider.call('/rest/v1/rpc/custom_u_products_'+version, rec['token'], {'payload': payload}, limit=2*1024*1024))
@@ -53,9 +57,15 @@ def install(app, provider, session, enabled, root, failure):
     def area_price():
         # Uses the same authenticated, rechecked product-view permission as reads.
         # Only the current saved product rate is accepted; client rates are not inputs.
-        result = rpc({'op': 'get', 'id': AREA_PRODUCT_ID})
+        gate({'op': 'get'})
+        body = request.get_json()
         try:
-            answer = calculate_area(request.get_json(), result.get('data'))
+            ident = selected_area_product(body)
+        except ValueError as error:
+            raise failure(str(error), 400) from None
+        result = rpc({'op': 'get', 'id': ident})
+        try:
+            answer = calculate_area(body, result.get('data'))
         except ValueError as error:
             raise failure(str(error), 400) from None
         return jsonify(answer)

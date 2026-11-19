@@ -4,7 +4,21 @@ import re
 PRODUCT_ID = 'cc076f06-50f4-5b77-821f-f6ea9a329d76'
 PRODUCT_CODE = 'SVX-890F38A1E26E9BF55E63C59F'
 PRODUCT_NAME = 'Digitally Printed Permanent Adhesive Vinyl'
+PERFORATED_ID = 'aa9cc9d2-4f68-5ae4-b576-da4f4748491d'
+PRODUCTS = {
+    PRODUCT_ID: {'code': PRODUCT_CODE, 'name': PRODUCT_NAME,
+                 'finishes': ('', 'Matte', 'Gloss'), 'fixed_finish': ''},
+    PERFORATED_ID: {'code': 'SVX-C97524326A513F6F6E88CDFE', 'name': 'Perforated Window Vinyl',
+                    'finishes': ('', 'Optically clear'), 'fixed_finish': 'Optically clear lamination'},
+}
 FIELDS = {'product_id', 'width', 'height', 'dimension_unit', 'pieces', 'finish'}
+
+
+def selected_product(body):
+    if (not isinstance(body, dict) or set(body) != FIELDS or
+            not isinstance(body['product_id'], str) or body['product_id'] not in PRODUCTS):
+        raise ValueError('INVALID_AREA_REQUEST')
+    return body['product_id']
 
 
 def scaled(raw, places, maximum, code):
@@ -31,9 +45,9 @@ def half_up(numerator, denominator):
 
 
 def calculate(body, product):
-    if not isinstance(body, dict) or set(body) != FIELDS or body['product_id'] != PRODUCT_ID:
-        raise ValueError('INVALID_AREA_REQUEST')
-    if body['dimension_unit'] not in ('in', 'ft') or body['finish'] not in ('', 'Matte', 'Gloss'):
+    ident = selected_product(body)
+    spec = PRODUCTS[ident]
+    if body['dimension_unit'] not in ('in', 'ft') or body['finish'] not in spec['finishes']:
         raise ValueError('INVALID_AREA_OPTIONS')
     width = scaled(body['width'], 3, 100000, 'INVALID_AREA_DIMENSIONS')
     height = scaled(body['height'], 3, 100000, 'INVALID_AREA_DIMENSIONS')
@@ -47,9 +61,11 @@ def calculate(body, product):
     if not isinstance(product, dict) or not isinstance(product.get('data'), dict):
         raise ValueError('AREA_PRODUCT_UNAVAILABLE')
     d = product['data']
-    if (product.get('id') != PRODUCT_ID or product.get('active') is not True or
+    if (product.get('id') != ident or product.get('active') is not True or
             type(product.get('version')) is not int or product['version'] < 1 or
-            d.get('code') != PRODUCT_CODE or d.get('name') != PRODUCT_NAME or d.get('unit') != 'Sqft'):
+            d.get('code') != spec['code'] or d.get('name') != spec['name'] or d.get('unit') != 'Sqft'):
+        raise ValueError('AREA_PRODUCT_UNAVAILABLE')
+    if spec['fixed_finish'] and d.get('finish', '') not in ('', spec['fixed_finish']):
         raise ValueError('AREA_PRODUCT_UNAVAILABLE')
     rate = scaled(d.get('unit_price'), 2, 1000000, 'AREA_PRODUCT_UNAVAILABLE')
     vat = scaled(d.get('vat_rate'), 2, 100, 'AREA_PRODUCT_UNAVAILABLE')
@@ -74,12 +90,13 @@ def calculate(body, product):
     description = '\n'.join(x for x in [d['name'], d.get('description', ''),
         f'Size: {w} × {h} {unit_label}; quantity: {pieces} '+('piece' if pieces == 1 else 'pieces')+'.',
         f'Total area: {area_label}; rate: BSD {money(rate)}/sq ft.'] if x)
-    finish = ' · '.join(x for x in [d.get('finish', ''), body['finish']+' UV lamination' if body['finish'] else ''] if x)
+    finish = spec['fixed_finish'] or ' · '.join(x for x in [d.get('finish', ''), body['finish']+' UV lamination' if body['finish'] else ''] if x)
     if len(description) > 1000 or len(finish) > 160:
         raise ValueError('AREA_DESCRIPTION_TOO_LONG')
     line = {'description': description, 'finish': finish, 'placement': d.get('placement', ''),
             'quantity': '1', 'unit': 'Job', 'unit_price': money(net), 'discount_percent': '0', 'vat_rate': money(vat)}
-    return {'product_id': PRODUCT_ID, 'product_version': product['version'],
-            'inputs': {**body, 'width': w, 'height': h, 'pieces': str(pieces)},
+    return {'product_id': ident, 'product_version': product['version'],
+            'inputs': {**body, 'width': w, 'height': h, 'pieces': str(pieces),
+                       'finish': 'Optically clear' if spec['fixed_finish'] else body['finish']},
             'area_sqft': area_text, 'area_approximate': approximate, 'rate': money(rate),
             'net_cents': net, 'vat_cents': tax, 'total_cents': net+tax, 'line': line}

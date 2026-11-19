@@ -36,7 +36,7 @@ async function findProducts(){
  const r=await api('/api/products?q='+encodeURIComponent(el('product-search').value)+'&state=active&page='+productPage);productTotal=r.total;el('product-results').replaceChildren();el('product-count').textContent=r.total+' active products · Page '+productPage;
  for(const p of r.data){const b=document.createElement('button');b.type='button';b.style.cssText='display:block;margin:8px 0;text-align:left;width:100%';b.textContent=p.data.code+' · '+p.data.name+' · BSD '+p.data.unit_price+' / '+p.data.unit+' before VAT';b.onclick=()=>run(async()=>{
   if(record?.status==='issued'||!can102(record?.version?'quotes.edit':'quotes.create'))return;
-  if(areaPicker?.accepts(p.id)){areaPicker.open();status('Enter width, height and piece count, then calculate the vinyl price.');return;}
+  if(areaPicker?.accepts(p.id)){areaPicker.open(p.id);status('Enter width, height and piece count, then calculate the vinyl price.');return;}
   const current=(await api('/api/products/'+p.id)).data;if(!current.active)throw Error('This product has been archived. Find another product.');
   const empty=readLines();if(empty.length===1&&!empty[0].description&&!empty[0].unit_price&&!empty[0].finish&&!empty[0].placement)el('lines').replaceChildren();
   if(el('lines').children.length>=100)throw Error('A quote can contain up to 100 items.');
