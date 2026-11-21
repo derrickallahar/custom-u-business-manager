@@ -5,6 +5,7 @@ from workspace_codec import parse
 from catalogue_pricing import calculate as calculate_catalogue
 import json
 import re
+import hashlib
 from area_pricing import calculate as calculate_area, selected_product as selected_area_product
 
 
@@ -52,20 +53,64 @@ def install(app, provider, session, enabled, root, failure):
     def pricing_picker_script():
         return app.response_class((root/'static/pricing-picker.js').read_bytes(), mimetype='text/javascript')
 
+    def starter_gate():
+        # One current access read, followed by the RPC's own authorization and a
+        # post-write recheck. Avoid the former duplicate session/access request.
+        rec, me = session()
+        if not enabled:
+            raise failure('CUSTOMERS_NOT_ENABLED', 409)
+        if me.get('role') != 'admin' or not permitted(me, {'op': 'save', 'version': 0}):
+            raise failure('ACCESS_DENIED', 403)
+        return rec
+
+    def starter_source():
+        raw = (root/'catalogue_starters.json').read_bytes()
+        items = json.loads(raw)
+        if not isinstance(items, list) or not 1 <= len(items) <= 250:
+            raise failure('STARTER_SOURCE_INVALID', 503)
+        return items, hashlib.sha256(raw).hexdigest()
+
     @app.post('/api/products/setup-starters')
     def setup_starters():
-        rec = gate({'op': 'save', 'version': 0})
-        if session()[1].get('role') != 'admin':
-            raise failure('ACCESS_DENIED', 403)
-        if request.get_json() != {'add_unpriced_starters': True}:
+        # A page left open from 114.6 must reload rather than silently process
+        # only part of the old all-at-once request.
+        starter_gate()
+        raise failure('STARTER_SETUP_RELOAD_REQUIRED', 409)
+
+    @app.get('/api/products/setup-starters/plan')
+    def starter_plan():
+        starter_gate()
+        items, digest = starter_source()
+        return jsonify(source_sha256=digest, total=len(items), batch_size=10)
+
+    @app.post('/api/products/setup-starters/batch')
+    def starter_batch():
+        rec = starter_gate()
+        body = request.get_json()
+        if (not isinstance(body, dict) or set(body) != {'add_unpriced_starters', 'source_sha256', 'offset'}
+                or body['add_unpriced_starters'] is not True or type(body['offset']) is not int
+                or not isinstance(body['source_sha256'], str)):
             raise failure('INVALID_REQUEST', 400)
-        items = json.loads((root/'catalogue_starters.json').read_text())
-        result = parse(provider.call('/rest/v1/rpc/custom_u_catalogue_setup_1146', rec['token'], {'payload': {'items': items}}, limit=2*1024*1024))
-        if provider.access(rec['token']).get('role') != 'admin':
+        items, digest = starter_source()
+        if body['source_sha256'] != digest:
+            raise failure('STARTER_SOURCE_CHANGED', 409)
+        offset = body['offset']
+        if not 0 <= offset < len(items) or offset % 10:
+            raise failure('INVALID_REQUEST', 400)
+        chunk = items[offset:offset+10]
+        result = parse(provider.call('/rest/v1/rpc/custom_u_catalogue_setup_1146', rec['token'], {'payload': {'items': chunk}}, limit=100000))
+        me = provider.access(rec['token'])
+        if me.get('role') != 'admin' or not permitted(me, {'op': 'save', 'version': 0}):
             raise failure('ACCESS_DENIED', 403)
-        if not isinstance(result, dict) or 'error' in result or type(result.get('added')) is not int or type(result.get('existing')) is not int or result['added']+result['existing'] != len(items):
-            raise failure('STARTER_SETUP_UNCONFIRMED', 400)
-        return jsonify(result)
+        if isinstance(result, dict) and result.get('error') == 'ACCESS_DENIED':
+            raise failure('ACCESS_DENIED', 403)
+        if (not isinstance(result, dict) or 'error' in result
+                or type(result.get('added')) is not int or type(result.get('existing')) is not int
+                or min(result['added'], result['existing']) < 0
+                or result['added']+result['existing'] != len(chunk)):
+            raise failure('STARTER_SETUP_UNCONFIRMED', 503)
+        return jsonify(source_sha256=digest, total=len(items), offset=offset,
+                       next_offset=offset+len(chunk), added=result['added'], existing=result['existing'])
 
     @app.post('/api/products/configured-price')
     def configured_price():

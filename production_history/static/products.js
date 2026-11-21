@@ -11,7 +11,7 @@ function status(message,kind='info',focus=false){
  if(!el('edit').hidden){el('edit-status').textContent=message;const box=el('save-status');box.hidden=false;box.textContent=message;box.dataset.kind=kind;box.setAttribute('role',kind==='error'?'alert':'status');if(focus){box.focus();box.scrollIntoView?.({block:'nearest'});}}
  else if(focus){el('status').setAttribute('tabindex','-1');el('status').focus();el('status').scrollIntoView?.({block:'nearest'});}
 }
-function clear(){el('starter-setup').hidden=true;fillPricing({});el('csv-import-link').hidden=true;me=null;record=null;supplierRecord=null;dirty=false;el('workspace').hidden=true;el('edit').hidden=true;el('rows').replaceChildren();for(const k of fields)el('p-'+k).value='';for(const k of Object.keys(supplierLimits))el('s-'+k).value='';el('identity').textContent='';el('heading').textContent='';el('revision').textContent='';el('edit-status').textContent='';el('save-status').textContent='';el('save-status').hidden=true;el('count').textContent='';el('active').checked=false;el('search').value='';clearImport();el('product-images').hidden=true;el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';el('image-status').textContent='';uploadId=null;}
+function clear(){clearStarterProgress();el('starter-setup').hidden=true;fillPricing({});el('csv-import-link').hidden=true;me=null;record=null;supplierRecord=null;dirty=false;el('workspace').hidden=true;el('edit').hidden=true;el('rows').replaceChildren();for(const k of fields)el('p-'+k).value='';for(const k of Object.keys(supplierLimits))el('s-'+k).value='';el('identity').textContent='';el('heading').textContent='';el('revision').textContent='';el('edit-status').textContent='';el('save-status').textContent='';el('save-status').hidden=true;el('count').textContent='';el('active').checked=false;el('search').value='';clearImport();el('product-images').hidden=true;el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';el('image-status').textContent='';uploadId=null;}
 const safeCodes=new Set([...Object.keys(errors),'INVALID_REQUEST','INVALID_PROVIDER_RESPONSE','REQUEST_FAILED','REQUEST_REJECTED','PROVIDER_REQUEST_FAILED','PROVIDER_UNAVAILABLE','RESPONSE_TOO_LARGE','CUSTOMERS_NOT_ENABLED','PLEASE_WAIT_AND_TRY_AGAIN']);
 async function api(path,body){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),path.includes('import-')||path.includes('/images')?45000:20000);
@@ -222,6 +222,72 @@ function readPricing(){
 }
 el('pricing-mode').onchange=()=>{const mode=el('pricing-mode').value;if(mode==='area')el('p-unit').value='Sqft';if(mode==='grid'){el('p-unit').value='Run';el('p-unit_price').value='';}pricingControls();dirty=true;};
 el('pricing-add').onclick=()=>{try{priceOption();dirty=true;}catch(e){status(e.message,'error',true);}};
-el('setup-starters').onclick=()=>run(async()=>{if(!leave())return;const r=await api('/api/products/setup-starters',{add_unpriced_starters:true});el('state').value='inactive';el('search').value='';page=1;await list();status(r.added+' unpriced products added; '+r.existing+' existing products kept. Open an item to set its pricing. Leave it inactive until ready.');});
+// Only this create-only setup operation is retried. Product saves are never
+// automatically retried here. The database keeps existing IDs/codes/names.
+let starterProgress=null;
+function starterMessage(text){
+ const progress=el('starter-progress');if(progress)progress.textContent=text;
+ status(text);
+}
+function clearStarterProgress(){starterProgress=null;const p=el('starter-progress');if(p)p.textContent='';el('setup-starters').textContent='Add unpriced product starters';}
+function starterError(message,retryable=false){const e=new Error(message);e.retryable=retryable;return e;}
+async function starterRequest(path,body){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+ try{
+  let r;try{r=await fetch(path,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});}
+  catch{throw starterError('The setup request timed out or lost its connection.',true);}
+  if(r.status===401||r.status===403){clear();throw starterError('Product access ended. Return to Workspace to sign in, then resume catalogue setup.');}
+  if(r.status===404)throw starterError('The setup update is not available yet. Wait for deployment to finish and reload Products.');
+  const retryable=r.status===408||r.status===429||r.status>=500;
+  let data;try{data=await r.json();}catch{throw starterError('The setup response could not be read (HTTP '+r.status+').',retryable||r.ok);}
+  if(!r.ok){
+   if(data?.error==='STARTER_SOURCE_CHANGED')throw starterError('The product starter file changed. Reload Products and run setup again; existing products will be kept.');
+   throw starterError('The server did not confirm this setup request (HTTP '+r.status+').',retryable);
+  }
+  return data;
+ }finally{clearTimeout(timer);}
+}
+async function starterWithRetry(path,body){
+ try{return await starterRequest(path,body);}
+ catch(e){
+  if(!e.retryable||me?.role!=='admin')throw e;
+  starterMessage('Connection interrupted. Rechecking the same small batch; any products already saved will be kept.');
+  await new Promise(resolve=>setTimeout(resolve,750));
+  return await starterRequest(path,body);
+ }
+}
+el('setup-starters').onclick=()=>run(async()=>{
+ try{
+  starterMessage('Checking the product starter list…');
+  const plan=await starterWithRetry('/api/products/setup-starters/plan');
+  if(!plan||!Number.isInteger(plan.total)||plan.total<1||plan.total>250||plan.batch_size!==10||typeof plan.source_sha256!=='string'||!/^[a-f0-9]{64}$/.test(plan.source_sha256))throw starterError('The setup plan could not be verified. Reload Products and try again.');
+  if(!starterProgress||starterProgress.source_sha256!==plan.source_sha256||starterProgress.total!==plan.total||starterProgress.offset===plan.total)
+   starterProgress={source_sha256:plan.source_sha256,total:plan.total,offset:0,added:0,existing:0};
+  const progress=starterProgress;
+  el('setup-starters').textContent='Setting up catalogue…';
+  while(progress.offset<progress.total){
+   if(me?.role!=='admin'||starterProgress!==progress)throw starterError('Product access ended. Sign in and resume catalogue setup.');
+   const offset=progress.offset,next=Math.min(offset+plan.batch_size,progress.total);
+   starterMessage('Checking products '+(offset+1)+'–'+next+' of '+progress.total+'. Existing products and prices are kept.');
+   const r=await starterWithRetry('/api/products/setup-starters/batch',{add_unpriced_starters:true,source_sha256:progress.source_sha256,offset});
+   if(starterProgress!==progress||me?.role!=='admin')throw starterError('Product access ended. Sign in and resume catalogue setup.');
+   if(!r||r.source_sha256!==progress.source_sha256||r.total!==progress.total||r.offset!==offset||r.next_offset!==next||!Number.isInteger(r.added)||!Number.isInteger(r.existing)||r.added<0||r.existing<0||r.added+r.existing!==next-offset)
+    throw starterError('The last batch could not be verified.');
+   progress.added+=r.added;progress.existing+=r.existing;progress.offset=next;
+  }
+  const done='Catalogue setup complete: all '+progress.total+' starters checked. '+progress.added+' additions confirmed; '+progress.existing+' already present and kept. Unpriced products remain inactive.';
+  el('setup-starters').textContent='Check catalogue setup';starterMessage(done);
+  el('state').value='inactive';el('search').value='';page=1;
+  try{await list();if(me)starterMessage(done);}
+  catch(e){if(!me)throw e;starterMessage(done+' The list did not refresh. Click Refresh catalogue.');}
+ }catch(e){
+  if(!me)throw e;
+  el('setup-starters').textContent='Resume catalogue setup';
+  const count=starterProgress?.offset||0;
+  const paused='Setup paused after '+count+' starters were checked in this pass. '+e.message+' Click Resume catalogue setup to continue safely; anything already saved will be kept.';
+  starterMessage(paused);throw Error(paused);
+ }
+});
+
 
 function samePricing(a,b){if(!a||!b)return !a&&!b;return a.mode===b.mode&&a.minimum===b.minimum&&a.options.length===b.options.length&&a.options.every((o,i)=>['label','copies','price'].every(k=>o[k]===b.options[i][k]));}
