@@ -61,6 +61,8 @@ def calculate(body, product):
     if not isinstance(product, dict) or not isinstance(product.get('data'), dict):
         raise ValueError('AREA_PRODUCT_UNAVAILABLE')
     d = product['data']
+    if 'pricing' in d:
+        raise ValueError('AREA_PRODUCT_UNAVAILABLE')
     if (product.get('id') != ident or product.get('active') is not True or
             type(product.get('version')) is not int or product['version'] < 1 or
             d.get('code') != spec['code'] or d.get('name') != spec['name'] or d.get('unit') != 'Sqft'):

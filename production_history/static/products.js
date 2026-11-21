@@ -5,13 +5,13 @@ const supplierLimits={supplier:160,url:2048,sku:100,cost:10,currency:3,colours:8
 const emptySupplier=()=>Object.fromEntries(Object.keys(supplierLimits).map(k=>[k,'']));
 let me=null,record=null,supplierRecord=null,page=1,total=0,busy=false,dirty=false,importPreview=null,candidate=null,candidateObjectURL=null,uploadId=null;
 const can=k=>me?.role==='admin'||me?.permissions?.[k]===true;
-const errors={PRODUCT_HISTORY_LIMIT:'The catalogue has reached its change-history limit. Contact your administrator before making further changes.',VERSION_CONFLICT:'This product changed in another session. Your changes are still here. Copy them before reloading the saved product.',PRODUCT_CODE_EXISTS:'That product code is already in use, including archived products. Choose a unique code.',INVALID_PRODUCT:'Check the product code, required fields, selling price and VAT rate.',PRODUCT_LIMIT:'The catalogue has reached its limit of 5,000 products.',NOT_FOUND:'This product could not be found. Refresh the catalogue.'};
+const errors={PRICING_MODE_REQUIRED:'Keep a pricing method for this product. Use Unit price with quantity for simple pricing.',PRICING_REQUIRED:'Enter VAT, a minimum line price (0 for none), and a positive price before activating this product.',STARTER_SETUP_UNCONFIRMED:'Setup was not confirmed. Refresh the list, then retry setup; existing products will be kept.',PRODUCT_HISTORY_LIMIT:'The catalogue has reached its change-history limit. Contact your administrator before making further changes.',VERSION_CONFLICT:'This product changed in another session. Your changes are still here. Copy them before reloading the saved product.',PRODUCT_CODE_EXISTS:'That product code is already in use, including archived products. Choose a unique code.',INVALID_PRODUCT:'Check the product code, required fields, selling price and VAT rate.',PRODUCT_LIMIT:'The catalogue has reached its limit of 5,000 products.',NOT_FOUND:'This product could not be found. Refresh the catalogue.'};
 function status(message,kind='info',focus=false){
  el('status').textContent=message;
  if(!el('edit').hidden){el('edit-status').textContent=message;const box=el('save-status');box.hidden=false;box.textContent=message;box.dataset.kind=kind;box.setAttribute('role',kind==='error'?'alert':'status');if(focus){box.focus();box.scrollIntoView?.({block:'nearest'});}}
  else if(focus){el('status').setAttribute('tabindex','-1');el('status').focus();el('status').scrollIntoView?.({block:'nearest'});}
 }
-function clear(){el('csv-import-link').hidden=true;me=null;record=null;supplierRecord=null;dirty=false;el('workspace').hidden=true;el('edit').hidden=true;el('rows').replaceChildren();for(const k of fields)el('p-'+k).value='';for(const k of Object.keys(supplierLimits))el('s-'+k).value='';el('identity').textContent='';el('heading').textContent='';el('revision').textContent='';el('edit-status').textContent='';el('save-status').textContent='';el('save-status').hidden=true;el('count').textContent='';el('active').checked=false;el('search').value='';clearImport();el('product-images').hidden=true;el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';el('image-status').textContent='';uploadId=null;}
+function clear(){el('starter-setup').hidden=true;fillPricing({});el('csv-import-link').hidden=true;me=null;record=null;supplierRecord=null;dirty=false;el('workspace').hidden=true;el('edit').hidden=true;el('rows').replaceChildren();for(const k of fields)el('p-'+k).value='';for(const k of Object.keys(supplierLimits))el('s-'+k).value='';el('identity').textContent='';el('heading').textContent='';el('revision').textContent='';el('edit-status').textContent='';el('save-status').textContent='';el('save-status').hidden=true;el('count').textContent='';el('active').checked=false;el('search').value='';clearImport();el('product-images').hidden=true;el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';el('image-status').textContent='';uploadId=null;}
 const safeCodes=new Set([...Object.keys(errors),'INVALID_REQUEST','INVALID_PROVIDER_RESPONSE','REQUEST_FAILED','REQUEST_REJECTED','PROVIDER_REQUEST_FAILED','PROVIDER_UNAVAILABLE','RESPONSE_TOO_LARGE','CUSTOMERS_NOT_ENABLED','PLEASE_WAIT_AND_TRY_AGAIN']);
 async function api(path,body){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),path.includes('import-')||path.includes('/images')?45000:20000);
@@ -22,35 +22,37 @@ async function api(path,body){
   return d;
  }finally{clearTimeout(timer);}
 }
-function controls(){el('csv-import-link').hidden=me?.role!=='admin';const editable=can(record?.version?'products.edit':'products.create');el('fields').disabled=busy||!editable;el('save').hidden=!editable;el('save').disabled=busy;el('new').hidden=!can('products.create');el('duplicate').hidden=!record?.version||!can('products.create');el('reload').hidden=!record?.version;el('prev').disabled=busy||page===1;el('next').disabled=busy||page*50>=total;el('backup-link').hidden=me?.role!=='admin';el('quotes-link').hidden=!can('quotes.view');el('supplier-import').hidden=!(can('products.create')||can('products.edit'));el('apply-import').disabled=busy||!importPreview||!editable;el('preview-image').disabled=busy||!el('candidate-list').value;el('save-candidate').disabled=busy||!candidate||!record?.version||!can('products.edit');el('image-upload-controls').hidden=!can('products.edit');el('upload-image').disabled=busy||!record?.version||!el('image-file').files?.length;}
+function controls(){el('starter-setup').hidden=me?.role!=='admin';pricingControls();el('csv-import-link').hidden=me?.role!=='admin';const editable=can(record?.version?'products.edit':'products.create');el('fields').disabled=busy||!editable;el('save').hidden=!editable;el('save').disabled=busy;el('new').hidden=!can('products.create');el('duplicate').hidden=!record?.version||!can('products.create');el('reload').hidden=!record?.version;el('prev').disabled=busy||page===1;el('next').disabled=busy||page*50>=total;el('backup-link').hidden=me?.role!=='admin';el('quotes-link').hidden=!can('quotes.view');el('supplier-import').hidden=!(can('products.create')||can('products.edit'));el('apply-import').disabled=busy||!importPreview||!editable;el('preview-image').disabled=busy||!el('candidate-list').value;el('save-candidate').disabled=busy||!candidate||!record?.version||!can('products.edit');el('image-upload-controls').hidden=!can('products.edit');el('upload-image').disabled=busy||!record?.version||!el('image-file').files?.length;}
 async function run(fn){if(busy)return;busy=true;document.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=true);try{await fn();}catch(e){status(e.message||'The action could not complete. Code: PRODUCT_ACTION_FAILED.','error',true);}finally{busy=false;el('save').textContent='Save product';document.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=false);controls();}}
 function leave(){return !dirty||window.confirm('Discard your unsaved product changes?');}
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
-async function list(){const r=await api('/api/products?q='+encodeURIComponent(el('search').value)+'&state='+el('state').value+'&page='+page);total=r.total;el('rows').replaceChildren();for(const p of r.data){const tr=document.createElement('tr');for(const v of [p.data.code+' · '+p.data.name,p.data.category,p.data.unit_price+' / '+p.data.unit,p.data.vat_rate+'%',p.active?'Active':'Archived']){const td=document.createElement('td');td.textContent=v;tr.append(td);}const td=document.createElement('td'),b=document.createElement('button');b.textContent='Open';b.type='button';b.onclick=()=>run(async()=>{if(!leave())return;const r=await api('/api/products/'+p.id);fill(r.data,r.supplier);await loadImages();status('Saved product opened.');});td.append(b);tr.append(td);el('rows').append(tr);}el('count').textContent=r.total+' products · Page '+page;controls();}
-function fill(p,supplier=null){const changed=record?.id!==p.id;record=p;supplierRecord=supplier;for(const k of fields)el('p-'+k).value=p.data[k]??'';for(const k of Object.keys(supplierLimits))el('s-'+k).value=supplier?.data?.[k]??'';el('active').checked=p.active;el('edit').hidden=false;el('heading').textContent=p.version?p.data.name:'New product';el('revision').textContent=p.version?'Saved · product revision '+p.version+' · supplier revision '+(supplier?.version||0):'Unsaved';el('edit-status').textContent='';el('save-status').hidden=true;el('save-status').textContent='';if(changed){el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';uploadId=null;}el('product-images').hidden=!p.version;dirty=false;controls();}
+async function list(){const r=await api('/api/products?q='+encodeURIComponent(el('search').value)+'&state='+el('state').value+'&page='+page);total=r.total;el('rows').replaceChildren();for(const p of r.data){const tr=document.createElement('tr');for(const v of [p.data.code+' · '+p.data.name,p.data.category,p.data.pricing?.mode==='grid'?'Option prices':p.data.unit_price?p.data.unit_price+' / '+p.data.unit:'Price not set',p.data.vat_rate!==''?p.data.vat_rate+'%':'Not set',p.active?'Active':p.data.pricing?'Inactive / pricing setup':'Archived']){const td=document.createElement('td');td.textContent=v;tr.append(td);}const td=document.createElement('td'),b=document.createElement('button');b.textContent='Open';b.type='button';b.onclick=()=>run(async()=>{if(!leave())return;const r=await api('/api/products/'+p.id);fill(r.data,r.supplier);await loadImages();status('Saved product opened.');});td.append(b);tr.append(td);el('rows').append(tr);}el('count').textContent=r.total+' products · Page '+page;controls();}
+function fill(p,supplier=null){const changed=record?.id!==p.id;record=p;supplierRecord=supplier;fillPricing(p.data);for(const k of fields)el('p-'+k).value=p.data[k]??'';for(const k of Object.keys(supplierLimits))el('s-'+k).value=supplier?.data?.[k]??'';el('active').checked=p.active;el('edit').hidden=false;el('heading').textContent=p.version?p.data.name:'New product';el('revision').textContent=p.version?'Saved · product revision '+p.version+' · supplier revision '+(supplier?.version||0):'Unsaved';el('edit-status').textContent='';el('save-status').hidden=true;el('save-status').textContent='';if(changed){el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';uploadId=null;}el('product-images').hidden=!p.version;dirty=false;controls();}
 function fresh(source){const supplier=source&&supplierRecord?{data:{...supplierRecord.data},version:0}:null;fill({id:crypto.randomUUID(),version:0,active:true,data:source?{...source.data,code:''}:{unit:'Each'}},supplier);dirty=true;status(source?'Choose a unique code for this copy, then save. Images are not copied.':'Enter the product details, selling price and VAT rate.');}
 el('new').onclick=()=>{if(leave())fresh();};el('duplicate').onclick=()=>{if(leave())fresh(record);};
 el('fields').oninput=()=>{dirty=true;status('Unsaved changes. Click Save product to apply them.');};
 const fieldLabels={code:'Product code',name:'Product name',category:'Category',description:'Description',unit:'Unit',unit_price:'Selling price',vat_rate:'VAT rate',finish:'Finish / branding method',placement:'Placement'};
 const fieldLimits={code:40,name:160,category:80,description:800,unit:20,finish:160,placement:160};
 function validatedProduct(){
- const data={};
+ const data={},pricing=readPricing();
  for(const k of fields){
   const input=el('p-'+k),v=input.value.trim(),label=fieldLabels[k];
-  if(['code','name','unit','unit_price','vat_rate'].includes(k)&&!v)throw Error(label+': enter a value before saving.');
+  if((['code','name','unit'].includes(k)||!pricing&&['unit_price','vat_rate'].includes(k))&&!v)throw Error(label+': enter a value before saving.');
   if(k==='code'&&!/^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$/.test(v))throw Error('Product code: use letters, numbers, dots, underscores or ordinary hyphens, for example TEST-CAT-105.');
   if(fieldLimits[k]&&v.length>fieldLimits[k])throw Error(label+': use no more than '+fieldLimits[k]+' characters.');
   if(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(v)||k!=='description'&&/[\t\r\n]/.test(v))throw Error(label+': remove line breaks or control characters.');
   if(k==='unit_price'||k==='vat_rate'){
+   if(pricing&&v===''){data[k]='';continue;}
    const max=k==='unit_price'?1000000:100;
    if(input.validity.badInput||!/^[0-9]{1,7}(\.[0-9]{1,2})?$/.test(v)||Number(v)>max)throw Error(label+': enter a number from 0 to '+max+' with at most two decimal places, for example 10.00.');
   }
   data[k]=v;
  }
+ if(pricing){data.pricing=pricing;if(pricing.mode==='grid')data.unit_price='';if(el('active').checked&&(data.vat_rate===''||pricing.minimum===''||(pricing.mode==='grid'?!pricing.options.some(o=>Number(o.price)>0):!(Number(data.unit_price)>0))))throw Error('Keep Active unchecked until VAT, minimum line price (0 for none), and a positive price are entered.');}
  return data;
 }
 function savedMatches(saved,payload){
- return saved&&saved.id===payload.id&&Number.isInteger(saved.version)&&saved.version>=1&&[payload.version,payload.version+1].includes(saved.version)&&saved.active===payload.active&&saved.data&&fields.every(k=>typeof saved.data[k]==='string'&&(k==='unit_price'||k==='vat_rate'?Number(saved.data[k])===Number(payload.data[k]):saved.data[k]===payload.data[k]));
+ return saved&&saved.id===payload.id&&Number.isInteger(saved.version)&&saved.version>=1&&[payload.version,payload.version+1].includes(saved.version)&&saved.active===payload.active&&saved.data&&samePricing(saved.data.pricing,payload.data.pricing)&&fields.every(k=>typeof saved.data[k]==='string'&&(k==='unit_price'||k==='vat_rate'?(saved.data[k]===''||payload.data[k]===''?saved.data[k]===payload.data[k]:Number(saved.data[k])===Number(payload.data[k])):saved.data[k]===payload.data[k]));
 }
 el('edit').onsubmit=e=>{
  e.preventDefault();if(busy)return;
@@ -183,3 +185,43 @@ el('save-candidate').onclick=()=>run(()=>messageWork('import-status',async()=>{
 }));
 
 run(async()=>{const r=await api('/api/session');me=r.me;if(!r.crm_enabled||!can('products.view')){clear();throw Error('Product catalogue access is required. Return to Workspace.');}el('workspace').hidden=false;el('identity').textContent=me.email;await list();status('Choose a product or add a new one.');});
+
+function pricingControls(){
+ const mode=el('pricing-mode').value,configured=mode!=='legacy';
+ el('pricing-settings').hidden=!configured;
+ el('pricing-grid').hidden=mode!=='grid';
+ el('p-unit_price').closest('label').hidden=mode==='grid';
+ el('price-label').textContent=mode==='area'?'Rate per square foot (BSD, before VAT)':'Selling price (BSD, before VAT)';
+ el('p-unit').disabled=busy||['area','grid'].includes(mode);
+ el('pricing-help').textContent=mode==='area'?'Quotes and invoices will ask for width, height, inches or feet, and number of pieces. The saved rate is per square foot.':mode==='grid'?'Each row is an exact option at a whole-run price. Put size, sides and finish in its customer-visible label. Blank or zero prices cannot be selected. No interpolation between quantities.':'Quotes and invoices will ask for a whole-number quantity. Use a custom item for fractional quantities.';
+}
+function priceOption(row={label:'',copies:'1',price:''}){
+ if(el('pricing-options').children.length>=50)throw Error('Use up to 50 pricing options per product.');
+ const box=document.createElement('div');box.className='line grid';
+ for(const [key,label] of [['label','Option label (shown to customer)'],['copies','Copies / pieces in one run'],['price','Whole-run price BSD, before VAT']]){
+  const l=document.createElement('label');l.textContent=label;const i=document.createElement('input');i.dataset.option=key;i.value=row[key];
+  if(key==='label')i.maxLength=100;else{i.type='number';i.min=key==='copies'?'1':'0.01';i.max='1000000';i.step=key==='copies'?'1':'0.01';}
+  l.append(i);box.append(l);
+ }
+ const b=document.createElement('button');b.type='button';b.textContent='Remove option';b.onclick=()=>{box.remove();dirty=true;status('Unsaved pricing changes.');};box.append(b);el('pricing-options').append(box);
+}
+function fillPricing(data){el('pricing-mode').querySelector('[value=legacy]').disabled=!!data.pricing;el('pricing-mode').value=data.pricing?.mode||'legacy';el('pricing-minimum').value=data.pricing?.minimum??'';el('pricing-options').replaceChildren();for(const o of data.pricing?.options||[])priceOption(o);pricingControls();}
+function readPricing(){
+ const mode=el('pricing-mode').value;if(mode==='legacy')return null;
+ const minimum=el('pricing-minimum').value.trim();
+ const normal=(v,label)=>{if(v==='')return '';if(!/^\d{1,7}(\.\d{1,2})?$/.test(v)||Number(v)>1000000)throw Error(label+': enter a price with at most two decimals.');return Number(v).toFixed(2);};
+ const p={mode,minimum:normal(minimum,'Minimum line price'),options:[]},seen=new Set();
+ if(mode==='grid')for(const box of el('pricing-options').children){
+  const o=Object.fromEntries([...box.querySelectorAll('input')].map(i=>[i.dataset.option,i.value.trim()]));
+  if(!o.label||o.label.length>100||/[\x00-\x1f\x7f]/.test(o.label)||seen.has(o.label.toLowerCase()))throw Error('Give every pricing option a different label.');
+  seen.add(o.label.toLowerCase());
+  if(!/^[1-9][0-9]{0,6}$/.test(o.copies)||Number(o.copies)>1000000)throw Error('Copies per run must be a positive whole number.');
+  o.price=normal(o.price,'Option price');p.options.push(o);
+ }
+ return p;
+}
+el('pricing-mode').onchange=()=>{const mode=el('pricing-mode').value;if(mode==='area')el('p-unit').value='Sqft';if(mode==='grid'){el('p-unit').value='Run';el('p-unit_price').value='';}pricingControls();dirty=true;};
+el('pricing-add').onclick=()=>{try{priceOption();dirty=true;}catch(e){status(e.message,'error',true);}};
+el('setup-starters').onclick=()=>run(async()=>{if(!leave())return;const r=await api('/api/products/setup-starters',{add_unpriced_starters:true});el('state').value='inactive';el('search').value='';page=1;await list();status(r.added+' unpriced products added; '+r.existing+' existing products kept. Open an item to set its pricing. Leave it inactive until ready.');});
+
+function samePricing(a,b){if(!a||!b)return !a&&!b;return a.mode===b.mode&&a.minimum===b.minimum&&a.options.length===b.options.length&&a.options.every((o,i)=>['label','copies','price'].every(k=>o[k]===b.options[i][k]));}

@@ -8,7 +8,7 @@
  function valid(product, option) {
   const d=product?.data;
   return !!(option && product?.active===true && product.id===option.id && d?.code===option.code &&
-   d.name===option.name && d.unit==='Run' && typeof d.unit_price==='string' &&
+   !d.pricing && d.name===option.name && d.unit==='Run' && typeof d.unit_price==='string' &&
    /^[0-9]{1,7}(\.[0-9]{1,2})?$/.test(d.unit_price) && Number(d.unit_price)>0 && Number(d.unit_price)<=1000000 &&
    typeof d.vat_rate==='string' && /^[0-9]{1,3}(\.[0-9]{1,2})?$/.test(d.vat_rate) && Number(d.vat_rate)<=100);
  }

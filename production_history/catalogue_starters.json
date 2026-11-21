@@ -1,0 +1,3270 @@
+[
+  {
+    "id": "8c2dc17d-546e-5e3d-ae93-ada65c41de0e",
+    "data": {
+      "code": "SVX-8C03F7A962843FDBDD3BF66D",
+      "name": "Vehicle Wrap Custom",
+      "description": "",
+      "category": "Vehicle Graphics",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "174e4d1b-fe05-5a0c-ba2d-7bedf7c8154d",
+    "data": {
+      "code": "SVX-2D237C45C3A09C20F131B6F4",
+      "name": "Setup Fee",
+      "description": "",
+      "category": "Labor",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "be0d0bf0-7cc4-5f6e-97eb-dab9796471e5",
+    "data": {
+      "code": "SVX-51347356EF6F468A30A379B7",
+      "name": "Aluminum Bottle Opener",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c22f38d8-5a46-55f5-8154-7f4b4bcbcfa5",
+    "data": {
+      "code": "SVX-33CD5E40BB5FC8A91AC79D1C",
+      "name": "Invitations",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "99fc5cb6-e253-5f1a-8c8e-3d98829014e6",
+    "data": {
+      "code": "SVX-9045D6F05CA3E89AD2D6DBB1",
+      "name": "Menus",
+      "description": "",
+      "category": "Custom",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "1b648af8-3799-5414-938f-062aa5947ca8",
+    "data": {
+      "code": "SVX-61BE483134D0C5547795F10F",
+      "name": "Custom Acrylic Sign",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "4b84b172-e7f6-595c-91b1-989007fda1c5",
+    "data": {
+      "code": "SVX-9F3EEE2B7C0083B00B35FC25",
+      "name": "Architecture Plans",
+      "description": "Printed on .9mil Photo Paper",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f047fa0e-a4b9-556f-a10d-caf5e071a663",
+    "data": {
+      "code": "SVX-9D74A20C1ACD3F977C69E73C",
+      "name": "Acrylic Standoff",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "1f724ff9-0c83-5c91-aa87-e2a94a046ddd",
+    "data": {
+      "code": "SVX-509F4B9F5E3BCEF0A8275E5D",
+      "name": "Lamination",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "77b083a1-f88a-5251-b299-6169c87f9b21",
+    "data": {
+      "code": "SVX-A7E06CFB26ACC79786E902D2",
+      "name": "Lifesize Cheque",
+      "description": "On premium foamboard",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "7f536151-d972-5c36-a863-72c690537821",
+    "data": {
+      "code": "SVX-CB9FBE7D8F3B56390B31F3DC",
+      "name": "Prize Wheel",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "ad945ab4-8c9f-51db-a07b-6194e1affc5a",
+    "data": {
+      "code": "SVX-D772EBB4590212C65CC31888",
+      "name": "Labels",
+      "description": "Laminated Stickers  Setup Fee Included",
+      "category": "Miscellaneous",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "75b0943a-4f88-5826-aa43-8c5a273a7ed5",
+    "data": {
+      "code": "SVX-BA529C1A3EE448DF2E98CA78",
+      "name": "Caps & Hats",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "6c2e5e75-1287-5b3c-a8d7-33054007d65c",
+    "data": {
+      "code": "SVX-C04B36AB29E10D89BA688D6A",
+      "name": "Tent (Trade Show Pop Up)",
+      "description": "",
+      "category": "Trade Show",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "d954ea19-60c9-5225-86ce-fdbd4aa13f97",
+    "data": {
+      "code": "SVX-06FE5E67D72B3B3CBDBE62FD",
+      "name": "Step & Repeat Banner without frame",
+      "description": "10 mil.   Gray Back",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "2a8bec6a-af0f-5ee5-9308-72599234a4a2",
+    "data": {
+      "code": "SVX-4886AFC09576AFCDD6949AD1",
+      "name": "Table Cover",
+      "description": "",
+      "category": "Trade Show",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "6cdbc62e-3f1b-5ce8-b592-80f24bf41d99",
+    "data": {
+      "code": "SVX-5DD8BECA3B3B84F1D04C219E",
+      "name": "Tension Banner",
+      "description": "",
+      "category": "Trade Show",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "a7868828-8b59-503f-900b-a7d2e4f0a50b",
+    "data": {
+      "code": "SVX-BF873A14E576A49633981A6C",
+      "name": "Directors Chair",
+      "description": "",
+      "category": "Trade Show",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "66875223-bddc-5fc5-b34d-acd5da192268",
+    "data": {
+      "code": "SVX-CCA92DE84EBE67F0ED40EAA6",
+      "name": "Promotional Buttons",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "6b36b463-2546-560b-8e58-090da4c5ae75",
+    "data": {
+      "code": "SVX-B81164F5AD9C4CBA7B0A8353",
+      "name": "Window Graphic",
+      "description": "",
+      "category": "Vinyl Graphics",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c47eacd3-c9e3-5d4c-bd94-dc9a24941180",
+    "data": {
+      "code": "SVX-45A5C62241EEC841F042AEE5",
+      "name": "Tickets",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "a0b479be-e304-5db2-a753-d741947aad22",
+    "data": {
+      "code": "SVX-E2BF78F0A8F966B583CBF072",
+      "name": "Pop Up Film",
+      "description": "Digitally Printed",
+      "category": "Custom",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "2feb91f7-9714-5caa-adba-0b031af61f9c",
+    "data": {
+      "code": "SVX-B7B479E0123D49074FAC95B0",
+      "name": "Notepad",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f00a3402-4bf1-5541-a0f7-a9d15f1349d2",
+    "data": {
+      "code": "SVX-E9E9C5CE134B4AB891B1F4A1",
+      "name": "Yard Signs",
+      "description": "Full-color imprint on 4mm white corrugated plastic.",
+      "category": "Rigid Signs",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "270dd150-25f4-5315-a6f8-4dfc6ebf8140",
+    "data": {
+      "code": "SVX-7A4BF1A72ABC41ACA3781345",
+      "name": "Real Estate H Signs",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "b5e5794a-fe59-56de-b2d9-d2afcb5c1d9f",
+    "data": {
+      "code": "SVX-4EFF02900BA81FA2D46B733B",
+      "name": "Wristbands",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "e4a85d77-e1a9-5d29-bbf0-83f5fe9b8b4c",
+    "data": {
+      "code": "SVX-E0DBDC68205E20296139F114",
+      "name": "Name Badge Tags",
+      "description": "UV Printed    Magnetic Backing",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c3080ab4-50a1-56e5-a87b-1cb94d506df7",
+    "data": {
+      "code": "SVX-0ADB1CBE43CB98A82B20B827",
+      "name": "Drink Coasters",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "7a4c1d00-1a30-55e5-8faf-c606695d0a02",
+    "data": {
+      "code": "SVX-1E914C1D70188A3B1D150890",
+      "name": "Polystyrene Sign Digitally Printed .06\"",
+      "description": "Digitally Printed & UV Laminated",
+      "category": "Rigid Signs",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "1ada6229-afb0-5457-bc43-345ff7fc5d0c",
+    "data": {
+      "code": "SVX-6DAEA38D0FFE8020487A84D0",
+      "name": "Polystyrene Sign Digitally Printed .02\"",
+      "description": "Digitally Printed & UV Laminated",
+      "category": "Rigid Signs",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f4fcc45c-f9c5-5cb4-a966-d5e198976d91",
+    "data": {
+      "code": "SVX-2E6656C9542F806457326BDB",
+      "name": "Letterheads",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "3b2e35d6-a22f-5aaa-8b11-e57a216caa98",
+    "data": {
+      "code": "SVX-F7B7C7A596099269A3FC0027",
+      "name": "Corrugated Plastic Sign Digitally Printed",
+      "description": "Digitally Printed, UV Laminated & Cut",
+      "category": "Rigid Signs",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "6ef15ac3-2675-5be5-a9eb-e7e4a279e240",
+    "data": {
+      "code": "SVX-D1E5F11F16A9E709D3341904",
+      "name": "Foamboard Sign Digitally Printed",
+      "description": "Digitally Printed, UV Laminated & Cut",
+      "category": "Rigid Signs",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "76f068fb-5971-5b96-8ecb-03f8d1d3dfd5",
+    "data": {
+      "code": "SVX-13BE4BC90DE4D5E868C83FB1",
+      "name": "Metal Sign Digitally Printed",
+      "description": "Digitally Printed & UV Laminated",
+      "category": "Rigid Signs",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "bf70dd1d-8815-5d05-8216-04e204507466",
+    "data": {
+      "code": "SVX-74156046756AE2E9777B3B56",
+      "name": "Digitally Printed Vehicle Vinyl",
+      "description": "Digitally Printed & UV Laminated",
+      "category": "Vehicle Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "b28381ae-0139-5777-9279-db13f6a1ec9c",
+    "data": {
+      "code": "SVX-A48F043F569337DBF1F737F5",
+      "name": "Digitally Printed Vehicle Installation",
+      "description": "Digitally Printed & UV Laminated    Surface Cleaning    Setup    Installation",
+      "category": "Vehicle Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "b3c84c10-bbf1-5afd-af29-0711063bb4df",
+    "data": {
+      "code": "SVX-2444D6CC82BBCB547A34888C",
+      "name": "Wall Vinyl Digitally Printed",
+      "description": "Digitally Printed & UV Laminated",
+      "category": "Vehicle Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "5b791e05-ced3-54bc-b2c3-04fbc579e3d5",
+    "data": {
+      "code": "SVX-A096AD323E2A98699C296E8F",
+      "name": "Bomber Jacket",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "19524cf7-9382-5547-a6e0-8e0ccbc302b1",
+    "data": {
+      "code": "SVX-ECF425E0F3ACD552AF3AAF43",
+      "name": "UV Printing",
+      "description": "",
+      "category": "Custom",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "df2a01e0-bcd6-540c-97b0-583cf3d770a3",
+    "data": {
+      "code": "SVX-2A5658736D9FC79F2501BB54",
+      "name": "Document Prints",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "81977a1b-6321-5de0-99b2-136be78513a8",
+    "data": {
+      "code": "SVX-FB4B7A95B241E8C7ED3A4C7D",
+      "name": "Canvas Print",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "8bd6274b-e8aa-5966-b52d-a7a9fe418245",
+    "data": {
+      "code": "SVX-78B5C3C860C937EFF29ABD5A",
+      "name": "Photo Prints",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "01097eb0-98aa-5767-95bc-8a014d635b4e",
+    "data": {
+      "code": "SVX-302B83A6435CB4146B4FB8F6",
+      "name": "Advertising Flag Accessories",
+      "description": "",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c41c8332-dd18-5c72-804f-a964021e8235",
+    "data": {
+      "code": "SVX-266550BABBB7BD394AB653E1",
+      "name": "Glasses",
+      "description": "",
+      "category": "Beverage",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "450bfc30-8fbc-5af0-92d6-708f3cf4fc1e",
+    "data": {
+      "code": "SVX-566FF5E30864DB914C42E347",
+      "name": "ID Card",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "9b3b9456-7d72-5c8e-af88-c0ea297e3418",
+    "data": {
+      "code": "SVX-6EBB16D100FAC5FEFFE6A745",
+      "name": "Event Activation",
+      "description": "Hourly promotional services",
+      "category": "Labor",
+      "unit": "Unit",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "2943dbfe-4bf7-5f33-a7a1-1c485c3826e4",
+    "data": {
+      "code": "SVX-350CED6E5159ECE6CE1355BD",
+      "name": "Keychain",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "48f2ccaf-b469-51ec-a197-c4cf53da1914",
+    "data": {
+      "code": "SVX-2F4597A1268C980676A3B12E",
+      "name": "Drink Sleeve",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "78f429ba-8399-558e-912b-cc6458cd33c3",
+    "data": {
+      "code": "SVX-2324FE43C393CD4D0CFD5068",
+      "name": "Car Shade Visor",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "d0fa075f-280f-56b0-8efa-74170253fb59",
+    "data": {
+      "code": "SVX-2974744982F08B2077515F1E",
+      "name": "Umbrella",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "228269e2-09fa-53fd-a863-1aed03ca8302",
+    "data": {
+      "code": "SVX-A0F25C96A71E66DADE2D6599",
+      "name": "X Banner Print 30\" x 69\"",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c957efd4-e90c-50ce-bee6-1bd405cb39fd",
+    "data": {
+      "code": "SVX-00C98E3B8BCF6A71282EE612",
+      "name": "Backlit SEG",
+      "description": "",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "e95ddb52-96c4-51e6-b35d-50addf616421",
+    "data": {
+      "code": "SVX-8C95F5C5CC80A46622504BE3",
+      "name": "Photo Printed Paper",
+      "description": "Digitally Printed & UV Laminated",
+      "category": "Custom",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "3e602f5b-9172-529c-bfc4-0cfd32eba7cd",
+    "data": {
+      "code": "SVX-8A993230F588EF210D6E4C40",
+      "name": "Screen Printing - Apparel",
+      "description": "",
+      "category": "Screen Printing",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "27770e6a-077f-5bb7-88c4-f84e5a3738ab",
+    "data": {
+      "code": "SVX-221617318BCF512885AF0E07",
+      "name": "Discount",
+      "description": "",
+      "category": "Misc. Fees",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "d7020fcf-07fd-5bf4-b1b9-9bdb4bdcdcc5",
+    "data": {
+      "code": "SVX-8E67F13D631BC5FA1604A77B",
+      "name": "Party Products",
+      "description": "",
+      "category": "Miscellaneous",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "dce0d67f-ddcb-58b7-8661-024432a8ccac",
+    "data": {
+      "code": "SVX-BF35DB7460022B0274FDCAF9",
+      "name": "Decor",
+      "description": "",
+      "category": "Promo",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "1fefcdbc-be52-5388-9f53-5bece715ee4f",
+    "data": {
+      "code": "SVX-C4B8EC2E5C3AB734B5AE1807",
+      "name": "Shelf Strips",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "fed16348-d70f-5476-ba4f-0a66cdcb306c",
+    "data": {
+      "code": "SVX-8BE0C643035A88F6F10DBB85",
+      "name": "Window Graphics",
+      "description": "",
+      "category": "Vinyl Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "321041fb-3010-5d1d-b109-5715d67edf0a",
+    "data": {
+      "code": "SVX-69FA007D599F34ED8A4221B2",
+      "name": "Bottle Neckers",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "414dad35-d5a4-5670-a8f3-9767a984a515",
+    "data": {
+      "code": "SVX-A3B3E098A413B32CB3C11A03",
+      "name": "Printed Vinyl",
+      "description": "",
+      "category": "Custom",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "a2d6a53e-fba4-528b-b539-0baa9897579d",
+    "data": {
+      "code": "SVX-5A940F68B18FC068D2C0D19F",
+      "name": "Shelf Talkers",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "d985a9af-a9e8-5563-966b-08a23a6af5c4",
+    "data": {
+      "code": "SVX-E8A4D338288B9D710C98AB19",
+      "name": "Balloons",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "b21767c1-b1b4-5e70-a7ab-b9b3655cde02",
+    "data": {
+      "code": "SVX-E1BFDBB29BDFAEC7CA7441B3",
+      "name": "Street Pole Banner",
+      "description": "",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "3c4cbf68-2442-52a0-8c38-6ad42c6ec8a5",
+    "data": {
+      "code": "SVX-8DE8888AA0E6E8C4B31786BD",
+      "name": "Rack Cards",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "e8e82ff4-8b4e-5163-bb01-f68f963c6864",
+    "data": {
+      "code": "SVX-D1967F5F2F06D10FA090C5BB",
+      "name": "Shelf Wobblers",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "b2339ced-4a4b-595a-9150-03ca0a2a9cd9",
+    "data": {
+      "code": "SVX-2F7BF50F916087E3E54EF053",
+      "name": "Digitally Printed Laminated Floor Vinyl",
+      "description": "Digitally Printed & UV Laminated",
+      "category": "Custom",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "882f9b25-2152-51dc-af63-4da5b6a794a6",
+    "data": {
+      "code": "SVX-10C86E5A4A676FCA10F62B53",
+      "name": "Postcards",
+      "description": "Full color post cards - digitally printed per approved layout",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "5780a87d-c18b-55bc-ae95-9a15f4fee220",
+    "data": {
+      "code": "SVX-1B69EBA88F636DCC831FCCAD",
+      "name": "Coir Door Mat",
+      "description": "",
+      "category": "Promotional Products",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f055a107-a7cd-5c66-a612-38e15dbca7d8",
+    "data": {
+      "code": "SVX-BC9F1910435B589A8B43E6B4",
+      "name": "Digital Flipbook",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "81fc8d64-c608-5a52-8327-f551f1198837",
+    "data": {
+      "code": "SVX-D4FBA09B856CC0AA0F2B643F",
+      "name": "Puzzle",
+      "description": "",
+      "category": "Miscellaneous",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "aafcc23d-742f-5d1a-8518-e701f1d38b18",
+    "data": {
+      "code": "SVX-B26149CB75E9F5A037028510",
+      "name": "Cardstock Prints",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "01942350-0d6f-5029-acbc-0bd9beb12a2a",
+    "data": {
+      "code": "SVX-88C48677414C11D560EA6761",
+      "name": "Retractable Banner",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c82c83c2-5c95-5906-b00c-361bbd1de599",
+    "data": {
+      "code": "SVX-4590C1C341391C93D0BD6AF1",
+      "name": "Notebook / Journal",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "66092b59-eda3-5f67-9156-3762837990c9",
+    "data": {
+      "code": "SVX-B114933192DDFAE795CF1327",
+      "name": "Stencil",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "adaeff6d-b6c2-59ed-aeac-201b8af3caa3",
+    "data": {
+      "code": "SVX-CE7316955B03A1ECA6B9FA4D",
+      "name": "Etched Frosted Vinyl",
+      "description": "",
+      "category": "Custom",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "cb64b6be-80cb-59f9-b62f-968938c5d6f3",
+    "data": {
+      "code": "SVX-E9EE482D048D7B89F7040657",
+      "name": "Tint",
+      "description": "",
+      "category": "Custom",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "13be8d88-b5db-5239-89ef-0a02d2c592fb",
+    "data": {
+      "code": "SVX-42AD36ADBBFA9058E6CB5156",
+      "name": "Billboards",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c0ee1b92-2f24-52f8-9cc0-a34108b81276",
+    "data": {
+      "code": "SVX-24F896F7408E9F66CB3153C0",
+      "name": "Pencils",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "e4042abb-2624-55e8-a929-b3979ef794d6",
+    "data": {
+      "code": "SVX-BD21059C22FA488EA4799884",
+      "name": "Miscellaneous",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "0544f90f-0af5-5e71-b86c-d253a7b5f8e3",
+    "data": {
+      "code": "SVX-94D8FE2CFFBE16B26A3AC857",
+      "name": "Laser",
+      "description": "Laser Services",
+      "category": "Labor",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "8c62a0c0-0b3d-5306-b6cd-0dda8ea5cc6f",
+    "data": {
+      "code": "SVX-3CFED1E1BC820CC487A7C437",
+      "name": "Door Hanger",
+      "description": "12pt Cardstock",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f516194d-48ad-551d-80e9-f66665b5cfe2",
+    "data": {
+      "code": "SVX-C81C05EF247D3B2C6F5AA21E",
+      "name": "Advertising Flags (Single Side)",
+      "description": "Flag comes with pole & ground stake.",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "e1e07560-8e63-5889-ab9c-6c60aed59482",
+    "data": {
+      "code": "SVX-BC969EAA136C3E540CF052DF",
+      "name": "Tote Bag",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c1e87217-5c5b-59cf-a889-8b7654bac1f7",
+    "data": {
+      "code": "SVX-199F201985EFB8C159A7918B",
+      "name": "USB Drive",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "52f7524e-5607-5327-b613-f4efacf39dea",
+    "data": {
+      "code": "SVX-D9C4EEF2F236464BF330C29B",
+      "name": "Bottle Opener",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "16de3ae5-7971-5687-a6c5-dada343c39e3",
+    "data": {
+      "code": "SVX-E8C679C97AF7E09EBB7FEE63",
+      "name": "Water Bottles",
+      "description": "",
+      "category": "Drinkware",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "20393f26-effd-5209-977c-c7257cf350ef",
+    "data": {
+      "code": "SVX-CF48DE385B60A2B55CCBEF02",
+      "name": "T-Shirts",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "7942a5fc-7572-5036-bd4c-161bc033198c",
+    "data": {
+      "code": "SVX-55015DCC0231800FB4072EFB",
+      "name": "Pens",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c3a2a6c1-539b-5b5e-9bbe-973e5d4db62c",
+    "data": {
+      "code": "SVX-43E27B3F640F8CEC0C2928D1",
+      "name": "Lanyards",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c113d6fa-855d-5dbd-b955-fbd659531647",
+    "data": {
+      "code": "SVX-35A20789D89B500373F48BB5",
+      "name": "Velcro Fabric Pop Up",
+      "description": "",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "2c1e29e9-046d-5790-b6f1-df0c66bf9063",
+    "data": {
+      "code": "SVX-51E77AAE864658EA01360A2D",
+      "name": "Ready-To-Apply Vinyl",
+      "description": "",
+      "category": "Vinyl Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "e54cdbd9-9d6a-5554-8ab8-f10885e13852",
+    "data": {
+      "code": "SVX-A1E373317BF43F360B9AC196",
+      "name": "Tension Fabric Stand",
+      "description": "",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "d6dadaca-1e2c-58b9-b4fa-d2804b8a2d92",
+    "data": {
+      "code": "SVX-D8ED3BAFEAE9DC14643032A9",
+      "name": "Advertising Flags (Double Sided)",
+      "description": "Flag comes with pole & ground stake.",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "6784c0f1-cb05-5f91-9bcf-d8399b0847e7",
+    "data": {
+      "code": "SVX-E8035C5A659739717FD3093F",
+      "name": "Calendar \"Desk\"",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "98459baf-99e5-5285-8c62-4b918234a133",
+    "data": {
+      "code": "SVX-5692C70E90D8B1AEFEAB7DD7",
+      "name": "UV DTF Stickers Sheet",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "d4714793-e02e-5cf8-8df7-daa5e73a43db",
+    "data": {
+      "code": "SVX-901B54BF1B6D2527D9B82E7A",
+      "name": "UV Stickers",
+      "description": "",
+      "category": "Promo",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c67c5ba1-b7fd-5e66-aa63-927b6c8aa16a",
+    "data": {
+      "code": "SVX-B87AA5270772708AEAED24AD",
+      "name": "Flask",
+      "description": "",
+      "category": "Drinkware",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "1c030aaf-1332-5d3e-909a-12a749d38a94",
+    "data": {
+      "code": "SVX-BF4C3D35506F7052EA7C2179",
+      "name": "Golf Balls",
+      "description": "",
+      "category": "Drinkware",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "7ee6c1cd-53ef-594d-8a70-129955346685",
+    "data": {
+      "code": "SVX-BF5E6C595B117A32A3EF292B",
+      "name": "Photo Block",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "78e81c80-8d7c-5023-b9ff-797f61e0be92",
+    "data": {
+      "code": "SVX-1B91249BDF492AB0D11E5D49",
+      "name": "Apparel Application",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "2d77c34a-784a-52e8-80b6-ba251c3271e3",
+    "data": {
+      "code": "SVX-1FEDAC5539D810EE362D731B",
+      "name": "Power Bank",
+      "description": "10000mAh Portable Charger",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "a2daf2c7-4d21-55a8-b362-fb2d1177b301",
+    "data": {
+      "code": "SVX-64CA615CA48653350276AAF3",
+      "name": "A-Frame",
+      "description": "Double Sided UV laminated",
+      "category": "Rigid Signs",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "202ed420-2b97-5aad-9ba6-d4fd68bb9bee",
+    "data": {
+      "code": "SVX-E2E1A1CCC571ADD8285F4727",
+      "name": "Laptop Carry Bag",
+      "description": "",
+      "category": "Mixed Decoration",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f53bb47b-2275-53f9-b641-d4e30f3d9d51",
+    "data": {
+      "code": "SVX-25E8DC0809D1B8FEF067639B",
+      "name": "Custom Flags (Double Sided)",
+      "description": "Flag comes with pole & ground stake.",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "742b17f1-c242-5da3-bbcc-f00b8a17673b",
+    "data": {
+      "code": "SVX-D830490A49E39FA46DF0AE6D",
+      "name": "Custom Item",
+      "description": "",
+      "category": "Miscellaneous",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "edf4226e-9273-547d-9c6b-1f9c1f050d74",
+    "data": {
+      "code": "SVX-A85497FFCE3E67AE95A9C6E9",
+      "name": "Name Badges",
+      "description": "UV Printed    Magnetic Backing",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "8925a064-e6d5-5194-b6ea-691310b84a61",
+    "data": {
+      "code": "SVX-D7212CB50ABF159673DB2B4B",
+      "name": "Long Sleeve T-Shirts",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "fd91ebb0-01f0-5dc4-a822-8a0ae343dc48",
+    "data": {
+      "code": "SVX-AE2613F33D04FEC75536958F",
+      "name": "Retractable Banner 33\"x81\"",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "3239cb9c-3834-5228-98f0-4d71bd91d277",
+    "data": {
+      "code": "SVX-88497093F0F497F0545B0BB1",
+      "name": "Sublimation Tumbler",
+      "description": "",
+      "category": "Drinkware",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "e02d9a1f-573b-56f7-8c58-b74f4ce0cfbc",
+    "data": {
+      "code": "SVX-27648BBE98F14B9D6FB402D8",
+      "name": "Beverage",
+      "description": "",
+      "category": "Beverage",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f4ca91d1-0a31-5a70-b5ab-468212b46a10",
+    "data": {
+      "code": "SVX-32D75A777A2D59BD595446D0",
+      "name": "Lawn Signs",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c57c0455-8cd4-5426-ac4d-c56c69810659",
+    "data": {
+      "code": "SVX-E8C51F692AEF0484017490DA",
+      "name": "Custom Business Cards",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "bd83da78-9db5-5822-8f5f-6f26d3198f0c",
+    "data": {
+      "code": "SVX-042FDEE9C195866CE61AC03E",
+      "name": "Memorial T-Shirts",
+      "description": "",
+      "category": "DTF",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "7423f428-4836-5c9b-91d3-75be8739d141",
+    "data": {
+      "code": "SVX-F024CA2D6389CD3B87C5A917",
+      "name": "Graduation Tumbler",
+      "description": "20 oz. Skinny  Stainless Steel     Image Dimensions 9.3\"W x 8.25\" H",
+      "category": "Drinkware",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "42170426-bd6f-5dec-98a6-cf948edcb160",
+    "data": {
+      "code": "SVX-0E98BF4C1B0D147D01A34FE8",
+      "name": "Drawstring Backpack",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "dbc04b3b-ac97-56f5-ba00-01c13d979466",
+    "data": {
+      "code": "SVX-6BD085C680893A0D1F0BB3BB",
+      "name": "Car Magnets",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "8d2f540f-0315-53bf-95b7-9f9d2458fddd",
+    "data": {
+      "code": "SVX-58C43A4D4C8A1B67BACE3B91",
+      "name": "Sign w/ Digitally Printed Graphics on Corrugated Plastic",
+      "description": "Laminated for indoor or outdoor use",
+      "category": "Rigid Signs",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "1763ef8a-2f21-5951-8563-560de58f9d1e",
+    "data": {
+      "code": "SVX-33F202596D5A3AEEC7DD38D7",
+      "name": "Envelopes",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "d56f4e09-0705-5ffc-a453-880692a7706a",
+    "data": {
+      "code": "SVX-7BEEBBA619FC447F3131D43F",
+      "name": "Custom Door Sign",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "cac739ba-8035-548f-a6bd-5c37f5a9aaeb",
+    "data": {
+      "code": "SVX-FFB620BE76A3324AF60491F7",
+      "name": "Calendar Poster",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "689d0c57-03e7-58b1-a3ef-b1dc61ee6222",
+    "data": {
+      "code": "SVX-64C966D63D5D34AE44187EB5",
+      "name": "Calendar Standard",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "586addd1-2905-5fd1-87bd-2bee040170f2",
+    "data": {
+      "code": "SVX-5B41B65F0682658232890223",
+      "name": "Sublimation Tumbler2",
+      "description": "",
+      "category": "Drinkware",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "bf543341-ce15-5790-b495-6c77dc14559b",
+    "data": {
+      "code": "SVX-E4F8AD5F3E6C9BF8451EB766",
+      "name": "Canvas print - gallery wrapped",
+      "description": "Digitally printed canvas prints wrapped on wood stretcher bar frame",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "8ed62cba-e2d0-58e3-bca8-575cb55605c7",
+    "data": {
+      "code": "SVX-4504C4A50769F04B11A08015",
+      "name": "Posters (Photo)",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "ce1ad246-6ed9-51ef-bd6c-2c8c0c82906c",
+    "data": {
+      "code": "SVX-07127E86435E899AF9BAA98C",
+      "name": "Custom Magnets",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "1c9fd12f-79e5-5c1f-b4a7-bc63c3409095",
+    "data": {
+      "code": "SVX-25E33363F7E24689C1267B4C",
+      "name": "Rush Fee",
+      "description": "",
+      "category": "Misc. Fees",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "e0a38095-ad87-5d6c-9b18-3174a8acdfe7",
+    "data": {
+      "code": "SVX-4DB17F45A4120A76AF0A5046",
+      "name": "Funeral Programmes",
+      "description": "",
+      "category": "Labor",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f61111d2-523a-514d-87cd-ec20b0f21f43",
+    "data": {
+      "code": "SVX-FACDD6B73C3579F18A18C0E6",
+      "name": "Mousepads",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "cf4923d6-e98d-5492-8398-e571563085e8",
+    "data": {
+      "code": "SVX-1D6C5BE58BFAD74E43BB4B7A",
+      "name": "Graphic Design",
+      "description": "",
+      "category": "Design/Creative",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "44770b10-003a-55e5-9c37-1f51da4ae7c7",
+    "data": {
+      "code": "SVX-B7224A5F285ABC0335033D98",
+      "name": "Sublimation Sheets",
+      "description": "",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "918ba825-358a-5ac6-8f29-c52c09d4c055",
+    "data": {
+      "code": "SVX-AE4AA054D0A2FA3C42DA8906",
+      "name": "Decals",
+      "description": "",
+      "category": "Vinyl Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "54307e23-76af-5eac-b385-b42a777e3ea6",
+    "data": {
+      "code": "SVX-756482B23846C30EE8FADF22",
+      "name": "Rigid Sign w/ Cut Vinyl Graphics",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "ae9c3c5f-4dde-5c6f-aa3a-929da882a432",
+    "data": {
+      "code": "SVX-7845BCEA692FF7C0A63D203F",
+      "name": "Blanks",
+      "description": "",
+      "category": "Miscellaneous",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "6f54f79a-d6a9-504a-b4d4-d61e3992cc73",
+    "data": {
+      "code": "SVX-EB2F24B61BC5E48EA3D4828E",
+      "name": "Custom Sign w/ Digitally Printed Graphics",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "fde630e3-61bf-55d8-b0cd-713cd60e03a3",
+    "data": {
+      "code": "SVX-327B1F8E20F34501C961DF6E",
+      "name": "Vehicle Bumper Stickers",
+      "description": "UV Laminated Removable Adhesive",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "50f06264-4dc3-50ac-bc83-3a6ad786b870",
+    "data": {
+      "code": "SVX-4B2437040AB773126E197094",
+      "name": "DTF Sheets",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "abee3dd9-9605-52f9-90ea-e5180a19f994",
+    "data": {
+      "code": "SVX-BB6E5531E24EDE7501AC6041",
+      "name": "Mugs",
+      "description": "",
+      "category": "Drinkware",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "118afa54-b4b4-5401-9ea8-22ef43cb0082",
+    "data": {
+      "code": "SVX-90F67C2FD8E2195E4B8ACABE",
+      "name": "Custom Item w/ Bill of Materials",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "02b6db4d-cbbe-55ce-80b8-157e95153ba4",
+    "data": {
+      "code": "SVX-236D42EA21D73D4735EDB5DE",
+      "name": "Decals2",
+      "description": "",
+      "category": "Custom",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "3ebccb5b-133e-532a-b7d3-5e8288201e6c",
+    "data": {
+      "code": "SVX-8C7ED2D9BE59E21CF7CFC7DA",
+      "name": "Banner",
+      "description": "",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "cccc262d-6f4a-52d6-9a0d-0e391c7c56ae",
+    "data": {
+      "code": "SVX-8A8B820FA762999B096D76ED",
+      "name": "Memorial Cards",
+      "description": "",
+      "category": "Stationary",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "aa379d33-e1fd-58bb-8d90-8bfabd3ab1c2",
+    "data": {
+      "code": "SVX-45534F993300187319D2763F",
+      "name": "Promotional Product",
+      "description": "",
+      "category": "Promotional Products",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "6b91ba3f-c595-5c57-be90-063112f49842",
+    "data": {
+      "code": "SVX-9FF45E6119EB6504C6B9BC80",
+      "name": "Stickers",
+      "description": "Laminated Stickers  Setup Fee Included",
+      "category": "Miscellaneous",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "84aa14d3-2b07-59b8-b166-72770dde9466",
+    "data": {
+      "code": "SVX-FF1F51BDC88DDFF105542B5E",
+      "name": "Boxes",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "7ef5de87-5b8d-5746-a2c7-cefcc8b7d9f0",
+    "data": {
+      "code": "SVX-A991357D0F765810E50C8EE4",
+      "name": "Printed Vehicle Wrap",
+      "description": "",
+      "category": "Vehicle Graphics",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "b55ce173-64e5-5e23-83ac-430d9ce8dcd1",
+    "data": {
+      "code": "SVX-8172BEED882439A4BCFB8D01",
+      "name": "Posters - Digital (Gloss)",
+      "description": "Full color posters - digitally printed per approved layout2-3 day turnaround",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "d3defa6c-4b1a-596a-b062-afcc734faeb3",
+    "data": {
+      "code": "SVX-5765C3FEAB9B557DF7993E5F",
+      "name": "Heat Transfer - Apparel",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "3fd7cd83-1974-5de1-bf41-2ad2202d0e35",
+    "data": {
+      "code": "SVX-2827A9AD1F3B6862434D0BDA",
+      "name": "Wide Format Digital Print",
+      "description": "Wide or Grand Format printing is typically done with media 60” or more, including material widths up to 16’",
+      "category": "Vinyl Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f7a55fac-f30b-5464-b154-7e188381eb1f",
+    "data": {
+      "code": "SVX-2E27C16BC0F79C8172E3A8CE",
+      "name": "Dress Shirts",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f498aeb2-56df-5802-b759-e0e9c5792a3a",
+    "data": {
+      "code": "SVX-221A4A999D7F080CE5C65A02",
+      "name": "Table Tents",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "ee53d98f-a9f6-5cdc-be78-46cc070ab09e",
+    "data": {
+      "code": "SVX-B4AF39D5B65A14849E885A9D",
+      "name": "Delivery",
+      "description": "",
+      "category": "Labor",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "5d1e2ec3-bd3d-5636-ba89-180000249652",
+    "data": {
+      "code": "SVX-E0FCF26BEA4C3427DEED6922",
+      "name": "Digital Print",
+      "description": "Wide or Grand Format printing is typically done with media 60” or more, including material widths up to 16’",
+      "category": "Vinyl Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "442fe7e0-3c88-53a3-af7e-b94551ffcdd7",
+    "data": {
+      "code": "SVX-1317DFA6A0C51245A1FBD37C",
+      "name": "Polo",
+      "description": "",
+      "category": "Heat Transfer",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "9b4521da-6634-5366-9788-5d9050a3a973",
+    "data": {
+      "code": "SVX-C6B4EC63A5C01908F4C62CD5",
+      "name": "Business Cards - Standard - 3.5 x 2",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "33074d20-f688-5afa-b5ad-9256b662d19e",
+    "data": {
+      "code": "SVX-2807813B60376F0BE9939E3A",
+      "name": "Printing - Custom",
+      "description": "",
+      "category": "Custom",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "ad68ba2b-4ff3-59a0-a20c-beda98612842",
+    "data": {
+      "code": "SVX-D5122E42385BF1F8EBA84400",
+      "name": "Executive Waterproof Backpack",
+      "description": "",
+      "category": "Mixed Decoration",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "ea72e46a-6399-53cd-b60c-ee2f26bfeb91",
+    "data": {
+      "code": "SVX-B250A8D23387A44ABA22F085",
+      "name": "Photo Cut Out",
+      "description": "",
+      "category": "Misc.",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "ddfa7b1f-921f-59e0-b626-0c58d5426972",
+    "data": {
+      "code": "SVX-8D367393FC7BC30FAADDA58A",
+      "name": "Stainless Steel Tumbler",
+      "description": "",
+      "category": "Drinkware",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "c7f32e51-45c3-5914-a7d4-ff9aa54670a4",
+    "data": {
+      "code": "SVX-549EE91880DB132DF72E1B68",
+      "name": "Printed/Cut Digital Vinyl Graphics",
+      "description": "",
+      "category": "Vinyl Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "8449ba01-c2ca-59b4-8952-53b50ee84ee7",
+    "data": {
+      "code": "SVX-E67CC257630B35CD56C37842",
+      "name": "Sign w/ Digitally Printed Graphics",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "cab5f596-c1a8-56b8-8cb9-18d82c78184c",
+    "data": {
+      "code": "SVX-9AD2DFE123F08CBAC98ED9EB",
+      "name": "Rigid Sign w/ Digitally Printed Graphics",
+      "description": "",
+      "category": "Rigid Signs",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "05866231-027a-5184-ae29-2f337af696bf",
+    "data": {
+      "code": "SVX-F26286944296087FCE59EED5",
+      "name": "Pop Up Banner Film",
+      "description": "10 mil.   Gray Back",
+      "category": "Promo",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "938d5810-429f-5d4f-97fd-eca137629cfb",
+    "data": {
+      "code": "SVX-6FFB568405A56F77868C8C27",
+      "name": "Raffle Tickets - Numbered",
+      "description": "Raffle Tickets (2.125\"x6.5\") - digitally printed on 67#vellum bristolNumbered with perforated stub2-3 day turnaround",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "4f51d0e4-299b-5c22-b8e0-86cb33052ff7",
+    "data": {
+      "code": "SVX-090C02708519305C4DA30E48",
+      "name": "Car Flags",
+      "description": "Full Color Sublimation",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "354b64b7-a178-5403-88d5-c82b4ea00ad5",
+    "data": {
+      "code": "SVX-279E2D7E0AABD38F29901DB9",
+      "name": "Mixed Decoration - Apparel",
+      "description": "",
+      "category": "Mixed Decoration",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "f9326b88-408b-51ee-89b5-82b529f0c976",
+    "data": {
+      "code": "SVX-33606915D1E7567EA5BBC237",
+      "name": "Greeting Cards - Digital",
+      "description": "Full color greeting cards - digitally printedScored to fold by hand (packed flat)Gloss Outside, No Coating on Inside2-3 day turnaround",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "bbfc90af-268c-525f-b73a-fd1c019bd33f",
+    "data": {
+      "code": "SVX-B1CF7AFB50364601D5FB9A8D",
+      "name": "Booklets",
+      "description": "",
+      "category": "Custom",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "640d7803-4016-565b-9ad1-731650c54f11",
+    "data": {
+      "code": "SVX-E7EFCE5A8C036120ACD037E0",
+      "name": "Banner Custom Size",
+      "description": "",
+      "category": "Banners",
+      "unit": "Run",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "grid",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "cfc25bcd-eb57-56e9-a0ad-433869736687",
+    "data": {
+      "code": "SVX-B8DFEDD3FA6ECEA8E3249EE5",
+      "name": "GreenStar Edge Removable Wall Graphic Vinyl",
+      "description": "Wide or Grand Format printing is typically done with media 60” or more, including material widths up to 16’",
+      "category": "Vinyl Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "ed658ca9-1879-5ca2-aab1-7d5f99b147a1",
+    "data": {
+      "code": "SVX-740062676A3134F36F0F0FC9",
+      "name": "Shipping",
+      "description": "",
+      "category": "Shipping",
+      "unit": "Each",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "fixed",
+        "minimum": "",
+        "options": []
+      }
+    }
+  },
+  {
+    "id": "65e77253-1406-56a0-95c8-8f9978a26f1d",
+    "data": {
+      "code": "SVX-E408F165F40BCB90CDD09B39",
+      "name": "Printed/Cut Digital Vehicle Graphics",
+      "description": "",
+      "category": "Vehicle Graphics",
+      "unit": "Sqft",
+      "unit_price": "",
+      "vat_rate": "",
+      "finish": "",
+      "placement": "",
+      "pricing": {
+        "mode": "area",
+        "minimum": "",
+        "options": []
+      }
+    }
+  }
+]

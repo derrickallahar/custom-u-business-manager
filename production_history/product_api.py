@@ -2,6 +2,9 @@
 from flask import request, jsonify
 from staff_access import can
 from workspace_codec import parse
+from catalogue_pricing import calculate as calculate_catalogue
+import json
+import re
 from area_pricing import calculate as calculate_area, selected_product as selected_area_product
 
 
@@ -44,6 +47,37 @@ def install(app, provider, session, enabled, root, failure):
     @app.get('/products.js')
     def product_script():
         return app.response_class((root/'static/products.js').read_bytes(), mimetype='text/javascript')
+
+    @app.get('/pricing-picker.js')
+    def pricing_picker_script():
+        return app.response_class((root/'static/pricing-picker.js').read_bytes(), mimetype='text/javascript')
+
+    @app.post('/api/products/setup-starters')
+    def setup_starters():
+        rec = gate({'op': 'save', 'version': 0})
+        if session()[1].get('role') != 'admin':
+            raise failure('ACCESS_DENIED', 403)
+        if request.get_json() != {'add_unpriced_starters': True}:
+            raise failure('INVALID_REQUEST', 400)
+        items = json.loads((root/'catalogue_starters.json').read_text())
+        result = parse(provider.call('/rest/v1/rpc/custom_u_catalogue_setup_1146', rec['token'], {'payload': {'items': items}}, limit=2*1024*1024))
+        if provider.access(rec['token']).get('role') != 'admin':
+            raise failure('ACCESS_DENIED', 403)
+        if not isinstance(result, dict) or 'error' in result or type(result.get('added')) is not int or type(result.get('existing')) is not int or result['added']+result['existing'] != len(items):
+            raise failure('STARTER_SETUP_UNCONFIRMED', 400)
+        return jsonify(result)
+
+    @app.post('/api/products/configured-price')
+    def configured_price():
+        gate({'op': 'get'})
+        body = request.get_json()
+        if not isinstance(body, dict) or not isinstance(body.get('product_id'), str) or not re.fullmatch(r'[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}', body['product_id']):
+            raise failure('INVALID_PRICING_REQUEST', 400)
+        result = rpc({'op': 'get', 'id': body['product_id']})
+        try:
+            return jsonify(calculate_catalogue(body, result.get('data')))
+        except ValueError as error:
+            raise failure(str(error), 400) from None
 
     @app.get('/brochure-picker.js')
     def brochure_picker_script():
