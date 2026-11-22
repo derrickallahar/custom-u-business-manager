@@ -51,7 +51,7 @@
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('cu-menu-open')){closeMenu();document.getElementById('cu-menu-toggle')?.focus();}});
   window.addEventListener('hashchange',()=>{if(session)render();});
   function setSession(value){epoch++;session=value;render();}
-  window.CustomUShell={setSession,clear(){epoch++;session=null;hide();}};
+  window.CustomUShell={setSession,clear(){epoch++;session=null;hide();window.dispatchEvent(new CustomEvent('cu-team-clear'));}};
   async function boot(){
     const page=area();if(page)new MutationObserver(()=>{if(page.hidden){hide();}else if(session&&!shell)render();}).observe(page,{attributes:true,attributeFilter:['hidden']});
     const ticket=epoch;

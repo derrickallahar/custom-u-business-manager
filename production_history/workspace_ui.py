@@ -11,6 +11,8 @@ def install(app, root):
     assets = {
         'workspace.css': ('workspace.css', 'text/css'),
         'workspace-shell.js': ('workspace-shell.js', 'text/javascript'),
+        'team-chat.js': ('team-chat.js', 'text/javascript'),
+        'team-chat.css': ('team-chat.css', 'text/css'),
         'brand/custom-u-logo.png': ('brand/custom-u-logo.png', 'image/png'),
     }
     @app.get('/workspace-assets/<path:name>')
@@ -27,6 +29,8 @@ def install(app, root):
             html = response.get_data(as_text=True)
             additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css">'
                          '<script src="/workspace-assets/workspace-shell.js" defer></script>'
-                         '<script src="/team-notifications.js?v=116" defer></script>')
+                         '<link rel="stylesheet" href="/workspace-assets/team-chat.css?v=116.1">'
+                         '<script src="/workspace-assets/team-chat.js?v=116.1" defer></script>'
+                         '<script src="/team-notifications.js?v=116.1" defer></script>')
             response.set_data(html.replace('</head>', additions + '</head>', 1))
         return response
