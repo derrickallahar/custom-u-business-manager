@@ -2,7 +2,7 @@
 (() => {
  function mount({root,api,run,editable,onAdd}){
   if(!root)return null;
-  let product=null,result=null,revision=0;
+  let product=null,result=null,revision=0,focusPending=false;
   const fields={};
   const title=document.createElement('h3'),help=document.createElement('p'),inputs=document.createElement('div'),message=document.createElement('p');
   inputs.className='grid';message.setAttribute('role','status');
@@ -24,8 +24,8 @@
   const calculate=document.createElement('button'),add=document.createElement('button'),close=document.createElement('button');
   for(const [b,text] of [[calculate,'Calculate price'],[add,'Add priced item'],[close,'Close pricing']]){b.type='button';b.textContent=text;root.append(b);}
   root.append(message);root.hidden=true;
-  function update(){for(const i of [...Object.values(fields),calculate,close])i.disabled=!editable();add.disabled=!editable()||!result;}
-  function clear(){revision++;product=null;result=null;root.hidden=true;title.textContent='';help.textContent='';message.textContent='';fields.option.replaceChildren();for(const k of ['width','height','pieces'])fields[k].value='';update();}
+  function update(){for(const i of [...Object.values(fields),calculate,close])i.disabled=!editable();add.disabled=!editable()||!result;if(editable()&&focusPending)queueMicrotask(()=>{const field=product?.data.pricing.mode==='area'?fields.width:product?.data.pricing.mode==='grid'?fields.option:fields.pieces;if(focusPending&&product&&editable()&&!field.matches(':disabled')){focusPending=false;field.focus();}});}
+  function clear(){revision++;focusPending=false;product=null;result=null;root.hidden=true;title.textContent='';help.textContent='';message.textContent='';fields.option.replaceChildren();for(const k of ['width','height','pieces'])fields[k].value='';update();}
   function open(p){
    clear();if(!p?.active||!p.data?.pricing||!editable(true))throw Error('This product is not ready for pricing.');
    product=p;root.hidden=false;title.textContent=p.data.name;
@@ -36,7 +36,7 @@
    fields.dimension_unit.value='in';fields.pieces.value='1';
    if(mode==='grid')for(const o of p.data.pricing.options.filter(o=>Number(o.price)>0))fields.option.append(new Option(o.label+' · '+o.copies+' copies · BSD '+o.price+' per run',o.label));
    fields.pieces.closest('label').firstChild.textContent=mode==='grid'?'Number of runs':mode==='area'?'Number of pieces':'Quantity ('+p.data.unit+')';
-   message.textContent='Enter the order details and calculate the price.';update();root.scrollIntoView?.({block:'nearest'});
+   message.textContent='Enter the order details and calculate the price.';focusPending=true;update();root.scrollIntoView?.({block:'nearest'});
   }
   function body(){const mode=product.data.pricing.mode;return {product_id:product.id,version:product.version,width:mode==='area'?fields.width.value:'',height:mode==='area'?fields.height.value:'',dimension_unit:mode==='area'?fields.dimension_unit.value:'',pieces:fields.pieces.value,option:mode==='grid'?fields.option.value:''};}
   async function price(){

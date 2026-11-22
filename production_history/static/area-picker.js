@@ -19,7 +19,7 @@
   if(!root)return null;
   const get=k=>root.querySelector('[data-area="'+k+'"]');
   const fields=['product_id','width','height','dimension_unit','pieces','finish'];
-  let result=null,signature='',revision=0;
+  let result=null,signature='',revision=0,focusPending=false;
   const input=()=>Object.fromEntries(fields.map(k=>[k,get(k).value]));
   get('product_id').replaceChildren(...[...products].map(([id,p])=>new Option(p.name,id)));
   const spec=()=>products.get(get('product_id').value);
@@ -30,6 +30,7 @@
    get('finish').disabled=!enabled||spec()?.fixed===true;
    get('calculate').disabled=!enabled;
    get('add').disabled=!enabled||!result||!sameInput();
+   if(enabled&&focusPending)queueMicrotask(()=>{if(focusPending&&editable()&&!get('width').matches(':disabled')){focusPending=false;get('width').focus();}});
   }
   function invalidate(){revision++;result=null;signature='';get('price').textContent='';get('detail').textContent='Calculate again after changing dimensions, quantity or finish.';update();}
   function finishOptions(){
@@ -39,7 +40,7 @@
    get('product-note').textContent=spec()?.name==='Perforated window vinyl'?'Digitally printed perforated window vinyl, including optically clear lamination.':'Digitally printed permanent adhesive vinyl, including UV lamination.';
   }
   function clear(){
-   revision++;result=null;signature='';get('width').value='';get('height').value='';
+   revision++;focusPending=false;result=null;signature='';get('width').value='';get('height').value='';
    get('dimension_unit').value='in';get('pieces').value='1';get('product_id').value=defaultProduct;finishOptions();
    get('price').textContent='';get('detail').textContent=spec().note;update();
   }
@@ -63,7 +64,7 @@
    result=null;signature='';get('price').textContent='';get('detail').textContent='Calculating from the saved square-foot rate…';
    try{
     const r=await api('/api/products/area-price',body);
-    if(start!==revision||key!==JSON.stringify(input()))return;
+    if(start!==revision||key!==JSON.stringify(input())||!editable(true))return;
     show(r,key);
    }catch(error){if(start===revision){result=null;get('detail').textContent=error.message;}throw error;}
   });
@@ -72,7 +73,7 @@
    const previous=result,body=input(),key=JSON.stringify(body),start=revision;
    try{
     const current=await api('/api/products/area-price',body);
-    if(start!==revision||key!==JSON.stringify(input()))return;
+    if(start!==revision||key!==JSON.stringify(input())||!editable(true))return;
     show(current,key);
     if(JSON.stringify(current)!==JSON.stringify(previous)){
      get('detail').textContent+=' The saved product changed. Review the updated result, then add it again.';
@@ -84,7 +85,7 @@
    finally{update();}
   });
   clear();
-  return {update,clear,accepts:id=>products.has(id),open:id=>{if(products.has(id)&&id!==get('product_id').value){get('product_id').value=id;finishOptions();invalidate();get('detail').textContent=spec().note;}root.open=true;get('width').focus();root.scrollIntoView?.({behavior:'smooth',block:'center'});}};
+  return {update,clear,accepts:id=>products.has(id),open:id=>{if(products.has(id)&&id!==get('product_id').value){get('product_id').value=id;finishOptions();invalidate();get('detail').textContent=spec().note;}root.open=true;focusPending=true;update();root.scrollIntoView?.({behavior:'smooth',block:'center'});}};
  }
  window.CustomUAreaPicker=Object.freeze({mount,messages});
 })();

@@ -15,7 +15,7 @@
  }
  function mount({root,api,run,editable,onAdd}) {
   if(!root) return null;
-  let saved=new Map(),loaded=false,revision=0;
+  let saved=new Map(),loaded=false,revision=0,focusPending=false;
   const find=name=>root.querySelector('[data-flyer="'+name+'"]');
   const load=find('load'),size=find('size'),side=find('side'),copies=find('copies'),add=find('add'),price=find('price'),note=find('note');
   function fill(select,values,placeholder){
@@ -30,6 +30,7 @@
    const enabled=editable(),o=chosen(),p=o?saved.get(o.id):null;
    load.disabled=!enabled;size.disabled=!enabled||!loaded;side.disabled=!enabled||!loaded;copies.disabled=!enabled||!loaded;
    add.disabled=!enabled||!valid(p,o);
+   if(enabled&&loaded&&focusPending)queueMicrotask(()=>{if(focusPending&&editable()&&!size.matches(':disabled')){focusPending=false;size.focus();}});
    // Also restore unavailable options after the surrounding form re-enables controls.
    fifty.disabled=true;
    price.textContent='';
@@ -38,7 +39,7 @@
     price.textContent='One run: '+cash(cents)+' before VAT + '+cash(vat)+' VAT ('+p.data.vat_rate+'%) = '+cash(cents+vat)+'.';
    }else if(o&&loaded)price.textContent='This run is not available in the saved catalogue. Import it or review its product record first.';
   }
-  function clear(){revision++;saved.clear();loaded=false;size.value='';side.value='';copies.value='';price.textContent='';note.textContent='Load the saved prices, then choose a flyer run.';update();}
+  function clear(){revision++;focusPending=false;saved.clear();loaded=false;size.value='';side.value='';copies.value='';price.textContent='';note.textContent='Load the saved prices, then choose a flyer run.';update();}
   async function loadPrices(){
    if(!editable(true))return;
    const start=++revision;
@@ -60,12 +61,13 @@
    finally{update();}
   }
   load.onclick=()=>run(loadPrices);
-  for(const select of [size,side,copies])select.onchange=update;
+  for(const select of [size,side,copies])select.onchange=()=>{revision++;update();};
   add.onclick=()=>run(async()=>{
    if(!editable(true))return;
-   const o=chosen(),p=o?saved.get(o.id):null;
+   const o=chosen(),p=o?saved.get(o.id):null,start=revision;
    if(!valid(p,o))throw Error('Choose an available flyer run first.');
    const current=(await api('/api/products/'+o.id)).data;
+   if(start!==revision||chosen()?.id!==o.id||!editable(true))return;
    if(!valid(current,o)){
     saved.delete(o.id);update();
     throw Error('This flyer run was archived or its identifying details changed. Review the product before using it.');
@@ -80,7 +82,7 @@
    onAdd({description,quantity:'1',unit:'Run',unit_price:d.unit_price,vat_rate:d.vat_rate,discount_percent:'0',finish:d.finish,placement:d.placement});
   });
   clear();
-  return {clear,update,async open(){root.hidden=false;root.open=true;await loadPrices();root.scrollIntoView?.({block:'start'});}};
+  return {clear,update,async open(){root.hidden=false;root.open=true;focusPending=true;await loadPrices();root.scrollIntoView?.({block:'start'});}};
  }
  window.CustomUFlyerPicker=Object.freeze({mount});
 })();

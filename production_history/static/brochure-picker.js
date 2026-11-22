@@ -14,7 +14,7 @@
  }
  function mount({root,api,run,editable,onAdd}) {
   if(!root) return null;
-  let saved=new Map(),loaded=false,revision=0;
+  let saved=new Map(),loaded=false,revision=0,focusPending=false;
   const find=name=>root.querySelector('[data-brochure="'+name+'"]');
   const load=find('load'),format=find('format'),copies=find('copies'),add=find('add'),price=find('price'),note=find('note');
   function fill(select,values,placeholder){
@@ -28,13 +28,14 @@
    const enabled=editable(),o=chosen(),p=o?saved.get(o.id):null;
    load.disabled=!enabled;format.disabled=!enabled||!loaded;copies.disabled=!enabled||!loaded;
    add.disabled=!enabled||!valid(p,o);
+   if(enabled&&loaded&&focusPending)queueMicrotask(()=>{if(focusPending&&editable()&&!format.matches(':disabled')){focusPending=false;format.focus();}});
    price.textContent='';
    if(valid(p,o)){
     const cents=hundred(p.data.unit_price),vat=(cents*hundred(p.data.vat_rate)+5000n)/10000n;
     price.textContent='One run: '+cash(cents)+' before VAT + '+cash(vat)+' VAT ('+p.data.vat_rate+'%) = '+cash(cents+vat)+'.';
    }else if(o&&loaded)price.textContent='This run is not available in the saved catalogue. Import it or review its product record first.';
   }
-  function clear(){revision++;saved.clear();loaded=false;format.value='';copies.value='';price.textContent='';note.textContent='Load the saved prices, then choose a brochure run.';update();}
+  function clear(){revision++;focusPending=false;saved.clear();loaded=false;format.value='';copies.value='';price.textContent='';note.textContent='Load the saved prices, then choose a brochure run.';update();}
   async function loadPrices(){
    if(!editable(true))return;
    const start=++revision,next=new Map();
@@ -77,7 +78,7 @@
    onAdd({description,quantity:'1',unit:'Run',unit_price:d.unit_price,vat_rate:d.vat_rate,discount_percent:'0',finish:d.finish,placement:d.placement});
   });
   clear();
-  return {clear,update,async open(){root.hidden=false;root.open=true;await loadPrices();root.scrollIntoView?.({block:'start'});}};
+  return {clear,update,async open(){root.hidden=false;root.open=true;focusPending=true;await loadPrices();root.scrollIntoView?.({block:'start'});}};
  }
  window.CustomUBrochurePicker=Object.freeze({mount});
 })();
