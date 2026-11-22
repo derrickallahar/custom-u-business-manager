@@ -18,3 +18,5 @@ body.cu-home main{max-width:1600px}body.cu-home:not(.cu-layout) main{margin:0;ma
 @media print{.cu-sidebar,.cu-mobilebar,.cu-skip{display:none!important}.cu-layout main{margin:0;width:100%;max-width:none;padding:0}}
 
 .cu-team-notice{display:flex;gap:16px;flex-wrap:wrap;background:#fff;border:1px solid #e3e7ed;border-radius:8px;padding:10px 14px;margin:0 0 18px;font-size:13px}.cu-team-notice a{color:#b72030;text-decoration:none;font-weight:600}
+
+.cu-creation-back{display:inline-block;margin:8px 0 18px;color:#b72030;font-weight:600;text-decoration:none}.cu-new-page [data-creation-list=true]{display:none!important}

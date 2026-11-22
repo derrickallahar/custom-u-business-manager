@@ -158,8 +158,31 @@ def install(app, provider, session, enabled, root, failure):
             raise failure(str(error), 400) from None
         return jsonify(answer)
 
+    def grouped_rpc(payload):
+        rec=gate({'op':'get'})
+        result=parse(provider.call('/rest/v1/rpc/custom_u_product_groups_117',rec['token'],{'payload':payload},limit=2*1024*1024))
+        if not permitted(provider.access(rec['token']),{'op':'get'}):raise failure('ACCESS_DENIED',403)
+        if not isinstance(result,dict):raise failure('INVALID_PROVIDER_RESPONSE')
+        if 'error' in result:raise failure(result['error'],403 if result['error']=='ACCESS_DENIED' else 400)
+        return result
+
+    @app.get('/products/options/<family>')
+    def product_group_page(family):
+        if family not in ('flyers','brochures'):raise failure('NOT_FOUND',404)
+        return app.response_class((root/'static/product-group.html').read_bytes(),mimetype='text/html')
+
+    @app.get('/product-group.js')
+    def product_group_script():return app.response_class((root/'static/product-group.js').read_bytes(),mimetype='text/javascript')
+
+    @app.get('/api/product-options/<family>')
+    def product_group_options(family):
+        if family not in ('flyers','brochures'):raise failure('NOT_FOUND',404)
+        return jsonify(grouped_rpc({'op':'get','group':family,'state':request.args.get('state','all')}))
+
     @app.get('/api/products')
     def product_list():
+        if request.args.get('grouped')=='1':
+            return jsonify(grouped_rpc({'op':'list','q':request.args.get('q',''),'state':request.args.get('state','active'),'page':request.args.get('page','1')}))
         return jsonify(rpc({'op': 'list', 'q': request.args.get('q', ''), 'page': request.args.get('page', '1'), 'state': request.args.get('state', 'active')}))
 
     @app.get('/api/products/<ident>')

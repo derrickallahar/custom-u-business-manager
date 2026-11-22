@@ -15,7 +15,7 @@
  }
  function mount({root,api,run,editable,onAdd}) {
   if(!root) return null;
-  let saved=new Map(),loaded=false;
+  let saved=new Map(),loaded=false,revision=0;
   const find=name=>root.querySelector('[data-flyer="'+name+'"]');
   const load=find('load'),size=find('size'),side=find('side'),copies=find('copies'),add=find('add'),price=find('price'),note=find('note');
   function fill(select,values,placeholder){
@@ -38,9 +38,10 @@
     price.textContent='One run: '+cash(cents)+' before VAT + '+cash(vat)+' VAT ('+p.data.vat_rate+'%) = '+cash(cents+vat)+'.';
    }else if(o&&loaded)price.textContent='This run is not available in the saved catalogue. Import it or review its product record first.';
   }
-  function clear(){saved.clear();loaded=false;size.value='';side.value='';copies.value='';price.textContent='';note.textContent='Load the saved prices, then choose a flyer run.';update();}
-  load.onclick=()=>run(async()=>{
+  function clear(){revision++;saved.clear();loaded=false;size.value='';side.value='';copies.value='';price.textContent='';note.textContent='Load the saved prices, then choose a flyer run.';update();}
+  async function loadPrices(){
    if(!editable(true))return;
+   const start=++revision;
    saved.clear();loaded=false;price.textContent='';note.textContent='Loading saved flyer prices…';
    try{
     let page=1,total=0;
@@ -49,6 +50,7 @@
      if(!Array.isArray(r.data)||!Number.isInteger(r.total)||r.total<0||r.total>5000||r.data.length>50)
       throw Error('The saved flyer prices could not be verified. Load prices again.');
      total=r.total;
+     if(start!==revision||!editable(true))return;
      for(const p of r.data){const o=byId.get(p.id);if(valid(p,o))saved.set(p.id,p);}
      page++;
     }while((page-1)*50<total);
@@ -56,7 +58,8 @@
     note.textContent=saved.size+' of 48 priced flyer options available. Fifty-copy runs are unavailable. Prices are for the whole run.';
    }catch(error){saved.clear();note.textContent='Prices could not be loaded. Try loading them again.';throw error;}
    finally{update();}
-  });
+  }
+  load.onclick=()=>run(loadPrices);
   for(const select of [size,side,copies])select.onchange=update;
   add.onclick=()=>run(async()=>{
    if(!editable(true))return;
@@ -77,7 +80,7 @@
    onAdd({description,quantity:'1',unit:'Run',unit_price:d.unit_price,vat_rate:d.vat_rate,discount_percent:'0',finish:d.finish,placement:d.placement});
   });
   clear();
-  return {clear,update};
+  return {clear,update,async open(){root.hidden=false;root.open=true;await loadPrices();root.scrollIntoView?.({block:'start'});}};
  }
  window.CustomUFlyerPicker=Object.freeze({mount});
 })();

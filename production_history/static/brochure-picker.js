@@ -35,7 +35,7 @@
    }else if(o&&loaded)price.textContent='This run is not available in the saved catalogue. Import it or review its product record first.';
   }
   function clear(){revision++;saved.clear();loaded=false;format.value='';copies.value='';price.textContent='';note.textContent='Load the saved prices, then choose a brochure run.';update();}
-  load.onclick=()=>run(async()=>{
+  async function loadPrices(){
    if(!editable(true))return;
    const start=++revision,next=new Map();
    saved.clear();loaded=false;price.textContent='';note.textContent='Loading saved brochure prices…';
@@ -54,7 +54,8 @@
     note.textContent=saved.size+' of 40 priced brochure options available. Prices are for the whole run.';
    }catch(error){if(start===revision){saved.clear();note.textContent='Prices could not be loaded. Try loading them again.';}throw error;}
    finally{update();}
-  });
+  }
+  load.onclick=()=>run(loadPrices);
   for(const select of [format,copies])select.onchange=()=>{revision++;update();};
   add.onclick=()=>run(async()=>{
    if(!editable(true))return;
@@ -76,7 +77,7 @@
    onAdd({description,quantity:'1',unit:'Run',unit_price:d.unit_price,vat_rate:d.vat_rate,discount_percent:'0',finish:d.finish,placement:d.placement});
   });
   clear();
-  return {clear,update};
+  return {clear,update,async open(){root.hidden=false;root.open=true;await loadPrices();root.scrollIntoView?.({block:'start'});}};
  }
  window.CustomUBrochurePicker=Object.freeze({mount});
 })();
