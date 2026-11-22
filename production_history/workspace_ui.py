@@ -3,7 +3,7 @@ from flask import request
 
 PAGES = frozenset(('/', '/customers', '/quotes', '/invoices', '/payments',
     '/credits', '/statements', '/jobs', '/products', '/mockups', '/catalogues',
-    '/hr', '/staff', '/reminders', '/legacy-balances', '/opening-balances',
+    '/hr', '/team', '/staff', '/reminders', '/legacy-balances', '/opening-balances',
     '/quotes/carryover', '/customers/import', '/customers/reviewed-import', '/products/csv-import',
     '/artwork', '/email'))
 
@@ -26,6 +26,7 @@ def install(app, root):
         if (request.path in PAGES or request.endpoint in ('artwork_page', 'product_detail_page','shopvox_quote_page','shopvox_invoice_page')) and response.status_code == 200 and response.mimetype == 'text/html':
             html = response.get_data(as_text=True)
             additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css">'
-                         '<script src="/workspace-assets/workspace-shell.js" defer></script>')
+                         '<script src="/workspace-assets/workspace-shell.js" defer></script>'
+                         '<script src="/team-notifications.js?v=116" defer></script>')
             response.set_data(html.replace('</head>', additions + '</head>', 1))
         return response
