@@ -1,5 +1,6 @@
 """HR time calculations and backup audit replay. No inferred payroll rates."""
-from datetime import datetime,timezone
+from datetime import datetime,timezone,timedelta,time
+from zoneinfo import ZoneInfo
 from decimal import Decimal
 import re
 
@@ -12,7 +13,8 @@ def uid(value):need(isinstance(value,str) and re.fullmatch(r'[a-f0-9]{8}-[a-f0-9
 def shift_totals(data,as_of):
     now=stamp(as_of) if isinstance(as_of,str) else as_of
     scheduled=stamp(data['scheduled_start']);pairs=[data['correction']] if data.get('correction') else data['intervals']
-    seconds=Decimal(0);previous=None;needs_review=False
+    seconds=Decimal(0);weekend_seconds=Decimal(0);previous=None;needs_review=False
+    weekend_policy=data.get('time_policy')=='weekends_1153';nassau=ZoneInfo('America/Nassau')
     for pair in pairs:
         start=stamp(pair['in']);end=stamp(pair['out']) if pair['out'] else now
         need(end>=start and (previous is None or start>=previous))
@@ -20,15 +22,24 @@ def shift_totals(data,as_of):
         previous=end
         delta=max(Decimal(0),Decimal(str((end-max(start,scheduled)).total_seconds())))
         seconds+=delta
+        if weekend_policy:
+            cursor=max(start,scheduled).astimezone(timezone.utc);end_utc=end.astimezone(timezone.utc)
+            while cursor<end_utc:
+                local=cursor.astimezone(nassau)
+                boundary=min(end_utc,datetime.combine(local.date()+timedelta(days=1),time(),nassau).astimezone(timezone.utc))
+                if local.weekday()>=5:weekend_seconds+=Decimal(str((boundary-cursor).total_seconds()))
+                cursor=boundary
     minutes=int(seconds//60)
-    return {'credited_seconds':float(seconds),'worked_minutes':minutes,'regular_minutes':min(minutes,480),'overtime_minutes':max(0,minutes-480),'needs_review':needs_review,'provisional':data['state']=='in'}
+    overtime=int((weekend_seconds+max(Decimal(0),seconds-weekend_seconds-480*60))//60)
+    return {'credited_seconds':float(seconds),'worked_minutes':minutes,'regular_minutes':minutes-overtime,'overtime_minutes':overtime,'needs_review':needs_review,'provisional':data['state']=='in'}
 def check_record(row):
     need(set(row)=={'id','kind','employee_id','data','version','created_at','updated_at'})
     uid(row['id']);need(row['kind'] in KINDS and type(row['version']) is int and row['version']>0)
     need(stamp(row['updated_at'])>=stamp(row['created_at']));d=row['data'];need(isinstance(d,dict))
     if row['employee_id'] is not None:uid(row['employee_id'])
     if row['kind']=='shift':
-        need(set(d) in ({'day','scheduled_start','regular_minutes','intervals','state','correction'},{'day','scheduled_start','regular_minutes','intervals','state','correction','lieu'}) and d['regular_minutes']==480 and d['state'] in ('in','out'))
+        need(set(d)-{'lieu','time_policy'}=={'day','scheduled_start','regular_minutes','intervals','state','correction'} and d['regular_minutes']==480 and d['state'] in ('in','out'))
+        if 'time_policy' in d:need(d['time_policy']=='weekends_1153')
         need(isinstance(d['intervals'],list) and 1<=len(d['intervals'])<=100)
         for i,pair in enumerate(d['intervals']):
             need(set(pair)=={'in','out'});stamp(pair['in'])

@@ -21,7 +21,7 @@
  }
  function mount({config,onChange,editable,onReady=()=>{}}){
   const $=id=>document.getElementById(id),canvas=$('manual-canvas'),wrap=$('manual-stage'),note=$('manual-note');
-  const ranges=['x','y','width','rotation'];let base=null,art=null,epoch=0,drag=null,shape=null,urls=[],scale=null,marking=false,selection=null;
+  const ranges=['x','y','width','rotation'];let base=null,art=null,epoch=0,drag=null,shape=null,urls=[],scale=null,marking=false,selection=null,anchor=null,markError='';
   const enabled=()=>$('measure-enabled').checked;
   function scaleConfig(){return enabled()&&scale?{...scale}:null;}
   function fieldValid(id){return $(id).checkValidity()&&Number.isFinite($(id).valueAsNumber);}
@@ -31,8 +31,14 @@
    return !!(base&&art&&scale&&!marking&&['reference-width','reference-height','print-width-in','print-height-in'].every(fieldValid)&&!geometry(canvas.width,canvas.height,art.width,art.height,config()).error);
   }
   function controls(){
-   $('measure-enabled').disabled=!base||!editable();$('measurement-fields').hidden=!enabled();$('mark-reference').disabled=!base||!editable();
-   for(const id of ['reference-width','reference-height','print-width-in','print-height-in'])$(id).disabled=!editable()||!enabled();
+   $('measure-enabled').disabled=!base||!editable();$('measurement-fields').hidden=!enabled();$('print-dimensions').hidden=!enabled();$('mark-reference').disabled=!base||!editable()||marking;
+   $('mark-reference').textContent=marking?'Marking area — use the photo below':scale?'Mark area again':'Mark area on photo';
+   $('mark-reference').setAttribute('aria-pressed',String(marking));$('cancel-reference').hidden=!marking;$('cancel-reference').disabled=!editable();wrap.dataset.marking=String(marking);
+   for(const id of ['reference-width','reference-height'])$(id).disabled=!editable()||!enabled()||marking;
+   for(const id of ['print-width-in','print-height-in'])$(id).disabled=!editable()||!enabled()||!scale||marking;
+   $('marking-note').hidden=!marking;
+   $('marking-note').textContent=markError||(anchor?'First corner selected. Click the opposite corner to finish. Escape cancels.':'Marking is on. Click two opposite corners of the item area, or drag between them. The green box follows your entered proportions. Escape cancels.');
+   canvas.setAttribute('aria-label',marking?'Mark reference area: click two opposite corners or drag a rectangle. Escape cancels.':'Move and resize the logo on the product. Arrow keys move it; Shift uses smaller steps.');
   }
   function sync(){for(const k of ranges){const field=$(k+'-number');field.value=$(k).value;field.setCustomValidity('');}}
   function dimensions(){if(!scale||!art)return;$('print-width-in').value=scale.print_width;$('print-height-in').value=round(scale.print_width*art.height/art.width,3);}
@@ -40,8 +46,8 @@
   function change(values){for(const [k,v] of Object.entries(values)){$(k).value=round(bound(v,Number($(k).min),Number($(k).max)));if(k==='width')percentWidth(v);}sync();onChange();}
   function revoke(){for(const url of urls)URL.revokeObjectURL(url);urls=[];}
   function clear({preserveScale=false}={}){
-   epoch++;base=null;art=null;shape=null;drag=null;marking=false;selection=null;revoke();canvas.width=1;canvas.height=1;wrap.hidden=true;
-   if(!preserveScale){scale=null;$('measure-enabled').checked=false;for(const id of ['reference-width','reference-height','print-width-in','print-height-in'])$(id).value='';$('measure-note').textContent='';}
+   epoch++;base=null;art=null;shape=null;drag=null;marking=false;selection=null;anchor=null;markError='';revoke();canvas.width=1;canvas.height=1;wrap.hidden=true;
+   if(!preserveScale){scale=null;$('measure-enabled').checked=false;for(const id of ['reference-width','reference-height','print-width-in','print-height-in'])$(id).value='';$('measure-note').textContent='';$('print-size-note').textContent='';}
    note.textContent='Click Update preview once to load the artwork here. Then drag to position, drag the corner to resize, or use the exact controls.';controls();
   }
   function restore(value){scale=value?{...value}:null;$('measure-enabled').checked=!!value;if(value){$('reference-width').value=value.reference_width;$('reference-height').value=value.reference_height;$('print-width-in').value=value.print_width;}controls();}
@@ -68,37 +74,53 @@
    const rect=canvas.getBoundingClientRect(),pixel=bw/(rect.width||bw),size=12*pixel;ctx.lineWidth=2*pixel;ctx.setLineDash([5*pixel,4*pixel]);
    if(!shape.error){ctx.strokeStyle='#006cc5';ctx.strokeRect(shape.left,shape.top,shape.rw,shape.rh);ctx.fillStyle='#006cc5';ctx.fillRect(shape.left+shape.rw-size,shape.top+shape.rh-size,size,size);}
    const ref=selection||shape.ref;if(ref){ctx.strokeStyle='#148346';ctx.strokeRect(ref.left,ref.top,ref.width,ref.height);}ctx.setLineDash([]);
-   if(enabled())$('measure-note').textContent=marking?'Drag on the photo to mark the reference area.':!scale?'Enter the item dimensions and mark the reference area.':shape.error||`Print: ${scale.print_width} × ${round(scale.print_width*art.height/art.width,3)} inches. Reference: ${scale.reference_width} × ${scale.reference_height} inches.`;
+   if(marking&&anchor){ctx.fillStyle='#148346';ctx.fillRect(anchor.x-size/2,anchor.y-size/2,size,size);}
+   if(enabled()){
+    $('measure-note').textContent=marking?'Marking is on — select two corners on the working photo.':!scale?'Enter the area dimensions, then click Mark area on photo. Print sizing becomes available after marking.':`Area marked: ${scale.reference_width} × ${scale.reference_height} inches. Set the print size below the photo.`;
+    $('print-size-note').textContent=!scale?'Mark the item area first to enable these fields.':!['print-width-in','print-height-in'].every(fieldValid)?'Enter a positive print size, using up to three decimal places.':shape.error||`Print: ${scale.print_width} × ${round(scale.print_width*art.height/art.width,3)} inches. Working photo updated. Click Update preview before saving.`;
+    // Keep geometry errors visible above the photo as well as beside the size fields.
+    if(scale&&!marking&&shape.error)$('measure-note').textContent=shape.error;
+   }
+   controls();
   }
   function point(ev){const b=canvas.getBoundingClientRect();return {x:bound((ev.clientX-b.left)*canvas.width/b.width,0,canvas.width),y:bound((ev.clientY-b.top)*canvas.height/b.height,0,canvas.height)};}
-  function markBox(p){const ratio=$('reference-width').valueAsNumber/$('reference-height').valueAsNumber,w=Math.min(Math.abs(p.x-drag.x),Math.abs(p.y-drag.y)*ratio),h=w/ratio;return {left:p.x<drag.x?drag.x-w:drag.x,top:p.y<drag.y?drag.y-h:drag.y,width:w,height:h};}
+  function markBox(p,origin=drag){const ratio=$('reference-width').valueAsNumber/$('reference-height').valueAsNumber,w=Math.min(Math.abs(p.x-origin.x),Math.abs(p.y-origin.y)*ratio),h=w/ratio;return {left:p.x<origin.x?origin.x-w:origin.x,top:p.y<origin.y?origin.y-h:origin.y,width:w,height:h};}
   canvas.addEventListener('pointerdown',ev=>{
    if(!editable()||!shape||!base||ev.button!==0)return;ev.preventDefault();canvas.focus();const p=point(ev);
-   if(marking){drag={pointer:ev.pointerId,mark:true,x:p.x,y:p.y};selection=null;canvas.setPointerCapture?.(ev.pointerId);return;}
+   if(marking){drag={pointer:ev.pointerId,mark:true,x:anchor?.x??p.x,y:anchor?.y??p.y,second:!!anchor};markError='';selection=null;canvas.setPointerCapture?.(ev.pointerId);return;}
    if(shape.error)return;
    const box=canvas.getBoundingClientRect(),hit=18*canvas.width/box.width,c=config(),resize=Math.abs(p.x-(shape.left+shape.rw))<=hit&&Math.abs(p.y-(shape.top+shape.rh))<=hit,inside=p.x>=shape.left&&p.x<=shape.left+shape.rw&&p.y>=shape.top&&p.y<=shape.top+shape.rh;
    if(!resize&&!inside)change({x:p.x/canvas.width*100,y:p.y/canvas.height*100});
    drag={pointer:ev.pointerId,resize,x:p.x,y:p.y,cx:shape.cx,cy:shape.cy,width:c.width,inch:scale?.print_width,distance:Math.max(1,Math.hypot(p.x-shape.cx,p.y-shape.cy))};canvas.setPointerCapture?.(ev.pointerId);
   });
   canvas.addEventListener('pointermove',ev=>{
-   if(!drag||drag.pointer!==ev.pointerId||!editable())return;ev.preventDefault();const p=point(ev);
+   if(!editable())return;if(marking&&anchor&&!drag){selection=markBox(point(ev),anchor);draw();return;}if(!drag||drag.pointer!==ev.pointerId)return;ev.preventDefault();const p=point(ev);
    if(drag.mark){selection=markBox(p);draw();return;}
    if(drag.resize){const factor=Math.hypot(p.x-drag.cx,p.y-drag.cy)/drag.distance;if(enabled()&&scale){scale.print_width=round(bound(drag.inch*factor,.001,2000),3);dimensions();$('width').value=round(bound(scale.print_width*(scale.right-scale.left)/scale.reference_width,1,100));sync();onChange();}else change({width:drag.width*factor});}
    else change({x:(drag.cx+p.x-drag.x)/canvas.width*100,y:(drag.cy+p.y-drag.y)/canvas.height*100});
   });
+  function cancelMark(){marking=false;anchor=null;selection=null;drag=null;markError='';onChange();}
   function stop(ev){
    if(drag?.pointer!==ev.pointerId)return;
    if(drag.mark&&ev.type==='pointerup'){
-    selection=markBox(point(ev));if(Math.min(selection.width,selection.height)>=8){scale={unit:'in',reference_width:$('reference-width').valueAsNumber,reference_height:$('reference-height').valueAsNumber,left:round(selection.left/canvas.width*100,4),top:round(selection.top/canvas.height*100,4),right:round((selection.left+selection.width)/canvas.width*100,4),bottom:round((selection.top+selection.height)/canvas.height*100,4),print_width:round($('reference-width').valueAsNumber/4,3)};dimensions();marking=false;$('width').value=round(bound(scale.print_width*(scale.right-scale.left)/scale.reference_width,1,100));sync();}
+    selection=markBox(point(ev));
+    if(Math.min(selection.width,selection.height)>=8){
+     const oldWidth=scale?.print_width;
+     scale={unit:'in',reference_width:$('reference-width').valueAsNumber,reference_height:$('reference-height').valueAsNumber,left:round(selection.left/canvas.width*100,4),top:round(selection.top/canvas.height*100,4),right:round((selection.left+selection.width)/canvas.width*100,4),bottom:round((selection.top+selection.height)/canvas.height*100,4),print_width:oldWidth??round($('reference-width').valueAsNumber/4,3)};
+     dimensions();marking=false;anchor=null;markError='';$('width').value=round(bound(scale.print_width*(scale.right-scale.left)/scale.reference_width,1,100));sync();
+    }else{
+     anchor={x:drag.x,y:drag.y};markError=drag.second?'That area is too small. Click a farther opposite corner, or cancel and start again.':'';
+    }
    }
    drag=null;selection=null;canvas.releasePointerCapture?.(ev.pointerId);onChange();
   }
   canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop);canvas.addEventListener('lostpointercapture',()=>{drag=null;selection=null;draw();});
-  canvas.addEventListener('keydown',ev=>{if(!editable()||!base||marking||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(ev.key))return;ev.preventDefault();const c=config(),step=ev.shiftKey ? 0.1 : 1;change({x:c.x+(ev.key==='ArrowRight'?step:ev.key==='ArrowLeft'?-step:0),y:c.y+(ev.key==='ArrowDown'?step:ev.key==='ArrowUp'?-step:0)});});
+  canvas.addEventListener('keydown',ev=>{if(marking&&ev.key==='Escape'){ev.preventDefault();cancelMark();return;}if(!editable()||!base||marking||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(ev.key))return;ev.preventDefault();const c=config(),step=ev.shiftKey ? 0.1 : 1;change({x:c.x+(ev.key==='ArrowRight'?step:ev.key==='ArrowLeft'?-step:0),y:c.y+(ev.key==='ArrowDown'?step:ev.key==='ArrowUp'?-step:0)});});
   for(const k of ranges){const field=$(k+'-number');field.addEventListener('input',()=>{const value=field.valueAsNumber,slider=$(k);if(!Number.isFinite(value)||value<Number(slider.min)||value>Number(slider.max)){field.setCustomValidity('Enter a value from '+slider.min+' to '+slider.max+'.');onChange();return;}field.setCustomValidity('');slider.value=round(value);if(k==='width')percentWidth(value);onChange();});field.addEventListener('change',()=>{if(valid())sync();});}
-  $('measure-enabled').addEventListener('change',()=>{marking=false;controls();onChange();});
-  for(const id of ['reference-width','reference-height'])$(id).addEventListener('input',()=>{scale=null;marking=false;onChange();});
-  $('mark-reference').addEventListener('click',()=>{if(!['reference-width','reference-height'].every(fieldValid)){$('measure-note').textContent='Enter a positive width and height in inches first.';return;}marking=true;selection=null;onChange();});
+  $('measure-enabled').addEventListener('change',()=>{cancelMark();controls();});
+  for(const id of ['reference-width','reference-height'])$(id).addEventListener('input',()=>{scale=null;marking=false;anchor=null;selection=null;markError='';$('print-width-in').value='';$('print-height-in').value='';onChange();});
+  $('mark-reference').addEventListener('click',()=>{if(!['reference-width','reference-height'].every(fieldValid)){$('measure-note').textContent='Enter a positive width and height in inches first.';return;}marking=true;anchor=null;selection=null;markError='';onChange();wrap.scrollIntoView?.({behavior:'smooth',block:'start'});canvas.focus({preventScroll:true});});
+  $('cancel-reference').addEventListener('click',cancelMark);
   for(const id of ['print-width-in','print-height-in'])$(id).addEventListener('input',()=>{if(scale&&art&&fieldValid(id)){scale.print_width=round(bound($(id).valueAsNumber*(id==='print-height-in'?art.width/art.height:1),.001,2000),3);if(id==='print-width-in')$('print-height-in').value=round(scale.print_width*art.height/art.width,3);else $('print-width-in').value=scale.print_width;$('width').value=round(bound(scale.print_width*(scale.right-scale.left)/scale.reference_width,1,100));sync();}onChange();});
   window.addEventListener('resize',draw);sync();controls();
   return {load,clear,draw,sync,valid,controls,restore,scaleConfig,percentageChanged:k=>{if(k==='width')percentWidth($('width').value);}};
