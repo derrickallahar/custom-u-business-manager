@@ -1,5 +1,6 @@
 from branding import pdf_logo
-"""Version 109: deterministic PDFs from saved quote/invoice snapshots only."""
+from bank_payment import BANK_DETAILS, HEADING as BANK_HEADING, payment_reference
+"""Deterministic PDFs from saved snapshots and current bank instructions."""
 import io
 from functools import partial
 from xml.sax.saxutils import escape
@@ -31,6 +32,7 @@ def render_document(kind, record):
     styles={}
     for name,size,bold,col in [('body',9,False,INK),('small',8,False,GREY),('title',22,True,RED),('heading',13,True,INK),('label',9,True,RED),('cell',8,False,INK),('head',8,True,INK)]:
         styles[name]=ParagraphStyle(name,fontName='CU-Bold' if bold else 'CU-Regular',fontSize=size,leading=size*1.4,textColor=col,spaceAfter=5,splitLongWords=True)
+    styles['bank']=ParagraphStyle('bank',parent=styles['body'],spaceAfter=2)
     def p(value,style='body'):
         return Paragraph(escape(str(value)).replace('\r\n','\n').replace('\r','\n').replace('\n','<br/>'),styles[style])
     def details(obj,keys):return '\n'.join(str(obj[k]) for k in keys if obj.get(k))
@@ -64,7 +66,11 @@ def render_document(kind, record):
     totals += [('VAT',d['tax_cents']),('Invoice total' if invoice else 'Quote total',d['total_cents'])]
     sums=Table([[p(k),p(money(v),'label' if i==len(totals)-1 else 'body')] for i,(k,v) in enumerate(totals)],colWidths=[150,150],hAlign='RIGHT')
     sums.setStyle(TableStyle([('LINEBELOW',(0,0),(-1,-1),.4,HexColor('#dedee4')),('VALIGN',(0,0),(-1,-1),'TOP')]))
-    story += [KeepTogether([sums]+([Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+d['deposit_percent']+'%): '+money(d['deposit_cents']),'small')] if not invoice or record['quote_id'] else []))]
+    summary=[sums]+([Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+d['deposit_percent']+'%): '+money(d['deposit_cents']),'small')] if not invoice or record['quote_id'] else [])
+    bank=[p(BANK_HEADING,'label')]+[p(label+': '+value,'bank') for label,value in BANK_DETAILS]+[Spacer(1,4),p(payment_reference(number),'small')]
+    payment=Table([[bank,summary]],colWidths=[240,300],hAlign='LEFT')
+    payment.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('BACKGROUND',(0,0),(0,0),HexColor('#f7f8fa')),('LINEBEFORE',(0,0),(0,0),2,RED),('LEFTPADDING',(0,0),(0,0),10),('RIGHTPADDING',(0,0),(0,0),12),('TOPPADDING',(0,0),(0,0),10),('BOTTOMPADDING',(0,0),(0,0),10),('LEFTPADDING',(1,0),(1,0),0),('RIGHTPADDING',(1,0),(1,0),0),('TOPPADDING',(1,0),(1,0),0),('BOTTOMPADDING',(1,0),(1,0),0)]))
+    story += [KeepTogether([payment])]
     for heading,text in [('Notes',m.get('notes') if invoice else d['notes']),('Terms',m.get('terms') if invoice else d['terms'])]:
         if text:story += [Spacer(1,12),p(heading,'label'),p(text)]
     ending=('Test document only. No amount is payable.' if test else 'Draft for review. Not an issued invoice.' if draft else 'This document states the invoice total. Payments received are acknowledged separately.') if invoice else 'This is a quotation, not a tax invoice or payment receipt.'
