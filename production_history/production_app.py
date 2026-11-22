@@ -109,7 +109,7 @@ class Supabase:
         try:self.call('/auth/v1/logout?scope=local',token,{})
         except Failure:pass
 
-def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
+def create_app(provider=None,origin=None,digest=None,crm_enabled=None,*,enforce_devices=True):
     crm_enabled = os.getenv("CUSTOMU_PRODUCTION_CRM_ENABLED", "") == "1" if crm_enabled is None else crm_enabled
     origin=(origin or os.getenv('CUSTOMU_PRODUCTION_ORIGIN','')).rstrip('/')
     parts=urlsplit(origin)
@@ -132,6 +132,9 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
                 if rec:sessions.pop(hashlib.sha256(sid.encode()).hexdigest(),None)
                 raise Failure('LOGIN_REQUIRED',401)
         me=provider.access(rec['token'])
+        if enforce_devices:
+            from device_access import authorize
+            authorize(provider,rec,me,Failure)
         return rec,me
     def archive(rec):
         if not digest:raise Failure('HISTORY_IMPORT_PENDING',409)
@@ -171,7 +174,7 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     @app.post('/api/login')
     def login():
         data=request.get_json()
-        if not isinstance(data,dict) or set(data)!={'email','password'}:raise Failure('INVALID_LOGIN_REQUEST',400)
+        if not isinstance(data,dict) or set(data) not in ({'email','password'},{'email','password','mobile'}) or ('mobile' in data and type(data['mobile']) is not bool):raise Failure('INVALID_LOGIN_REQUEST',400)
         email=data['email'];password=data['password']
         if not isinstance(email,str) or not 3<=len(email)<=254 or not isinstance(password,str) or not 1<=len(password)<=128:raise Failure('INVALID_LOGIN_REQUEST',400)
         with lock:
@@ -181,7 +184,11 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
         result=provider.login(email.strip(),password)
         token=result['access_token']
         if not isinstance(token,str) or len(token)>20000:raise Failure('INVALID_PROVIDER_RESPONSE')
-        try:me=provider.access(token)
+        try:
+            me=provider.access(token)
+            if enforce_devices:
+                from device_access import authorize
+                authorize(provider,{'token':token},me,Failure,data.get('mobile',False))
         except Exception:
             provider.logout(token);raise
         ttl=max(1,min(3600,int(result['expires_in'])))
@@ -191,7 +198,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
             for k in [k for k,r in sessions.items() if r['expires']<=time.time()]:sessions.pop(k)
             if len(sessions)>=100:raise Failure('SESSION_CAPACITY_REACHED',429)
             sessions.pop(hashlib.sha256(old.encode()).hexdigest(),None)
-            sessions[key]={'token':token,'expires':time.time()+ttl}
+            from device_access import digest as device_digest
+            sessions[key]={'token':token,'expires':time.time()+ttl,'device_digest':device_digest()}
         r=jsonify(me=me,archive_configured=bool(digest),crm_enabled=bool(crm_enabled))
         r.set_cookie(COOKIE,sid,secure=True,httponly=True,samesite='Strict',max_age=ttl,path='/')
         return r
@@ -259,6 +267,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_legacy(app,provider,session,crm_enabled,ROOT,Failure)
     from reminder_api import install as install_reminders
     install_reminders(app,provider,session,crm_enabled,ROOT,Failure)
+    from hr_api import install as install_hr
+    install_hr(app,provider,session,crm_enabled,ROOT,Failure)
     from workspace_ui import install as install_workspace_ui
     install_workspace_ui(app, ROOT)
     return app

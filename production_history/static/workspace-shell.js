@@ -24,6 +24,7 @@
         ['Quotes','/quotes','▤',enabled&&can('quotes.view')],['Invoices','/invoices','▣',enabled&&can('invoices.view')],
         ['Payments','/payments','↔',enabled&&can('payments.view')],['Statements','/statements','▤',enabled&&admin()],
         ['Production','/jobs','⚙',enabled&&can('jobs.view')]]],
+      ['People',[['HR & time clock','/hr','◷',enabled]]],
       ['Products & proposals',[
         ['Products & pricing','/products','◈',enabled&&can('products.view')],
         ['Client mockups','/mockups','▣',enabled&&can('products.view')&&can('customers.view')],
