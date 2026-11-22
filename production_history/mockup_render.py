@@ -2,17 +2,19 @@
 import base64,hashlib,io,math
 from PIL import Image,ImageOps
 from product_images import encode_image,checked_bytes
+from mockup_scale import validate_scale,render_scaled
 
 FAMILIES={'generic':('centre',),'shirt':('centre','left-chest','back'),'journal':('centre','bottom-right','upper-left'),'drinkware':('centre','front')}
 FINISHES=('colour','engraved-dark','engraved-light')
 
 def configuration(value):
-    if not isinstance(value,dict) or set(value)!={'x','y','width','rotation','finish','family','placement'}:raise ValueError('INVALID_MOCKUP')
+    if not isinstance(value,dict) or set(value) not in ({'x','y','width','rotation','finish','family','placement'},{'x','y','width','rotation','finish','family','placement','scale'}):raise ValueError('INVALID_MOCKUP')
     for k,lo,hi in (('x',0,100),('y',0,100),('width',1,100),('rotation',-180,180)):
         n=value[k]
         if type(n) not in (int,float) or not math.isfinite(n) or not lo<=n<=hi or abs(n*10-round(n*10))>0.000001:raise ValueError('INVALID_MOCKUP')
     if any(not isinstance(value[k],str) for k in ('family','placement','finish')):raise ValueError('INVALID_MOCKUP')
     if value['family'] not in FAMILIES or value['placement'] not in FAMILIES[value['family']] or value['finish'] not in FINISHES:raise ValueError('INVALID_MOCKUP')
+    if 'scale' in value:validate_scale(value['scale'])
     return dict(value)
 
 def render(base_record,logo_record,config):
@@ -26,6 +28,7 @@ def render(base_record,logo_record,config):
     if c['finish']!='colour':
         tint=(65,55,45) if c['finish']=='engraved-dark' else (220,218,210)
         ink=Image.new('RGBA',logo.size,tint+(255,));ink.putalpha(logo.getchannel('A'));logo=ink
+    if 'scale' in c:return render_scaled(base,logo,c)
     w=max(1,round(base.width*c['width']/100));h=max(1,round(w*logo.height/logo.width))
     scale=min(1,base.width/w,base.height/h);w=max(1,round(w*scale));h=max(1,round(h*scale))
     logo=logo.resize((w,h),Image.Resampling.LANCZOS)

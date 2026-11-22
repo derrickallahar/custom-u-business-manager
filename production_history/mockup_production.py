@@ -1,0 +1,18 @@
+"""Printable production measurements retained with a saved mockup."""
+from html import escape
+from mockup_scale import measurements
+
+def page(record):
+    h=lambda s:escape(str(s),quote=True)
+    g=measurements(record);s=record['config'].get('scale');c=record['config']
+    if g:
+        inch=lambda n:f'{n:.3f}'.rstrip('0').rstrip('.')+' in'
+        rows=[('Print width × height',inch(g['print_width_in'])+' × '+inch(g['print_height_in'])),('Rotation',str(c['rotation'])+'° clockwise'),('Reference area width × height',inch(s['reference_width'])+' × '+inch(s['reference_height'])),('Print bounding box from reference left',inch(g['left_in'])),('Print bounding box from reference top',inch(g['top_in'])),('Branding finish',{'colour':'Colour artwork / UV print','engraved-dark':'Engraving preview — dark','engraved-light':'Engraving preview — light'}[c['finish']])]
+        details='<dl>'+''.join('<dt>'+h(k)+'</dt><dd>'+h(v)+'</dd>' for k,v in rows)+'</dl>'
+    else:details='<p>This mockup has no production dimensions. Edit a copy and set its reference area and print size first.</p>'
+    preview='<img class="preview" src="/api/mockups/'+h(record['id'])+'/image" alt="Saved mockup">'
+    if g:
+        bw=record['preview']['width'];bh=record['preview']['height']
+        preview='<svg class="preview" viewBox="0 0 '+str(bw)+' '+str(bh)+'" role="img" aria-label="Saved mockup with the measured reference area outlined in green"><image href="/api/mockups/'+h(record['id'])+'/image" width="'+str(bw)+'" height="'+str(bh)+'"></image><rect x="'+str(g['reference_left_px'])+'" y="'+str(g['reference_top_px'])+'" width="'+str(g['reference_width_px'])+'" height="'+str(g['reference_height_px'])+'" fill="none" stroke="#148346" stroke-width="3"></rect></svg>'
+    return '''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Custom U · Production size sheet</title><style>
+body{font:16px Arial,sans-serif;color:#202329;margin:35px auto;padding:20px;max-width:950px}header{display:flex;justify-content:space-between;align-items:center;gap:20px}header img{width:200px;max-height:90px;object-fit:contain}h1{font-size:25px}h2{font-size:21px}dl{display:grid;grid-template-columns:1fr 1fr;gap:12px}dt{font-weight:bold}dd{margin:0}.preview{display:block;max-width:100%;max-height:520px;margin:24px auto;object-fit:contain}svg.preview{width:100%;height:520px}.note{font-size:14px;line-height:1.5;color:#555}a{color:#b72030}@media print{.screen{display:none}.preview{height:300px;max-height:300px}body{margin:0;max-width:none}img,dl{break-inside:avoid}}@page{size:letter;margin:16mm}</style></head><body><header><img src="/workspace-assets/brand/custom-u-logo.png" alt="Custom U"><h1>Production size sheet</h1></header><p class="screen"><a href="/mockups">Back to mockups</a> · Use your browser’s Print menu to print or save as PDF.</p><h2>'''+h(record['title'])+'''</h2><p>Customer: '''+h(record['customer_name'])+'''<br>Item: '''+h(record['product_name'])+'''</p>'''+details+preview+'''<p class="note">Print width and height describe the visible artwork before rotation, with proportions preserved. Position is the top-left of the rotated print bounding box, measured from the reference area outlined in green. Dimensions are rounded to 0.001 inch.</p><p class="note">Sizing depends on the dimensions and reference area you entered. Use a straight-on image of a flat surface; check curved or angled items physically. This sheet and preview are not a full-size production artwork file. Use the original artwork at the listed print dimensions.</p></body></html>'''

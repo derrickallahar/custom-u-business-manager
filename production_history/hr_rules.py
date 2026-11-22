@@ -28,7 +28,7 @@ def check_record(row):
     need(stamp(row['updated_at'])>=stamp(row['created_at']));d=row['data'];need(isinstance(d,dict))
     if row['employee_id'] is not None:uid(row['employee_id'])
     if row['kind']=='shift':
-        need(set(d)=={'day','scheduled_start','regular_minutes','intervals','state','correction'} and d['regular_minutes']==480 and d['state'] in ('in','out'))
+        need(set(d) in ({'day','scheduled_start','regular_minutes','intervals','state','correction'},{'day','scheduled_start','regular_minutes','intervals','state','correction','lieu'}) and d['regular_minutes']==480 and d['state'] in ('in','out'))
         need(isinstance(d['intervals'],list) and 1<=len(d['intervals'])<=100)
         for i,pair in enumerate(d['intervals']):
             need(set(pair)=={'in','out'});stamp(pair['in'])
@@ -38,7 +38,21 @@ def check_record(row):
             c=d['correction'];need(set(c)=={'in','out','reason','by','at'} and c['reason']);uid(c['by']);stamp(c['at']);need(stamp(c['out'])>stamp(c['in']))
         else:need((d['intervals'][-1]['out'] is None)==(d['state']=='in'))
         shift_totals(d,max(stamp(row['updated_at']),stamp(d['intervals'][-1]['in'])))
-    elif row['kind'] in ('early','leave'):need(d.get('status') in ('pending','approved','declined','cancelled'))
+        if 'lieu' in d:
+            credit=d['lieu'];need(isinstance(credit,dict) and set(credit)=={'status','minutes','decided_by','decided_at','note'})
+            need(credit['status'] in ('approved','declined','review_required') and type(credit['minutes']) is int and credit['minutes']>=0)
+            uid(credit['decided_by']);stamp(credit['decided_at']);need(isinstance(credit['note'],str) and 1<=len(credit['note'])<=1000)
+            if credit['status']=='approved':
+                totals=shift_totals(d,row['updated_at']);need(d['state']=='out' and not totals['needs_review'] and credit['minutes']==totals['overtime_minutes'] and credit['minutes']>0)
+            if credit['status']=='declined':need(credit['minutes']==0)
+    elif row['kind'] in ('early','leave'):
+        need(d.get('status') in ('pending','approved','declined','cancelled'))
+        if row['kind']=='leave' and d.get('leave_type')=='Time in lieu':
+            from datetime import date,timedelta
+            start=date.fromisoformat(d['start_date']);end=date.fromisoformat(d['end_date']);need(0<=(end-start).days<=366)
+            days=sum((start+timedelta(days=i)).weekday()<5 for i in range((end-start).days+1))
+            need(type(d.get('lieu_minutes')) is int and 0<d['lieu_minutes']<=days*480)
+
     elif row['kind']=='policy':need(d.get('status') in ('draft','published') and d.get('title') and d.get('body') and d.get('edition'))
     elif row['kind']=='ack':uid(d['policy_id']);stamp(d['acknowledged_at'])
     elif row['kind'] in ('manager','device'):need(type(d.get('active')) is bool)
@@ -65,3 +79,16 @@ def validate_hr(obj):
         need(set(r)=={'actor_id','request_id','payload','result','created_at'});uid(r['actor_id']);uid(r['request_id']);stamp(r['created_at']);key=(r['actor_id'],r['request_id']);need(key not in seen);seen.add(key)
         need(r['payload']['request_id']==r['request_id'] and isinstance(r['result'],dict) and 'data' in r['result'])
         check_record(r['result']['data']);need(history.get((r['actor_id'],r['result']['data']['id'],r['result']['data']['version']))==r['result']['data'])
+
+def lieu_balances(records):
+    balances={}
+    for r in records:
+        emp=r.get('employee_id')
+        if not emp:continue
+        b=balances.setdefault(emp,{'employee_id':emp,'approved_minutes':0,'used_minutes':0,'pending_minutes':0,'available_minutes':0});d=r['data']
+        if r['kind']=='shift' and d.get('lieu',{}).get('status')=='approved':b['approved_minutes']+=d['lieu']['minutes']
+        if r['kind']=='leave' and d.get('leave_type')=='Time in lieu':
+            if d['status']=='approved':b['used_minutes']+=d['lieu_minutes']
+            if d['status']=='pending':b['pending_minutes']+=d['lieu_minutes']
+    for b in balances.values():b['available_minutes']=b['approved_minutes']-b['used_minutes']
+    return list(balances.values())

@@ -82,6 +82,13 @@ def install(app,provider,session,enabled,root,failure):
     @app.get('/api/mockups/<mid>')
     def mockup_detail(mid):
         ident(mid);rec=gate();return jsonify(rpc(rec,{'op':'get','id':mid}))
+    @app.get('/mockups/<mid>/production')
+    def mockup_production(mid):
+        from mockup_production import page
+        ident(mid);rec=gate();record=rpc(rec,{'op':'get','id':mid})['data']
+        try:html=page(record)
+        except ValueError:raise failure('INVALID_MOCKUP',409) from None
+        check(rec);return app.response_class(html,mimetype='text/html')
     @app.get('/api/mockups/<mid>/image')
     def mockup_image(mid):
         ident(mid);rec=gate();r=rpc(rec,{'op':'get','id':mid})['data']

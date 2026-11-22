@@ -43,7 +43,7 @@ def install(app,provider,session,enabled,root,failure):
         import csv,io,json
         result=rpc({'op':'view','from':request.args.get('from',''),'to':request.args.get('to','')})
         names={p['id']:p['email'] for p in result['people']};out=io.StringIO(newline='');writer=csv.writer(out)
-        writer.writerow(['Employee','Date','Regular minutes','Overtime minutes','Counted minutes','State','Needs review','Actual clock events','Correction'])
+        writer.writerow(['Employee','Date','Regular minutes','Overtime minutes','Counted minutes','State','Needs review','Actual clock events','Correction','Lieu approval','Lieu credited minutes'])
         def safe(value):
             value=str(value)
             return "'"+value if value.lstrip().startswith(('=','+','-','@')) else value
@@ -51,7 +51,7 @@ def install(app,provider,session,enabled,root,failure):
             if row['kind']!='shift':continue
             if request.args.get('employee') and row['employee_id']!=request.args['employee']:continue
             d=row['data'];totals=shift_totals(d,result['now'])
-            writer.writerow([safe(names.get(row['employee_id'],row['employee_id'])),d['day'],totals['regular_minutes'],totals['overtime_minutes'],totals['worked_minutes'],d['state'],totals['needs_review'],safe(json.dumps(d['intervals'])),safe(json.dumps(d['correction']))])
+            writer.writerow([safe(names.get(row['employee_id'],row['employee_id'])),d['day'],totals['regular_minutes'],totals['overtime_minutes'],totals['worked_minutes'],d['state'],totals['needs_review'],safe(json.dumps(d['intervals'])),safe(json.dumps(d['correction'])),d.get('lieu',{}).get('status','Not reviewed'),d.get('lieu',{}).get('minutes',0) if d.get('lieu',{}).get('status')=='approved' else 0])
         response=make_response(out.getvalue().encode('utf-8-sig'));response.headers['Content-Type']='text/csv; charset=utf-8';response.headers['Content-Disposition']='attachment; filename="CustomU_Time_Records.csv"';return response
     @app.get('/api/hr/audit/<ident>')
     def hr_audit(ident):return jsonify(rpc({'op':'audit','id':ident}))
