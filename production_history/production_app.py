@@ -212,21 +212,33 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None,*,enforce_
     @app.get('/api/session')
     def who():
         _,me=session();return jsonify(me=me,archive_configured=bool(digest),crm_enabled=bool(crm_enabled))
+    def history_access():
+        rec,me=session()
+        if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
+        return rec,me
+    @app.get('/shopvox-documents.js')
+    def shopvox_documents_script():return app.response_class((ROOT/'static/shopvox-documents.js').read_bytes(),mimetype='text/javascript')
+    @app.get('/shopvox-record.js')
+    def shopvox_record_script():return app.response_class((ROOT/'static/shopvox-record.js').read_bytes(),mimetype='text/javascript')
+    def shopvox_page(kind,ident):
+        from shopvox_documents import page
+        rec,me=history_access();record=archive(rec).detail(ident)
+        if record['kind']!=kind:raise Failure('NOT_FOUND',404)
+        history_access()
+        return app.response_class(page(record,me.get('email','')),mimetype='text/html')
+    @app.get('/quotes/shopvox/<ident>')
+    def shopvox_quote_page(ident):return shopvox_page('quote',ident)
+    @app.get('/invoices/shopvox/<ident>')
+    def shopvox_invoice_page(ident):return shopvox_page('invoice',ident)
     @app.get('/api/history')
     def listing():
-        rec,me=session()
-        if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
-        return jsonify(archive(rec).listing(request.query_string.decode('utf-8')))
+        rec,_=history_access();result=archive(rec).listing(request.query_string.decode('utf-8'));history_access();return jsonify(result)
     @app.get('/api/history/records/<ident>')
     def detail(ident):
-        rec,me=session()
-        if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
-        return jsonify(data=archive(rec).detail(ident))
+        rec,_=history_access();result=archive(rec).detail(ident);history_access();return jsonify(data=result)
     @app.get('/api/history/files/<ident>')
     def pdf(ident):
-        rec,me=session()
-        if me.get('role')!='admin':raise Failure('ACCESS_DENIED',403)
-        name,blob=archive(rec).pdf(ident)
+        rec,_=history_access();name,blob=archive(rec).pdf(ident);history_access()
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
     from product_api import install as install_products
     install_products(app,provider,session,crm_enabled,ROOT,Failure)

@@ -1,0 +1,14 @@
+"""Read-only document pages for existing ShopVox archive records."""
+from html import escape
+
+def page(record,email):
+    h=lambda value:escape(str(value),quote=True)
+    kind=record['kind'];plural=kind+'s';number=record['number'];attachments=record['attachments']
+    fields=[('Source','Imported from ShopVox'),('Original number',number),('Customer',record['customer']),('Status in export',record['status']),('Total in export',record['total'])]
+    if kind=='invoice':fields.append(('Balance in export',record['balance']))
+    rows=''.join('<dt>'+h(label)+'</dt><dd>'+h(value or 'Not supplied')+'</dd>' for label,value in fields)
+    links=''.join('<p><a href="'+h(a['url'])+'">Download original PDF: '+h(a['name'])+'</a></p>' for a in attachments)
+    if not links:links='<p>The original PDF was not included with this imported record.</p>'
+    next_step=('<p><a href="/legacy-balances">Open current imported invoice balances</a></p><p>Payments recorded after the export are reflected in Imported balances and customer statements. The export figures on this page remain historical.</p>' if kind=='invoice' else '<p><a href="/quotes/carryover">Open the reviewed active-quote importer</a></p><p>Historical quotes are retained here for reference. The four reviewed quotes 1864–1867 can be carried into working drafts through the reviewed import.</p>')
+    return '''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ShopVox '''+h(kind+' '+number)+''' · Custom U</title><style>
+body{margin:0;background:#f5f6fa;color:#222;font:16px system-ui}main{max-width:1200px;margin:auto;padding:28px}.bar{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}.card{background:white;padding:24px;border-radius:12px;margin:20px 0}a{color:#b72030}button{font:inherit;padding:10px;border:1px solid #bbc2cc;border-radius:6px;background:white}dl{display:grid;grid-template-columns:190px 1fr;gap:12px}dt{font-weight:600}dd{margin:0;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.6}.notice{padding:14px;background:#fff1cf;border-radius:8px}[hidden]{display:none!important}@media(max-width:600px){dl{grid-template-columns:1fr}main{padding:16px}}</style></head><body><main><header class="bar"><h1>ShopVox '''+h(kind+' '+number)+'''</h1><a href="/'''+plural+'''">Back to '''+plural+'''</a></header><p id="status" role="status"></p><section id="workspace"><header class="bar"><p>'''+h(email)+'''</p><button id="logout">Sign out</button></header><p class="notice">Imported historical record · Read only</p><section class="card"><h2>Imported details</h2><dl>'''+rows+'''</dl><pre>'''+h(record['details'])+'''</pre></section><section class="card"><h2>Original document</h2>'''+links+'''</section><section class="card">'''+next_step+'''</section></section></main><script src="/shopvox-record.js"></script></body></html>'''

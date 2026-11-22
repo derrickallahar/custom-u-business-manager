@@ -30,6 +30,8 @@ def install(app,provider,session,enabled,root,failure):
         return v
     @app.get('/mockups')
     def mockup_page():return app.response_class((root/'static/mockups.html').read_bytes(),mimetype='text/html')
+    @app.get('/mockup-editor.js')
+    def mockup_editor_script():return app.response_class((root/'static/mockup-editor.js').read_bytes(),mimetype='text/javascript')
     @app.get('/mockups.js')
     def mockup_script():return app.response_class((root/'static/mockups.js').read_bytes(),mimetype='text/javascript')
     @app.get('/api/mockups')

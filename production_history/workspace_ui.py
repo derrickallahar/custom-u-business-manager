@@ -23,7 +23,7 @@ def install(app, root):
 
     @app.after_request
     def workspace_layout(response):
-        if (request.path in PAGES or request.endpoint in ('artwork_page', 'product_detail_page')) and response.status_code == 200 and response.mimetype == 'text/html':
+        if (request.path in PAGES or request.endpoint in ('artwork_page', 'product_detail_page','shopvox_quote_page','shopvox_invoice_page')) and response.status_code == 200 and response.mimetype == 'text/html':
             html = response.get_data(as_text=True)
             additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css">'
                          '<script src="/workspace-assets/workspace-shell.js" defer></script>')
