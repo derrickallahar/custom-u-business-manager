@@ -4,6 +4,22 @@ const fields=['code','name','category','description','unit','unit_price','vat_ra
 const supplierLimits={supplier:160,url:2048,sku:100,cost:10,currency:3,colours:800,sizes:800,specifications:4000};
 const emptySupplier=()=>Object.fromEntries(Object.keys(supplierLimits).map(k=>[k,'']));
 let me=null,record=null,supplierRecord=null,page=1,total=0,busy=false,dirty=false,importPreview=null,candidate=null,candidateObjectURL=null,uploadId=null;
+// Product details have their own URL. Filter state travels with Back to products.
+const productPath=location.pathname.toLowerCase().match(/^\/products\/([a-f0-9-]{36}|new)$/i);
+const detailPage=!!productPath;
+const listQuery=new URLSearchParams(location.search);
+const initialState=['active','inactive','all'].includes(listQuery.get('state'))?listQuery.get('state'):'active';
+const initialPage=Math.max(1,Math.min(100000,Number.parseInt(listQuery.get('page')||'1',10)||1));
+el('search').value=(listQuery.get('q')||'').slice(0,200);el('state').value=initialState;page=initialPage;
+document.body.classList.add(detailPage?'product-detail':'product-index');
+el('back-products').hidden=!detailPage;el('catalogue-list').hidden=detailPage;el('catalogue-intro').hidden=detailPage;
+function catalogueQuery(){return new URLSearchParams({q:el('search').value,state:el('state').value,page:String(page)}).toString();}
+function catalogueURL(){return '/products?'+catalogueQuery();}
+function productURL(id){return '/products/'+encodeURIComponent(id)+'?'+catalogueQuery();}
+function navigateProduct(url){if(busy||!leave())return;dirty=false;location.assign(url);}
+function syncProductURL(id){if(detailPage)history.replaceState(null,'',productURL(id));}
+el('back-products').href=catalogueURL();
+el('back-products').addEventListener('click',e=>{if(busy||!leave()){e.preventDefault();return;}dirty=false;});
 const can=k=>me?.role==='admin'||me?.permissions?.[k]===true;
 const errors={PRICING_MODE_REQUIRED:'Keep a pricing method for this product. Use Unit price with quantity for simple pricing.',PRICING_REQUIRED:'Enter VAT, a minimum line price (0 for none), and a positive price before activating this product.',STARTER_SETUP_UNCONFIRMED:'Setup was not confirmed. Refresh the list, then retry setup; existing products will be kept.',PRODUCT_HISTORY_LIMIT:'The catalogue has reached its change-history limit. Contact your administrator before making further changes.',VERSION_CONFLICT:'This product changed in another session. Your changes are still here. Copy them before reloading the saved product.',PRODUCT_CODE_EXISTS:'That product code is already in use, including archived products. Choose a unique code.',INVALID_PRODUCT:'Check the product code, required fields, selling price and VAT rate.',PRODUCT_LIMIT:'The catalogue has reached its limit of 5,000 products.',NOT_FOUND:'This product could not be found. Refresh the catalogue.'};
 function status(message,kind='info',focus=false){
@@ -11,25 +27,33 @@ function status(message,kind='info',focus=false){
  if(!el('edit').hidden){el('edit-status').textContent=message;const box=el('save-status');box.hidden=false;box.textContent=message;box.dataset.kind=kind;box.setAttribute('role',kind==='error'?'alert':'status');if(focus){box.focus();box.scrollIntoView?.({block:'nearest'});}}
  else if(focus){el('status').setAttribute('tabindex','-1');el('status').focus();el('status').scrollIntoView?.({block:'nearest'});}
 }
-function clear(){clearStarterProgress();el('starter-setup').hidden=true;fillPricing({});el('csv-import-link').hidden=true;me=null;record=null;supplierRecord=null;dirty=false;el('workspace').hidden=true;el('edit').hidden=true;el('rows').replaceChildren();for(const k of fields)el('p-'+k).value='';for(const k of Object.keys(supplierLimits))el('s-'+k).value='';el('identity').textContent='';el('heading').textContent='';el('revision').textContent='';el('edit-status').textContent='';el('save-status').textContent='';el('save-status').hidden=true;el('count').textContent='';el('active').checked=false;el('search').value='';clearImport();el('product-images').hidden=true;el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';el('image-status').textContent='';uploadId=null;}
+function clear(){clearStarterProgress();el('starter-setup').hidden=true;fillPricing({});el('csv-import-link').hidden=true;me=null;record=null;supplierRecord=null;dirty=false;el('workspace').hidden=true;el('edit').hidden=true;el('rows').replaceChildren();for(const k of fields)el('p-'+k).value='';for(const k of Object.keys(supplierLimits))el('s-'+k).value='';el('identity').textContent='';el('heading').textContent='';el('page-heading').textContent='Products';document.title='Custom U · Products';el('internal-reference').open=false;el('revision').textContent='';el('edit-status').textContent='';el('save-status').textContent='';el('save-status').hidden=true;el('count').textContent='';el('active').checked=false;el('search').value='';clearImport();el('product-images').hidden=true;el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';el('image-status').textContent='';uploadId=null;}
 const safeCodes=new Set([...Object.keys(errors),'INVALID_REQUEST','INVALID_PROVIDER_RESPONSE','REQUEST_FAILED','REQUEST_REJECTED','PROVIDER_REQUEST_FAILED','PROVIDER_UNAVAILABLE','RESPONSE_TOO_LARGE','CUSTOMERS_NOT_ENABLED','PLEASE_WAIT_AND_TRY_AGAIN']);
 async function api(path,body){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),path.includes('import-')||path.includes('/images')?45000:20000);
  try{
-  let r;try{r=await fetch(path,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});}catch{throw Error(controller.signal.aborted?'The request timed out. A save may still have completed. Search for this product code before retrying. Code: PRODUCT_REQUEST_TIMEOUT.':'The connection failed. The save is not confirmed. Keep your entries and search for this product code before retrying. Code: PRODUCT_CONNECTION_FAILED.');}
+  let r;try{r=await fetch(path,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});}catch{throw Error(controller.signal.aborted?'The request timed out. A save may still have completed. Search for this product before retrying. Code: PRODUCT_REQUEST_TIMEOUT.':'The connection failed. The save is not confirmed. Keep your entries and search for this product before retrying. Code: PRODUCT_CONNECTION_FAILED.');}
   let d;try{d=await r.json();}catch{if(r.status===401||r.status===403)clear();throw Error('The response could not be read (HTTP '+r.status+'). A save is not confirmed. Code: PRODUCT_RESPONSE_UNREADABLE.');}
-  if(!r.ok){if(r.status===401||r.status===403){clear();throw Error('Product access ended. Return to Workspace to sign in.');}const code=safeCodes.has(d?.error)?d.error:'PRODUCT_REQUEST_FAILED';throw Error((errors[code]||'The save is not confirmed. Keep your entries and search for this product code before retrying.')+' Code: '+code+' (HTTP '+r.status+').');}
+  if(!r.ok){if(r.status===401||r.status===403){clear();throw Error('Product access ended. Return to Workspace to sign in.');}const code=safeCodes.has(d?.error)?d.error:'PRODUCT_REQUEST_FAILED';throw Error((errors[code]||'The save is not confirmed. Keep your entries and search for this product before retrying.')+' Code: '+code+' (HTTP '+r.status+').');}
   return d;
  }finally{clearTimeout(timer);}
 }
-function controls(){el('starter-setup').hidden=me?.role!=='admin';pricingControls();el('csv-import-link').hidden=me?.role!=='admin';const editable=can(record?.version?'products.edit':'products.create');el('fields').disabled=busy||!editable;el('save').hidden=!editable;el('save').disabled=busy;el('new').hidden=!can('products.create');el('duplicate').hidden=!record?.version||!can('products.create');el('reload').hidden=!record?.version;el('prev').disabled=busy||page===1;el('next').disabled=busy||page*50>=total;el('backup-link').hidden=me?.role!=='admin';el('quotes-link').hidden=!can('quotes.view');el('supplier-import').hidden=!(can('products.create')||can('products.edit'));el('apply-import').disabled=busy||!importPreview||!editable;el('preview-image').disabled=busy||!el('candidate-list').value;el('save-candidate').disabled=busy||!candidate||!record?.version||!can('products.edit');el('image-upload-controls').hidden=!can('products.edit');el('upload-image').disabled=busy||!record?.version||!el('image-file').files?.length;}
-async function run(fn){if(busy)return;busy=true;document.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=true);try{await fn();}catch(e){status(e.message||'The action could not complete. Code: PRODUCT_ACTION_FAILED.','error',true);}finally{busy=false;el('save').textContent='Save product';document.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=false);controls();}}
+function controls(){el('starter-setup').hidden=detailPage||me?.role!=='admin';pricingControls();el('csv-import-link').hidden=me?.role!=='admin';const editable=can(record?.version?'products.edit':'products.create');el('fields').disabled=busy||!editable;el('save').hidden=!editable;el('save').disabled=busy;el('new').hidden=!can('products.create');el('duplicate').hidden=!record?.version||!can('products.create');el('reload').hidden=!record?.version;el('prev').disabled=busy||page===1;el('next').disabled=busy||page*50>=total;el('backup-link').hidden=me?.role!=='admin';el('quotes-link').hidden=!can('quotes.view');el('supplier-import').hidden=!detailPage||!(can('products.create')||can('products.edit'));el('apply-import').disabled=busy||!importPreview||!editable;el('preview-image').disabled=busy||!el('candidate-list').value;el('save-candidate').disabled=busy||!candidate||!record?.version||!can('products.edit');el('image-upload-controls').hidden=!can('products.edit');el('upload-image').disabled=busy||!record?.version||!el('image-file').files?.length;}
+async function run(fn){if(busy)return;busy=true;document.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=true);try{await fn();}catch(e){if(/PRODUCT_CODE_EXISTS|INVALID_SUPPLIER|SUPPLIER_URL_INVALID/.test(e.message||''))el('internal-reference').open=true;status(e.message||'The action could not complete. Code: PRODUCT_ACTION_FAILED.','error',true);}finally{busy=false;el('save').textContent='Save product';document.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=false);controls();}}
 function leave(){return !dirty||window.confirm('Discard your unsaved product changes?');}
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
-async function list(){const r=await api('/api/products?q='+encodeURIComponent(el('search').value)+'&state='+el('state').value+'&page='+page);total=r.total;el('rows').replaceChildren();for(const p of r.data){const tr=document.createElement('tr');for(const v of [p.data.code+' · '+p.data.name,p.data.category,p.data.pricing?.mode==='grid'?'Option prices':p.data.unit_price?p.data.unit_price+' / '+p.data.unit:'Price not set',p.data.vat_rate!==''?p.data.vat_rate+'%':'Not set',p.active?'Active':p.data.pricing?'Inactive / pricing setup':'Archived']){const td=document.createElement('td');td.textContent=v;tr.append(td);}const td=document.createElement('td'),b=document.createElement('button');b.textContent='Open';b.type='button';b.onclick=()=>run(async()=>{if(!leave())return;const r=await api('/api/products/'+p.id);fill(r.data,r.supplier);await loadImages();status('Saved product opened.');});td.append(b);tr.append(td);el('rows').append(tr);}el('count').textContent=r.total+' products · Page '+page;controls();}
-function fill(p,supplier=null){const changed=record?.id!==p.id;record=p;supplierRecord=supplier;fillPricing(p.data);for(const k of fields)el('p-'+k).value=p.data[k]??'';for(const k of Object.keys(supplierLimits))el('s-'+k).value=supplier?.data?.[k]??'';el('active').checked=p.active;el('edit').hidden=false;el('heading').textContent=p.version?p.data.name:'New product';el('revision').textContent=p.version?'Saved · product revision '+p.version+' · supplier revision '+(supplier?.version||0):'Unsaved';el('edit-status').textContent='';el('save-status').hidden=true;el('save-status').textContent='';if(changed){el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';uploadId=null;}el('product-images').hidden=!p.version;dirty=false;controls();}
-function fresh(source){const supplier=source&&supplierRecord?{data:{...supplierRecord.data},version:0}:null;fill({id:crypto.randomUUID(),version:0,active:true,data:source?{...source.data,code:''}:{unit:'Each'}},supplier);dirty=true;status(source?'Choose a unique code for this copy, then save. Images are not copied.':'Enter the product details, selling price and VAT rate.');}
-el('new').onclick=()=>{if(leave())fresh();};el('duplicate').onclick=()=>{if(leave())fresh(record);};
+async function list(){
+ const r=await api('/api/products?q='+encodeURIComponent(el('search').value)+'&state='+el('state').value+'&page='+page);total=r.total;el('rows').replaceChildren();
+ for(const p of r.data){
+  const tr=document.createElement('tr'),nameCell=document.createElement('td'),name=document.createElement('a');name.className='product-link';name.href=productURL(p.id);name.textContent=p.data.name;nameCell.append(name);tr.append(nameCell);
+  for(const v of [p.data.category,p.data.pricing?.mode==='grid'?'Option prices':p.data.unit_price?p.data.unit_price+' / '+p.data.unit:'Price not set',p.data.vat_rate!==''?p.data.vat_rate+'%':'Not set',p.active?'Active':p.data.pricing?'Inactive / pricing setup':'Archived']){const td=document.createElement('td');td.textContent=v;tr.append(td);}
+  const td=document.createElement('td'),link=document.createElement('a');link.className='product-open';link.textContent='Open';link.href=productURL(p.id);link.setAttribute('aria-label','Open '+p.data.name);td.append(link);tr.append(td);el('rows').append(tr);
+ }
+ el('count').textContent=r.total+' products · Page '+page;if(!detailPage)history.replaceState(null,'',catalogueURL());controls();
+}
+function fill(p,supplier=null){const changed=record?.id!==p.id;record=p;supplierRecord=supplier;fillPricing(p.data);for(const k of fields)el('p-'+k).value=p.data[k]??'';for(const k of Object.keys(supplierLimits))el('s-'+k).value=supplier?.data?.[k]??'';el('active').checked=p.active;el('edit').hidden=false;el('heading').textContent=p.version?'Product details':'New product';if(detailPage){el('page-heading').textContent=p.version?p.data.name:'New product';document.title='Custom U · '+(p.version?p.data.name:'New product');}el('internal-reference').open=false;el('revision').textContent=p.version?'Saved · product revision '+p.version+' · supplier revision '+(supplier?.version||0):'Unsaved';el('edit-status').textContent='';el('save-status').hidden=true;el('save-status').textContent='';if(changed){el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';uploadId=null;}el('product-images').hidden=!p.version;dirty=false;controls();}
+function fresh(source){const supplier=source&&supplierRecord?{data:{...supplierRecord.data},version:0}:null;const id=crypto.randomUUID();fill({id,version:0,active:true,data:source?{...source.data,code:'P-'+id.replaceAll('-','')}:{unit:'Each',code:'P-'+id.replaceAll('-','')}},supplier);syncProductURL('new');dirty=!!source;status(source?'Copy ready. Review and save as a new product. Images are not copied.':'Enter the product details, selling price and VAT rate.');}
+el('new').onclick=()=>navigateProduct(productURL('new'));el('duplicate').onclick=()=>{if(leave())fresh(record);};
 el('fields').oninput=()=>{dirty=true;status('Unsaved changes. Click Save product to apply them.');};
 const fieldLabels={code:'Product code',name:'Product name',category:'Category',description:'Description',unit:'Unit',unit_price:'Selling price',vat_rate:'VAT rate',finish:'Finish / branding method',placement:'Placement'};
 const fieldLimits={code:40,name:160,category:80,description:800,unit:20,finish:160,placement:160};
@@ -58,20 +82,20 @@ el('edit').onsubmit=e=>{
  e.preventDefault();if(busy)return;
  if(!record){status('Open New product or a saved product before saving.','error',true);return;}
  if(!can(record.version?'products.edit':'products.create')){status('Your account does not have permission to save this product.','error',true);return;}
- let payload;try{payload={op:'save',id:record.id,version:record.version,active:el('active').checked,data:validatedProduct(),supplier:validatedSupplier(),supplier_version:supplierRecord?.version||0};}catch(error){status(error.message,'error',true);return;}
+ let payload;try{payload={op:'save',id:record.id,version:record.version,active:el('active').checked,data:validatedProduct(),supplier:validatedSupplier(),supplier_version:supplierRecord?.version||0};}catch(error){if(error.message.startsWith('Product code:')||error.message.startsWith('Supplier '))el('internal-reference').open=true;status(error.message,'error',true);return;}
  run(async()=>{
   el('save').textContent='Saving…';status('Saving product…');
   const r=await api('/api/products/save',payload);
-  if(!savedMatches(r?.data,payload)||!supplierMatches(r?.supplier,payload))throw Error('The server did not confirm the saved values. Keep your entries and search for this product code before retrying. Code: PRODUCT_SAVE_RESPONSE.');
-  fill(r.data,r.supplier);let imagesRefreshed=true;
+  if(!savedMatches(r?.data,payload)||!supplierMatches(r?.supplier,payload))throw Error('The server did not confirm the saved values. Keep your entries and search for this product before retrying. Code: PRODUCT_SAVE_RESPONSE.');
+  fill(r.data,r.supplier);syncProductURL(r.data.id);let imagesRefreshed=true;
   try{await loadImages();}catch(error){if(!me)throw error;imagesRefreshed=false;el('image-status').textContent='Product saved, but images could not refresh. Reopen the product to try again.';}
   const savedMessage=imagesRefreshed?'Product saved · revision '+r.data.version+'.':'Product saved · revision '+r.data.version+'. Images could not refresh; reopen the product.';
   status(savedMessage,'success',true);
-  try{await list();if(me)status(savedMessage,'success');}catch(error){if(me)status('Product saved, but the list could not refresh. Use Refresh catalogue.','success',true);else status(error.message,'error',true);}
+  try{if(!detailPage)await list();if(me)status(savedMessage,'success');}catch(error){if(me)status('Product saved, but the list could not refresh. Use Refresh catalogue.','success',true);else status(error.message,'error',true);}
  });
 };
 el('reload').onclick=()=>run(async()=>{if(record?.version&&leave()){const r=await api('/api/products/'+record.id);fill(r.data,r.supplier);await loadImages();status('Reloaded the saved product.');}});
-el('close').onclick=()=>{if(leave()){dirty=false;record=null;supplierRecord=null;el('edit').hidden=true;el('product-images').hidden=true;el('image-gallery').replaceChildren();controls();}};
+el('close').onclick=()=>navigateProduct(catalogueURL());
 el('search-button').onclick=()=>run(async()=>{page=1;await list();});el('state').onchange=()=>run(async()=>{page=1;await list();});
 el('prev').onclick=()=>run(async()=>{if(page>1){page--;await list();}});el('next').onclick=()=>run(async()=>{if(page*50<total){page++;await list();}});
 el('refresh').onclick=()=>run(async()=>{await list();status(dirty?'Catalogue refreshed. Your unsaved product changes are still here.':'Catalogue refreshed.');});
@@ -146,7 +170,7 @@ el('apply-import').onclick=()=>{
  if(!record)fresh();
  for(const k of ['name','description','category'])el('p-'+k).value=importPreview.product[k];
  for(const k of Object.keys(supplierLimits))el('s-'+k).value=importPreview.supplier[k];
- dirty=true;status('Supplier details applied to the form. Review them and enter your own product code, selling price and VAT before saving.');el('heading').scrollIntoView?.({block:'start'});controls();
+ dirty=true;status('Supplier details applied to the form. Review them and enter your selling price and VAT before saving.');el('heading').scrollIntoView?.({block:'start'});controls();
 };
 el('candidate-list').onchange=()=>{clearCandidate();controls();};
 el('preview-image').onclick=()=>run(()=>messageWork('import-status',async()=>{
@@ -181,10 +205,15 @@ el('save-candidate').onclick=()=>run(()=>messageWork('import-status',async()=>{
  if(candidate.product&&candidate.product!==record.id)candidate.id=crypto.randomUUID();candidate.product=record.id;
  const result=await api('/api/products/'+record.id+'/images/add',{id:candidate.id,filename:'supplier-image.webp',caption:record.data.name.slice(0,200),source_url:candidate.source_url,data:candidate.content_base64});
  if(!result?.data||result.data.id!==candidate.id||result.data.product_id!==record.id)throw Error('The supplier image save was not confirmed. Keep this preview and retry.');
- await loadImages();el('import-status').textContent='Supplier image saved and verified for '+record.data.code+'.';
+ await loadImages();el('import-status').textContent='Supplier image saved and verified for '+record.data.name+'.';
 }));
 
-run(async()=>{const r=await api('/api/session');me=r.me;if(!r.crm_enabled||!can('products.view')){clear();throw Error('Product catalogue access is required. Return to Workspace.');}el('workspace').hidden=false;el('identity').textContent=me.email;await list();status('Choose a product or add a new one.');});
+run(async()=>{const r=await api('/api/session');me=r.me;if(!r.crm_enabled||!can('products.view')){clear();throw Error('Product catalogue access is required. Return to Workspace.');}el('workspace').hidden=false;el('identity').textContent=me.email;
+ if(detailPage){
+  if(productPath[1]==='new'){if(!can('products.create'))throw Error('Your account cannot create products. Use Back to products.');fresh();}
+  else{const saved=await api('/api/products/'+productPath[1]);if(!saved?.data||saved.data.id!==productPath[1])throw Error('The saved product could not be verified. Use Back to products.');fill(saved.data,saved.supplier);await loadImages();status('Saved product opened.');}
+ }else{await list();status('Choose a product or add a new one.');}
+});
 
 function pricingControls(){
  const mode=el('pricing-mode').value,configured=mode!=='legacy';

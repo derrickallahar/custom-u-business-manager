@@ -7,7 +7,7 @@
   function node(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
   const can=k=>session?.me?.role==='admin'||session?.me?.permissions?.[k]===true;
   const admin=()=>session?.me?.role==='admin';
-  function current(href){const url=new URL(href,location.origin);return url.pathname===location.pathname&&(url.hash?url.hash===location.hash:!location.hash||!['#business-settings','#backup','#history'].includes(location.hash));}
+  function current(href){const url=new URL(href,location.origin);return (url.pathname===location.pathname||(url.pathname==='/quotes'&&location.pathname==='/quotes/carryover')||(url.pathname==='/products'&&/^\/products\/(?:new|[a-f0-9-]{36})$/.test(location.pathname)))&&(url.hash?url.hash===location.hash:!location.hash||!['#business-settings','#backup','#history'].includes(location.hash));}
   function hide(){shell?.remove();mobile?.remove();document.querySelector('.cu-skip')?.remove();shell=mobile=null;document.body.classList.remove('cu-layout','cu-menu-open');}
   function render(){
     const page=area();if(!session||!page||page.hidden){hide();return;}

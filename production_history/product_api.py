@@ -45,6 +45,11 @@ def install(app, provider, session, enabled, root, failure):
     def product_page():
         return app.response_class((root/'static/products.html').read_bytes(), mimetype='text/html')
 
+    @app.get('/products/new')
+    @app.get('/products/<uuid:ident>')
+    def product_detail_page(ident=None):
+        return app.response_class((root/'static/products.html').read_bytes(), mimetype='text/html')
+
     @app.get('/products.js')
     def product_script():
         return app.response_class((root/'static/products.js').read_bytes(), mimetype='text/javascript')

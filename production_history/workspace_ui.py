@@ -4,7 +4,7 @@ from flask import request
 PAGES = frozenset(('/', '/customers', '/quotes', '/invoices', '/payments',
     '/credits', '/statements', '/jobs', '/products', '/mockups', '/catalogues',
     '/staff', '/reminders', '/legacy-balances', '/opening-balances',
-    '/customers/import', '/customers/reviewed-import', '/products/csv-import',
+    '/quotes/carryover', '/customers/import', '/customers/reviewed-import', '/products/csv-import',
     '/artwork', '/email'))
 
 def install(app, root):
@@ -23,7 +23,7 @@ def install(app, root):
 
     @app.after_request
     def workspace_layout(response):
-        if (request.path in PAGES or request.endpoint == 'artwork_page') and response.status_code == 200 and response.mimetype == 'text/html':
+        if (request.path in PAGES or request.endpoint in ('artwork_page', 'product_detail_page')) and response.status_code == 200 and response.mimetype == 'text/html':
             html = response.get_data(as_text=True)
             additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css">'
                          '<script src="/workspace-assets/workspace-shell.js" defer></script>')
