@@ -3,7 +3,7 @@ from flask import request
 
 PAGES = frozenset(('/', '/customers', '/quotes', '/invoices', '/payments',
     '/credits', '/statements', '/jobs', '/products', '/mockups', '/catalogues',
-    '/hr', '/team', '/staff', '/reminders', '/legacy-balances', '/opening-balances',
+    '/hr', '/team', '/staff', '/admin-controls', '/reminders', '/legacy-balances', '/opening-balances',
     '/quotes/carryover', '/customers/import', '/customers/reviewed-import', '/products/csv-import',
     '/artwork', '/email'))
 

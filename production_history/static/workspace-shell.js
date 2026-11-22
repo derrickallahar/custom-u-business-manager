@@ -30,7 +30,7 @@
         ['Client mockups','/mockups','▣',enabled&&can('products.view')&&can('customers.view')],
         ['Client catalogues','/catalogues','▤',enabled&&can('products.view')&&can('customers.view')]]],
       ['Administration',[
-        ['Reminders','/reminders','◷',enabled&&admin()],['Staff & access','/staff','♙',enabled&&admin()],
+        ['Reminders','/reminders','◷',enabled&&admin()],['Staff & access','/staff','♙',enabled&&admin()],['Admin controls','/admin-controls','⚙',enabled&&admin()],
         ['Business settings','/quotes#business-settings','⚙',enabled&&admin()],
         ['Credits & refunds','/credits','↔',enabled&&admin()],
         ['Imported balances','/legacy-balances','▤',enabled&&admin()],

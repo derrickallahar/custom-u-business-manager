@@ -26,6 +26,9 @@ class Supabase:
     def call(self,path,token=None,body=None,limit=100000):
         headers={'apikey':self.key,'Content-Type':'application/json'}
         if token:headers['Authorization']='Bearer '+token
+        if path.startswith('/rest/v1/'):
+            from admin_controls import gateway_headers
+            headers.update(gateway_headers())
         req=http.Request(PROJECT+path,headers=headers,data=None if body is None else json.dumps(body).encode(),method='GET' if body is None else 'POST')
         try:
             with self.opener.open(req,timeout=12) as r:
@@ -41,6 +44,8 @@ class Supabase:
     def artwork_blob(self,path,token,data=None):
         if not re.fullmatch(r'[0-9a-f-]{36}/[0-9a-f-]{36}',path):raise Failure('INVALID_FILE_PATH',400)
         headers={'apikey':self.key,'Authorization':'Bearer '+token,'Cache-Control':'no-store'}
+        from admin_controls import gateway_headers
+        headers.update(gateway_headers())
         if data is None:headers['Accept']='application/octet-stream'
         else:headers.update({'Content-Type':'application/octet-stream','x-upsert':'false'})
         endpoint='/storage/v1/object/'+('authenticated/' if data is None else '')+'custom-u-artwork-104/'+path
@@ -76,6 +81,8 @@ class Supabase:
                 if status==429:raise Failure('PLEASE_WAIT_AND_TRY_AGAIN',429) from None
                 if 500<=status<=599:raise Failure('ARTWORK_UPLOAD_UNCERTAIN',503) from None
                 raise Failure('ARTWORK_UPLOAD_HTTP_'+str(status),409) from None
+            if status in (403,404) and gateway_headers():
+                return self.signed_artwork_read(path,token,gateway_headers())
             # Preserve a bounded, allowlisted read failure category and HTTP status.
             # The provider's raw error message may contain private object paths.
             read_codes={
@@ -95,11 +102,36 @@ class Supabase:
                 else:reason={401:'AUTH_REJECTED',403:'ACCESS_DENIED',404:'NOT_FOUND',429:'RATE_LIMITED'}.get(status,'HTTP_ERROR')
             raise Failure('ARTWORK_READ_'+reason+'_HTTP_'+str(status),409) from None
         except (error.URLError,TimeoutError):raise Failure('PROVIDER_UNAVAILABLE') from None
+    def signed_artwork_read(self,path,token,proof):
+        """Private, short-lived server fetch when Storage GET loses request context."""
+        endpoint='/object/sign/custom-u-artwork-104/'+path
+        headers={'apikey':self.key,'Authorization':'Bearer '+token,'Content-Type':'application/json','Cache-Control':'no-store',**proof}
+        req=http.Request(PROJECT+'/storage/v1'+endpoint,headers=headers,data=json.dumps({'expiresIn':30}).encode(),method='POST')
+        try:
+            with self.opener.open(req,timeout=12) as response:
+                raw=response.read(8193)
+                if len(raw)>8192:raise Failure('INVALID_PROVIDER_RESPONSE')
+                try:result=json.loads(raw)
+                except (ValueError,UnicodeError):raise Failure('INVALID_PROVIDER_RESPONSE') from None
+                signed=result.get('signedURL') if isinstance(result,dict) else None
+                if not isinstance(signed,str) or not re.fullmatch(re.escape(endpoint)+r'\?token=[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+',signed):raise Failure('INVALID_PROVIDER_RESPONSE')
+            # Never return or retain the URL. Existing download routes recheck account
+            # and object permissions and checksums before returning the bytes.
+            req=http.Request(PROJECT+'/storage/v1'+signed,headers={'Cache-Control':'no-store','Accept':'application/octet-stream'},method='GET')
+            with self.opener.open(req,timeout=30) as response:
+                data=response.read(6000001)
+                if len(data)>6000000:raise Failure('RESPONSE_TOO_LARGE')
+                return data
+        except error.HTTPError as e:
+            status=e.code;e.close()
+            raise Failure('ARTWORK_READ_ACCESS_CHECK_HTTP_'+str(status),409) from None
+        except (error.URLError,TimeoutError):raise Failure('PROVIDER_UNAVAILABLE') from None
     def login(self,email,password):
         return json.loads(self.call('/auth/v1/token?grant_type=password',body={'email':email,'password':password}))
     def access(self,token):
         user=json.loads(self.call('/auth/v1/user',token))
         member=json.loads(self.call('/rest/v1/rpc/custom_u_session_access_102',token,{}))
+        if isinstance(member,dict) and member.get('error')=='OFFICE_NETWORK_REQUIRED':raise Failure('OFFICE_NETWORK_REQUIRED',403)
         if not isinstance(user,dict) or not isinstance(user.get('id'),str) or not user['id'] or not isinstance(member,dict) or member.get('user_id')!=user.get('id') or member.get('role') not in ('admin','sales','office','production') or not isinstance(member.get('permissions'),dict) or member.get('bucket_private') is not True:
             raise Failure('ACCESS_DENIED',403)
         return {'user_id':user['id'],'email':user.get('email',''),'role':member['role'],'permissions':{k:v for k,v in member['permissions'].items() if k in KEYS and v is True}}
@@ -240,6 +272,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None,*,enforce_
     def pdf(ident):
         rec,_=history_access();name,blob=archive(rec).pdf(ident);history_access()
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
+    from admin_controls import install as install_admin_controls
+    install_admin_controls(app,provider,session,ROOT,Failure)
     from product_api import install as install_products
     install_products(app,provider,session,crm_enabled,ROOT,Failure)
     from product_media_api import install as install_product_media

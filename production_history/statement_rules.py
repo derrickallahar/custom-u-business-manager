@@ -1,5 +1,6 @@
 """Current balances and due-date ageing. All values are integer BSD cents."""
 from datetime import date
+import re
 from collections import defaultdict
 from quote_rules import need,text
 from payment_rules import integer,ident,timestamp
@@ -18,7 +19,7 @@ def build_101(raw,test_mode):
     for source in raw['invoices']:
         r=dict(source);ident(r['id']);ident(r['customer_id']);need(r['id'] not in seen);seen.add(r['id']);need(type(r['is_test']) is bool and r['is_test']==test_mode)
         for k in ('number','customer_name','invoice_customer_name','title'):need(text(r[k],200,k=='title',True)==r[k])
-        need(r['number'].startswith('CU-TEST-I-' if test_mode else 'CU-I-'));day(r['invoice_date']);due=day(r['due_date']);need(due>=day(r['invoice_date']))
+        need(bool(re.fullmatch(r'CU-TEST-I-[0-9]{8}',r['number'])) if test_mode else bool(re.fullmatch(r'(?:CU-I-[0-9]{8}|[1-9][0-9]{0,7})',r['number'])));day(r['invoice_date']);due=day(r['due_date']);need(due>=day(r['invoice_date']))
         for k in ('total_cents','credit_cents','payment_cents','refund_cents'):integer(r[k])
         t,c,p,f=(r[k] for k in ('total_cents','credit_cents','payment_cents','refund_cents'));need(c<=t and p<=t and f<=min(p,c))
         r.update(adjusted_cents=t-c,net_paid_cents=p-f,balance_cents=max(t-c-p+f,0),refund_due_cents=max(p-f-t+c,0))
