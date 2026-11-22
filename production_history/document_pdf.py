@@ -1,3 +1,4 @@
+from branding import pdf_logo
 """Version 109: deterministic PDFs from saved quote/invoice snapshots only."""
 import io
 from functools import partial
@@ -35,11 +36,13 @@ def render_document(kind, record):
     def details(obj,keys):return '\n'.join(str(obj[k]) for k in keys if obj.get(k))
     story=[]
     if banner:story += [p(banner,'label'),Spacer(1,8)]
-    story += [p(seller['name'],'title'),p(details(seller,['address','email','phone','website']),'small')]
-    if seller.get('tax_id'):story += [p('VAT ID: '+seller['tax_id'],'small')]
-    story += [Spacer(1,12),p(title+' '+number,'heading')]
-    dates=('Invoice date: '+m['invoice_date']+'   |   Due: '+m['due_date']+('\nEarlier supply/payment: '+m['supply_date'] if m['supply_date'] else '')+('\nSource quote: '+q['number'] if record['quote_id'] else '')) if invoice else 'Quote date: '+d['quote_date']+'   |   Valid until: '+d['valid_until']
-    story += [p(dates+'\nRevision: '+str(record['version'])+'   |   Currency: BSD   |   Unit prices before VAT','small'),Spacer(1,12)]
+    seller_header=[pdf_logo(),Spacer(1,8),p(seller['name'],'small'),p(details(seller,['address','email','phone','website']),'small')]
+    if seller.get('tax_id'):seller_header.append(p('VAT ID: '+seller['tax_id'],'small'))
+    dates=('Invoice date: '+m['invoice_date']+'\nPayment due: '+m['due_date']+('\nEarlier supply/payment: '+m['supply_date'] if m['supply_date'] else '')+('\nSource quote: '+q['number'] if record['quote_id'] else '')) if invoice else 'Quote date: '+d['quote_date']+'\nValid until: '+d['valid_until']
+    document_header=[p(title,'heading'),p(number,'heading'),p(dates+'\nRevision: '+str(record['version'])+'\nCurrency: BSD\nUnit prices before VAT','small')]
+    header=Table([[seller_header,document_header]],colWidths=[300,240],hAlign='LEFT')
+    header.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),0),('RIGHTPADDING',(0,0),(-1,-1),12),('TOPPADDING',(0,0),(-1,-1),0),('BOTTOMPADDING',(0,0),(-1,-1),0)]))
+    story += [header,Spacer(1,16)]
     parties=Table([[p('BILLED TO' if invoice else 'PREPARED FOR','label'),p('CONTACT','label')],[p(details(buyer,['name','address','email','phone'])+('\nVAT ID: '+buyer['tax_id'] if buyer.get('tax_id') else '')),p(details(contact,['name','title','email','phone']))]],colWidths=[300,240],hAlign='LEFT')
     parties.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),0),('BOTTOMPADDING',(0,0),(-1,-1),6)]))
     story += [parties,Spacer(1,10),p(d['title'],'heading')]

@@ -259,4 +259,6 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None):
     install_legacy(app,provider,session,crm_enabled,ROOT,Failure)
     from reminder_api import install as install_reminders
     install_reminders(app,provider,session,crm_enabled,ROOT,Failure)
+    from workspace_ui import install as install_workspace_ui
+    install_workspace_ui(app, ROOT)
     return app

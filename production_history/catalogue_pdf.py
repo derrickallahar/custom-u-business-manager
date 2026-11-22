@@ -1,3 +1,4 @@
+from branding import draw_logo
 """Offline deterministic catalogue PDF. No network fetches or external assets."""
 import io,threading
 from decimal import Decimal,ROUND_HALF_UP
@@ -37,11 +38,10 @@ def photo(c,raw,x,y,width,height):
         c.drawImage(ImageReader(im),x+(width-rw)/2,y+(height-rh)/2,rw,rh,mask='auto')
 def header(c,page,total):
     c.setFillColor(RED);c.rect(0,H-8,W,8,fill=1,stroke=0)
-    c.setFillColor(INK);c.setFont('CU-Bold',20);c.drawString(38,H-48,'CUSTOM')
-    c.setFillColor(RED);c.drawString(135,H-48,'U')
+    draw_logo(c,38,H-20,width=128)
     c.setFont('CU-Regular',8);c.setFillColor(MUTED);c.drawRightString(W-38,H-42,'CLIENT CATALOGUE')
     c.setStrokeColor(LINE);c.line(38,43,W-38,43)
-    c.setFont('CU-Regular',8);c.drawString(38,27,'Custom U | Print Your Vision.');c.drawRightString(W-38,27,f'{page} / {total}')
+    c.setFont('CU-Regular',8);c.drawString(38,27,'CUSTOM U | Print Your Vision.');c.drawRightString(W-38,27,f'{page} / {total}')
 def render_catalogue(document,assets):
     raw=validate_document(document,assets);fonts();items=document['items'];total=1+(len(items)+1)//2
     out=io.BytesIO();c=canvas.Canvas(out,pagesize=(W,H),invariant=1,pageCompression=1);c.setTitle(document['title']);c.setAuthor('Custom U');c.setSubject('Customer product options')
