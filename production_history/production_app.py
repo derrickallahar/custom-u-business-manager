@@ -231,7 +231,7 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None,*,enforce_
             if len(sessions)>=100:raise Failure('SESSION_CAPACITY_REACHED',429)
             sessions.pop(hashlib.sha256(old.encode()).hexdigest(),None)
             from device_access import digest as device_digest
-            sessions[key]={'token':token,'expires':time.time()+ttl,'device_digest':device_digest()}
+            sessions[key]={'token':token,'expires':time.time()+ttl,'device_digest':device_digest(),'user_id':me.get('user_id')}
         r=jsonify(me=me,archive_configured=bool(digest),crm_enabled=bool(crm_enabled))
         r.set_cookie(COOKIE,sid,secure=True,httponly=True,samesite='Strict',max_age=ttl,path='/')
         return r
@@ -272,6 +272,11 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None,*,enforce_
     def pdf(ident):
         rec,_=history_access();name,blob=archive(rec).pdf(ident);history_access()
         r=make_response(blob);r.headers['Content-Type']='application/pdf';r.headers['Content-Disposition']='attachment; filename="'+name+'"';return r
+    def forget_sessions(user_id):
+        with lock:
+            for key in [k for k,r in sessions.items() if r.get('user_id')==user_id]:sessions.pop(key,None)
+    from account_api import install as install_accounts
+    install_accounts(app,provider,session,crm_enabled,ROOT,Failure,origin,forget_sessions)
     from admin_controls import install as install_admin_controls
     install_admin_controls(app,provider,session,ROOT,Failure)
     from product_api import install as install_products
