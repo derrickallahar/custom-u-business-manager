@@ -59,10 +59,12 @@ def install(app,provider,session,enabled,root,failure,origin,forget_sessions):
         rate('mail_email',target['email'].lower(),3)
         token=a.generate(target['email']);link_id=str(uuid.uuid4())
         a.service({'op':'issue','id':link_id,'user_id':target['user_id'],'purpose':purpose,'proof':sha(token),'actor_id':actor})
-        state=a.send(target['email'],origin+'/password#id='+link_id+'&token='+token,link_id,purpose)
-        try:a.service({'op':'delivery','id':link_id,'status':state})
-        except failure:state='uncertain'
-        return state
+        result=a.send(target['email'],origin+'/password#id='+link_id+'&token='+token,link_id,purpose)
+        try:a.service({'op':'delivery','id':link_id,'status':result['delivery']})
+        except failure:
+            # Keep a confirmed provider rejection distinct from uncertain delivery/history.
+            if result['delivery']!='rejected':result={'delivery':'uncertain','reason':'EMAIL_HISTORY_UNCONFIRMED','http_status':None}
+        return result
     def audit(user_id,event):
         try:transport().service({'op':'event','user_id':user_id,'event':event})
         except failure:pass # Provider Auth audit is authoritative; never retry a password write.
@@ -127,8 +129,8 @@ def install(app,provider,session,enabled,root,failure,origin,forget_sessions):
     def send_setup():
         rec,me=admin();body=fields(('user_id',));ident(body['user_id'])
         target=rpc(rec,{'op':'target','user_id':body['user_id']})
-        state=mail(target,'setup',me['user_id'])
-        return jsonify(delivery=state,email=target['email'])
+        result=mail(target,'setup',me['user_id'])
+        return jsonify(**result,email=target['email'])
     @app.post('/api/password/forgot')
     def forgot():
         body=fields(('email',));address=email(body['email'])

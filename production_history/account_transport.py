@@ -5,6 +5,33 @@ from production_app import PROJECT,NoRedirect,Failure
 from admin_controls import gateway_headers
 from email_delivery import Settings
 
+def mail_result(delivery,reason=None,http_status=None):
+    return {'delivery':delivery,'reason':reason,'http_status':http_status}
+
+def mail_failure(status,raw):
+    """Translate bounded provider data into fixed codes; never return raw error text."""
+    state='rejected' if 400<=status<500 and status not in (408,409) else 'uncertain'
+    reason='EMAIL_PROVIDER_REJECTED' if state=='rejected' else 'EMAIL_PROVIDER_UNCERTAIN'
+    if status==403 and raw.strip()==b'error code: 1010':
+        return mail_result(state,'EMAIL_CLIENT_BLOCKED',status)
+    try:detail=json.loads(raw)
+    except (ValueError,UnicodeError):detail={}
+    if not isinstance(detail,dict):detail={}
+    name=detail.get('name');message=detail.get('message')
+    if not isinstance(name,str):name=''
+    if not isinstance(message,str):message=''
+    message=message.lower()
+    if name=='suspended_api_key':reason='EMAIL_ACCOUNT_SUSPENDED'
+    elif name in ('missing_api_key','authentication_error') or message=='api key is invalid':reason='EMAIL_API_KEY_REJECTED'
+    elif name in ('restricted_api_key','invalid_permission'):reason='EMAIL_KEY_PERMISSION'
+    elif name=='validation_error' and status==403 and 'only send testing emails' in message:reason='EMAIL_TEST_DOMAIN'
+    elif name=='validation_error' and status==403 and 'domain' in message and ('not verified' in message or 'verify your domain' in message):reason='EMAIL_DOMAIN_UNVERIFIED'
+    elif name in ('daily_quota_exceeded','monthly_quota_exceeded'):reason='EMAIL_QUOTA_EXCEEDED'
+    elif status==429:reason='EMAIL_RATE_LIMITED'
+    elif name in ('concurrent_idempotent_requests','invalid_idempotent_request'):reason='EMAIL_REQUEST_CONFLICT'
+    elif name in ('validation_error','invalid_parameter','missing_required_field','missing_required_parameter'):reason='EMAIL_REQUEST_INVALID'
+    return mail_result(state,reason,status)
+
 class Accounts:
     def __init__(self,publishable):
         self.publishable=publishable
@@ -68,12 +95,19 @@ class Accounts:
         # Password email deliberately never uses the customer-document test recipient.
         body={'from':self.email.sender,'to':[email],'reply_to':self.email.reply_to,'subject':subject,'text':text}
         req=http.Request('https://api.resend.com/emails',data=json.dumps(body).encode(),method='POST',headers={
-            'Authorization':'Bearer '+self.email.api_key,'Content-Type':'application/json','Idempotency-Key':'customu-account119/'+ident})
+            'Authorization':'Bearer '+self.email.api_key,'Content-Type':'application/json','Idempotency-Key':'customu-account119/'+ident,
+            'User-Agent':'CustomU/119.1','Accept':'application/json'})
         try:
             with self.opener.open(req,timeout=12) as response:
                 raw=response.read(8193)
                 r=json.loads(raw) if len(raw)<=8192 else {}
-                return 'accepted' if isinstance(r,dict) and isinstance(r.get('id'),str) else 'uncertain'
+                if isinstance(r,dict) and isinstance(r.get('id'),str) and re.fullmatch(r'[A-Za-z0-9_-]{1,100}',r['id']):return mail_result('accepted')
+                return mail_result('uncertain','EMAIL_RESPONSE_INVALID')
         except error.HTTPError as e:
-            code=e.code;e.close();return 'rejected' if 400<=code<500 and code!=408 else 'uncertain'
-        except (error.URLError,TimeoutError,ValueError,OSError):return 'uncertain'
+            try:
+                raw=e.read(8193)
+                if len(raw)>8192:raw=b''
+            except (OSError,ValueError):raw=b''
+            finally:e.close()
+            return mail_failure(e.code,raw)
+        except (error.URLError,TimeoutError,ValueError,OSError):return mail_result('uncertain','EMAIL_PROVIDER_UNCERTAIN')
