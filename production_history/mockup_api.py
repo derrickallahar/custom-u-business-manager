@@ -96,6 +96,19 @@ def install(app,provider,session,enabled,root,failure):
         except ValueError:raise failure('IMAGE_INTEGRITY_FAILED',409) from None
         check(rec);response=make_response(raw);response.headers['Content-Type']='image/webp'
         response.headers['Content-Disposition']=('attachment' if request.args.get('download')=='1' else 'inline')+'; filename="CustomU_Mockup_'+mid+'.webp"';return response
+    @app.get('/api/mockups/<mid>/pdf')
+    def mockup_presentation(mid):
+        from presentation_pdf import render_mockup_presentation
+        ident(mid);rec=gate()
+        if not lock.acquire(blocking=False):raise failure('PRODUCT_IMAGE_BUSY',429)
+        try:
+            record=rpc(rec,{'op':'get','id':mid})['data']
+            try:raw=render_mockup_presentation(record)
+            except (ValueError,KeyError,TypeError):raise failure('INVALID_MOCKUP',409) from None
+            check(rec);response=make_response(raw);response.headers['Content-Type']='application/pdf'
+            response.headers['Content-Disposition']=('attachment' if request.args.get('download')=='1' else 'inline')+'; filename="CustomU_Mockup_Presentation_'+mid+'.pdf"'
+            return response
+        finally:lock.release()
     @app.post('/api/mockups/<mid>/active')
     def mockup_active(mid):
         ident(mid);rec=gate(True);v=body({'version','active'},8192)
