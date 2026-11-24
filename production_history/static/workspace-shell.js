@@ -39,6 +39,7 @@
         ['Workspace backup','/quotes#backup','↓',enabled&&admin()],
         ['Import customers','/customers/reviewed-import','↓',enabled&&admin()],
         ['Import products','/products/csv-import','↓',enabled&&admin()],
+        ['Bulk product pricing','/products/bulk-pricing','↓',enabled&&admin()],
         ['Opening-balance review','/opening-balances','▤',enabled&&admin()]]]
     ];
     for(const [title,items] of groups){const visible=items.filter(x=>x[3]);if(!visible.length)continue;const group=node(title==='Setup & backups'?'details':'section','cu-nav-group');if(group.tagName==='DETAILS')group.open=visible.some(x=>current(x[1]));group.append(node(group.tagName==='DETAILS'?'summary':'h2','',title));for(const [label,href,icon] of visible){const a=node('a');a.href=href;if(current(href))a.setAttribute('aria-current','page');const glyph=node('span','cu-icon',icon);glyph.setAttribute('aria-hidden','true');a.append(glyph,node('span','',label));a.addEventListener('click',()=>closeMenu());group.append(a);}nav.append(group);}
