@@ -8,7 +8,25 @@ const can=k=>me?.role==='admin'||me?.permissions?.[k]===true;
 const messages={INVALID_REFERENCE_AREA:'Enter the item dimensions and mark its reference area on the photo.',REFERENCE_ASPECT_MISMATCH:'Mark the reference area again to match the entered dimensions.',PRINT_OUTSIDE_REFERENCE:'The print size or rotation does not fit in the marked area. Reduce it slightly or check the reference area.',PRINT_SIZE_TOO_SMALL:'The requested print is too small to show on this photo.',ACCESS_DENIED:'Mockup access ended. Return to Workspace to sign in.',NOT_FOUND:'The customer, product or photo is unavailable or archived. Choose an active record.',INVALID_MOCKUP:'Check the logo, title and placement. Use a still PNG, JPG or WebP logo up to 12 MB.',LOGO_EMPTY:'This logo is fully transparent. Choose visible artwork.',VERSION_CONFLICT:'This record changed in another session. Refresh saved mockups before retrying.',MOCKUP_ID_CONFLICT:'This save ID already belongs to a different preview. Start a new mockup.',MOCKUP_STORAGE_LIMIT:'The mockup storage limit has been reached. Archiving retains files and does not free space.',MOCKUP_HISTORY_LIMIT:'The mockup history limit has been reached.',INVALID_IMAGE:'Choose a valid PNG, JPG or WebP product photo up to 12 MB.',IMAGE_TOO_LARGE:'Choose a product photo up to 12 MB.',IMAGE_ID_CONFLICT:'The upload could not be matched. Choose the file again and retry.',PRODUCT_IMAGE_LIMIT:'This product has reached its saved-photo limit. Review its existing photos.',PRODUCT_IMAGE_BUSY:'Image processing or backup is busy. Try again shortly.',IMAGE_INTEGRITY_FAILED:'The image integrity check failed. This result is not confirmed.'};
 function status(text,error=false){e('status').textContent=text;e('status').className=error?'error':'';}
 function discardPreview(){preview=null;if(previewURL)URL.revokeObjectURL(previewURL);previewURL=null;e('preview-image').removeAttribute('src');e('preview-image').hidden=true;e('preview-note').textContent='Placement changed. Click Update preview before saving.';}
-function controls(){options?.controls();photoControls();manual?.controls();e('new').hidden=!can('products.edit');e('save').disabled=busy||!preview||!customer||!product||!e('title').value.trim()||!can('products.edit');e('preview').disabled=(manual&&!manual.valid())||busy||!product||!e('source-image').value||(!e('logo').files?.length&&!savedLogo)||!can('products.edit');e('preview-working').disabled=e('preview').disabled;e('previous').disabled=busy||page===1;e('next').disabled=busy||page*25>=total;}
+function controls(){options?.controls();photoControls();manual?.controls();e('new').hidden=!can('products.edit');e('save').disabled=busy||!preview||!customer||!product||!e('title').value.trim()||!can('products.edit');e('preview').disabled=busy||!can('products.edit');previewHelp();e('preview-working').disabled=e('preview').disabled;e('previous').disabled=busy||page===1;e('next').disabled=busy||page*25>=total;}
+function previewProblem(){
+ if(!can('products.edit'))return {id:'identity',message:'Edit products access is required to create a mockup.'};
+ if(!product)return {id:'product-search',message:'Choose the product with Find product before updating the preview.'};
+ if(!e('source-image').value&&!photoPending&&!e('product-photo-file').files?.length)return {id:'product-photo-file',message:'Choose a product photo from the list, or select a file under Add a product photo.'};
+ const file=e('logo').files?.[0];
+ if(!file&&!savedLogo)return {id:'logo',message:'Choose the customer logo or artwork in Customer logo or image. The product photo and logo are separate images.'};
+ if(file&&(file.size===0||file.size>12000000||!['image/png','image/jpeg','image/webp'].includes(file.type)))return {id:'logo',message:'Choose a PNG, JPG or WebP logo up to 12 MB.'};
+ return manual?.problem?.()||null;
+}
+function previewHelp(){
+ const problem=previewProblem(),message=busy?'Please wait for the current action to finish…':problem?problem.message:photoPending?'The photo upload is unconfirmed. Click Update preview to retry it safely.':e('product-photo-file').files?.length?'Update preview will upload your selected product photo and apply the logo.':'Ready. Click Update preview to apply the artwork.';
+ for(const id of ['preview-help','preview-working-help']){const node=e(id);if(node)node.textContent=message;}
+}
+function showPreviewProblem(problem){
+ status(problem.message,true);e('preview-note').textContent=problem.message;
+ for(const id of ['preview-help','preview-working-help'])if(e(id))e(id).textContent=problem.message;
+ const field=e(problem.id);field?.scrollIntoView?.({behavior:'smooth',block:'center'});field?.focus({preventScroll:true});
+}
 function clear(){options?.clear();clearPhoto();manual?.clear();me=null;customer=null;product=null;savedLogo=null;e('logo-note').textContent='';discardPreview();saveId=null;dirty=false;e('workspace').hidden=true;e('editor').hidden=true;e('identity').textContent='';e('saved').replaceChildren();e('customer-results').replaceChildren();e('product-results').replaceChildren();e('customer-name').textContent='';e('product-name').textContent='';e('count').textContent='';e('source-image').replaceChildren();e('workspace').querySelectorAll('input').forEach(x=>{x.value='';});}
 async function api(path,body){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),60000);try{const r=await fetch(path,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined,signal:controller.signal});let d;try{d=await r.json();}catch{if(r.status===401||r.status===403)clear();throw Error('The server response could not be read. Check saved mockups before retrying a save.');}if(!r.ok){if(r.status===401||r.status===403)clear();const error=Error(messages[d?.error]||'The request could not complete. Refresh saved mockups before retrying a save.');error.definitive=r.status>=400&&r.status<500;throw error;}return d;}catch(err){if(err.name==='AbortError'||err instanceof TypeError)throw Error('The connection did not confirm completion. Refresh saved mockups before retrying a save.');throw err;}finally{clearTimeout(timer);}}
 async function run(fn){if(busy)return;busy=true;e('workspace').querySelectorAll('button,input,select').forEach(x=>x.disabled=true);try{await fn();}catch(err){status(err.message,true);}finally{busy=false;e('workspace').querySelectorAll('button,input,select').forEach(x=>x.disabled=false);controls();}}
@@ -40,8 +58,8 @@ async function loadProductPhotos(selected=''){
  if(selected){if(!images.some(i=>i.id===selected))throw Error('The photo upload is not yet confirmed. Retry the retained upload.');e('source-image').value=selected;}
  showProductPhoto();return images;
 }
-e('product-photo-file').onchange=()=>{e('photo-upload-status').textContent='';controls();};
-e('upload-product-photo').onclick=()=>run(async()=>{
+e('product-photo-file').onchange=()=>{e('photo-upload-status').textContent='';manual?.clear();change();};
+async function uploadProductPhoto(){
  if(!product||!can('products.edit'))throw Error('Choose a product first. Edit products access is required to upload a photo.');
  if(!photoPending){const file=e('product-photo-file').files?.[0];if(!file||file.size===0||file.size>12000000||!['image/png','image/jpeg','image/webp'].includes(file.type))throw Error('Choose a PNG, JPG or WebP product photo up to 12 MB.');photoPending={product_id:product.id,body:{id:crypto.randomUUID(),filename:file.name,caption:e('product-photo-caption').value.trim(),source_url:'',data:await base64(file)}};}
  const pending=photoPending;dirty=true;e('photo-upload-status').textContent='Uploading and checking the product photo…';
@@ -51,11 +69,21 @@ e('upload-product-photo').onclick=()=>run(async()=>{
   await loadProductPhotos(pending.body.id);photoPending=null;e('product-photo-file').value='';e('product-photo-caption').value='';manual?.clear();change();
   e('photo-upload-status').textContent='Product photo saved and selected. Add the customer logo, then Update preview.';status('Product photo saved and selected for this mockup.');
  }catch(error){if(error.definitive)photoPending=null;e('photo-upload-status').textContent=photoPending?'The upload is not confirmed. Retry this photo upload; an already-saved photo will be kept once.':error.message;throw error;}
-});
+}
+e('upload-product-photo').onclick=()=>run(uploadProductPhoto);
 
 const base64=file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('The image file could not be read.'));reader.readAsDataURL(file);});
 function config(){return {...Object.fromEntries(['x','y','width','rotation'].map(k=>[k,Number(e(k).value)])),family:e('family').value,placement:e('placement').value,finish:e('finish').value,...(manual?.scaleConfig()?{scale:manual.scaleConfig()}:{})};}
-e('preview').onclick=()=>run(async()=>{const file=e('logo').files?.[0];if((!file&&!savedLogo)||(file&&file.size>12000000))throw Error('Choose a PNG, JPG or WebP logo up to 12 MB.');discardPreview();status('Preparing the preview…');const r=await api('/api/mockups/preview',{product_id:product.id,image_id:e('source-image').value,logo:file?await base64(file):savedLogo,config:config()});if(!r.preview?.content_base64||!r.logo?.content_base64||!r.config||!r.source_sha256)throw Error('The preview could not be verified.');preview=r;manual?.load('/api/products/'+encodeURIComponent(product.id)+'/images/'+encodeURIComponent(e('source-image').value),r.logo);const bytes=Uint8Array.from(atob(r.preview.content_base64),c=>c.charCodeAt(0));previewURL=URL.createObjectURL(new Blob([bytes],{type:'image/webp'}));e('preview-image').src=previewURL;e('preview-image').hidden=false;e('preview-note').textContent='Preview ready · '+r.preview.width+' × '+r.preview.height+' pixels. Review before saving.';saveId=null;dirty=true;status('Preview ready. Nothing has been saved.');});
+e('preview').onclick=()=>{
+ if(busy||!can('products.edit'))return;
+ // Validate while inputs are enabled: browsers skip native validity on disabled fields.
+ const problem=previewProblem();if(problem){showPreviewProblem(problem);return;}
+ return run(async()=>{try{
+  const file=e('logo').files?.[0];
+  if(photoPending||e('product-photo-file').files?.length)await uploadProductPhoto();
+  discardPreview();status('Preparing the preview…');const r=await api('/api/mockups/preview',{product_id:product.id,image_id:e('source-image').value,logo:file?await base64(file):savedLogo,config:config()});if(!r.preview?.content_base64||!r.logo?.content_base64||!r.config||!r.source_sha256)throw Error('The preview could not be verified.');preview=r;manual?.load('/api/products/'+encodeURIComponent(product.id)+'/images/'+encodeURIComponent(e('source-image').value),r.logo);const bytes=Uint8Array.from(atob(r.preview.content_base64),c=>c.charCodeAt(0));previewURL=URL.createObjectURL(new Blob([bytes],{type:'image/webp'}));e('preview-image').src=previewURL;e('preview-image').hidden=false;e('preview-note').textContent='Preview ready · '+r.preview.width+' × '+r.preview.height+' pixels. Review before saving.';saveId=null;dirty=true;status('Preview ready. Nothing has been saved.');
+ }catch(error){e('preview-note').textContent=error.message;throw error;}});
+};
 e('preview-working').onclick=()=>e('preview').click();
 e('save').onclick=()=>run(async()=>{if(!preview||!customer||!product)return;saveId=saveId||crypto.randomUUID();const r=await api('/api/mockups/save',{id:saveId,product_id:product.id,image_id:e('source-image').value,customer_id:customer.id,title:e('title').value.trim(),logo:preview.logo,config:preview.config,source_sha256:preview.source_sha256});if(r.data?.id!==saveId||r.data?.preview?.sha256!==preview.preview.sha256)throw Error('The save could not be verified. Refresh saved mockups before retrying.');dirty=false;status('Mockup saved and image bytes verified. Included in the next workspace backup.');try{await list();}catch{status('Mockup saved and verified. The saved list could not refresh; click Refresh saved mockups.',true);}});
 // Load all dependencies before replacing a draft. Reopening itself never writes.

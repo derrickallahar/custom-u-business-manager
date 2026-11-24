@@ -25,11 +25,18 @@
   const enabled=()=>$('measure-enabled').checked;
   function scaleConfig(){return enabled()&&scale?{...scale}:null;}
   function fieldValid(id){return $(id).checkValidity()&&Number.isFinite($(id).valueAsNumber);}
-  function valid(){
-   if(!ranges.every(k=>$(k+'-number').checkValidity()))return false;
-   if(!enabled())return true;
-   return !!(base&&art&&scale&&!marking&&['reference-width','reference-height','print-width-in','print-height-in'].every(fieldValid)&&!geometry(canvas.width,canvas.height,art.width,art.height,config()).error);
+  function problem(){
+   for(const k of ranges){const id=k+'-number';if(!fieldValid(id))return {id,message:'Check '+({x:'horizontal position',y:'vertical position',width:'logo width',rotation:'rotation'}[k])+'. Enter a number from '+$(k).min+' to '+$(k).max+'.'};}
+   if(!enabled())return null;
+   if(!base||!art)return {id:'measure-enabled',message:'The working photo has not loaded. Turn off Set print size in inches and update the preview first.'};
+   if(marking)return {id:'manual-canvas',message:'Finish marking the area on the photo, or click Cancel marking.'};
+   for(const id of ['reference-width','reference-height'])if(!fieldValid(id))return {id,message:'Enter the item / area width and height in inches, then mark that area on the photo.'};
+   if(!scale)return {id:'mark-reference',message:'Click Mark area on photo and select two opposite corners before updating the sized preview.'};
+   for(const id of ['print-width-in','print-height-in'])if(!fieldValid(id))return {id,message:'Enter a positive print width and height, using up to three decimal places.'};
+   const error=geometry(canvas.width,canvas.height,art.width,art.height,config()).error;
+   return error?{id:'print-width-in',message:error}:null;
   }
+  function valid(){return !problem();}
   function controls(){
    $('measure-enabled').disabled=!base||!editable();$('measurement-fields').hidden=!enabled();$('print-dimensions').hidden=!enabled();$('mark-reference').disabled=!base||!editable()||marking;
    $('mark-reference').textContent=marking?'Marking area — use the photo below':scale?'Mark area again':'Mark area on photo';
@@ -64,7 +71,7 @@
     const cropped=document.createElement('canvas');cropped.width=x1-x0+1;cropped.height=y1-y0+1;cropped.getContext('2d').drawImage(temp,x0,y0,cropped.width,cropped.height,0,0,cropped.width,cropped.height);
     base=photo;art=cropped;canvas.width=photo.naturalWidth;canvas.height=photo.naturalHeight;wrap.hidden=false;revoke();dimensions();draw();controls();onReady();
     note.textContent='Drag the artwork to move it. Drag the blue corner to resize. Click elsewhere to place it. Arrow keys move it; Shift gives finer steps. Update preview before saving.';
-   }catch(err){if(ticket===epoch){clear();note.textContent=err.message;}}
+   }catch(err){if(ticket===epoch){clear();note.textContent=err.message;onReady();}}
   }
   function draw(){
    if(!base||!art)return;const c=config(),ctx=canvas.getContext('2d'),bw=canvas.width,bh=canvas.height;shape=geometry(bw,bh,art.width,art.height,c);
@@ -123,7 +130,7 @@
   $('cancel-reference').addEventListener('click',cancelMark);
   for(const id of ['print-width-in','print-height-in'])$(id).addEventListener('input',()=>{if(scale&&art&&fieldValid(id)){scale.print_width=round(bound($(id).valueAsNumber*(id==='print-height-in'?art.width/art.height:1),.001,2000),3);if(id==='print-width-in')$('print-height-in').value=round(scale.print_width*art.height/art.width,3);else $('print-width-in').value=scale.print_width;$('width').value=round(bound(scale.print_width*(scale.right-scale.left)/scale.reference_width,1,100));sync();}onChange();});
   window.addEventListener('resize',draw);sync();controls();
-  return {load,clear,draw,sync,valid,controls,restore,scaleConfig,percentageChanged:k=>{if(k==='width')percentWidth($('width').value);}};
+  return {load,clear,draw,sync,valid,problem,controls,restore,scaleConfig,percentageChanged:k=>{if(k==='width')percentWidth($('width').value);}};
  }
  window.CustomUMockupEditor={mount,geometry};
 })();
