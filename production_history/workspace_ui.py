@@ -1,7 +1,7 @@
 """Shared interface assets for the existing authenticated application pages."""
 from flask import request
 
-PAGES = frozenset(('/', '/customers', '/quotes', '/invoices', '/payments',
+PAGES = frozenset(('/inventory','/', '/customers', '/quotes', '/invoices', '/payments',
     '/credits', '/statements', '/jobs', '/products', '/mockups', '/catalogues',
     '/account', '/hr', '/team', '/staff', '/admin-controls', '/reminders', '/legacy-balances', '/opening-balances',
     '/quotes/carryover', '/customers/import', '/customers/reviewed-import', '/products/csv-import', '/products/bulk-pricing',
@@ -33,12 +33,12 @@ def install(app, root):
 
     @app.after_request
     def workspace_layout(response):
-        if (request.path in PAGES or request.endpoint in ('artwork_page', 'product_detail_page','shopvox_quote_page','shopvox_invoice_page','product_group_page','creation_page')) and response.status_code == 200 and response.mimetype == 'text/html':
+        if (request.path in PAGES or request.endpoint in ('inventory_page','artwork_page', 'product_detail_page','shopvox_quote_page','shopvox_invoice_page','product_group_page','creation_page')) and response.status_code == 200 and response.mimetype == 'text/html':
             html = response.get_data(as_text=True)
             additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css">'
                          '<script src="/workspace-assets/workspace-shell.js" defer></script>'
-                         '<script src="/workspace-assets/page-navigation.js?v=121.1" defer></script>'
-                         '<script src="/workspace-assets/new-page.js?v=121.1" defer></script>'
+                         '<script src="/workspace-assets/page-navigation.js?v=123" defer></script>'
+                         '<script src="/workspace-assets/new-page.js?v=123" defer></script>'
                          '<link rel="stylesheet" href="/workspace-assets/team-chat.css?v=116.1">'
                          '<script src="/workspace-assets/team-chat.js?v=116.1" defer></script>'
                          '<script src="/team-notifications.js?v=116.1" defer></script>')
