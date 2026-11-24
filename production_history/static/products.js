@@ -17,12 +17,12 @@ el('back-products').hidden=!detailPage;el('catalogue-list').hidden=detailPage;el
 function catalogueQuery(){return new URLSearchParams({q:el('search').value,state:el('state').value,page:String(page)}).toString();}
 function catalogueURL(){return '/products?'+catalogueQuery();}
 function productURL(id){return '/products/'+encodeURIComponent(id)+'?'+catalogueQuery();}
-function navigateProduct(url){if(busy||!leave())return;dirty=false;location.assign(url);}
+function navigateProduct(url){if(busy)return;if(window.CustomUNavigation){window.CustomUNavigation.open(url);return;}if(!leave())return;dirty=false;location.assign(url);}
 function syncProductURL(id){if(detailPage)history.replaceState(null,'',productURL(id));}
 const optionGroup=['flyers','brochures'].includes(listQuery.get('group'))?listQuery.get('group'):'';
 if(optionGroup)el('back-products').textContent='← Back to '+optionGroup;
 el('back-products').href=optionGroup?'/products/options/'+optionGroup:catalogueURL();
-el('back-products').addEventListener('click',e=>{if(busy||!leave()){e.preventDefault();return;}dirty=false;});
+el('back-products').addEventListener('click',e=>{if(e.currentTarget.target==='_blank')return;if(busy||!leave()){e.preventDefault();return;}dirty=false;});
 const can=k=>me?.role==='admin'||me?.permissions?.[k]===true;
 const errors={PRICING_MODE_REQUIRED:'Keep a pricing method for this product. Use Unit price with quantity for simple pricing.',PRICING_REQUIRED:'Enter VAT, a minimum line price (0 for none), and a positive price before activating this product.',STARTER_SETUP_UNCONFIRMED:'Setup was not confirmed. Refresh the list, then retry setup; existing products will be kept.',PRODUCT_HISTORY_LIMIT:'The catalogue has reached its change-history limit. Contact your administrator before making further changes.',VERSION_CONFLICT:'This product changed in another session. Your changes are still here. Copy them before reloading the saved product.',PRODUCT_CODE_EXISTS:'That product code is already in use, including archived products. Choose a unique code.',INVALID_PRODUCT:'Check the product code, required fields, selling price and VAT rate.',PRODUCT_LIMIT:'The catalogue has reached its limit of 5,000 products.',NOT_FOUND:'This product could not be found. Refresh the catalogue.'};
 function status(message,kind='info',focus=false){

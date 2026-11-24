@@ -14,6 +14,7 @@ def install(app, root):
         'team-chat.js': ('team-chat.js', 'text/javascript'),
         'team-chat.css': ('team-chat.css', 'text/css'),
         'new-page.js': ('new-page.js','text/javascript'),
+        'page-navigation.js': ('page-navigation.js','text/javascript'),
         'brand/custom-u-logo.png': ('brand/custom-u-logo.png', 'image/png'),
     }
     @app.get('/<feature>/new')
@@ -36,7 +37,8 @@ def install(app, root):
             html = response.get_data(as_text=True)
             additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css">'
                          '<script src="/workspace-assets/workspace-shell.js" defer></script>'
-                         '<script src="/workspace-assets/new-page.js?v=117" defer></script>'
+                         '<script src="/workspace-assets/page-navigation.js?v=121" defer></script>'
+                         '<script src="/workspace-assets/new-page.js?v=121" defer></script>'
                          '<link rel="stylesheet" href="/workspace-assets/team-chat.css?v=116.1">'
                          '<script src="/workspace-assets/team-chat.js?v=116.1" defer></script>'
                          '<script src="/team-notifications.js?v=116.1" defer></script>')
