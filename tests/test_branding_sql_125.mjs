@@ -1,0 +1,26 @@
+import {PGlite} from '@electric-sql/pglite';import fs from 'node:fs';import assert from 'node:assert/strict';
+const db=new PGlite(),uid=n=>'12500000-0000-4000-8000-'+String(n).padStart(12,'0');
+await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA custom_u_production;
+CREATE TABLE custom_u_production.products_105(id uuid,data jsonb,active boolean);
+CREATE TABLE custom_u_production.product_images_106(id uuid,product_id uuid,active boolean,sha256 text,width int,height int,size_bytes int,content_base64 text);
+CREATE TABLE custom_u_production.mockups_107(id uuid,product_id uuid,customer_id uuid,active boolean,preview jsonb);
+CREATE FUNCTION custom_u_production.catalogue_text_108(v jsonb,maxlen int,required boolean) RETURNS boolean LANGUAGE sql IMMUTABLE SET search_path='' AS $$ SELECT jsonb_typeof(v)='string' AND length(v#>>'{}')<=maxlen AND (NOT required OR length(btrim(v#>>'{}'))>0) AND (v#>>'{}') !~ '[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]'; $$;`);
+const sql=fs.readFileSync('supabase/migrations/'+fs.readdirSync('supabase/migrations').find(x=>x.endsWith('_branding_options_125.sql')),'utf8');await db.exec('BEGIN;'+sql+'COMMIT;');await db.exec('BEGIN;'+sql+'COMMIT;');
+const valid=async item=>(await db.query('SELECT custom_u_production.catalogue_items_valid_108($1::jsonb) ok',[JSON.stringify(item)])).rows[0].ok;
+const views=[1,2].map(i=>({visual_kind:'mockup',visual_id:uid(i+10),visual_sha256:'a'.repeat(64),label:i===1?'Left chest':'Back'}));
+const item={product_id:uid(2),product_code:'TEST',name:'Shirt',description:'Test',unit:'Each',unit_price:'25.00',vat_rate:'10.00',finish:'UV printing',placement:'Left chest + back',...views[0],views};delete item.label;
+assert.equal(await valid([item]),true);const legacy={...item};delete legacy.views;assert.equal(await valid([legacy]),true);
+for(const change of [{views:[]},{views:null},{views:[views[1]]},{views:[...views,...views]},{views:[{...views[0],customer_id:uid(1)}]},{views:[{...views[0],label:''}]},{unit_price:'25x00'}])assert.equal(await valid([{...item,...change}]),false,JSON.stringify(change));
+assert.equal(await valid(Array(6).fill(item)),true);assert.equal(await valid(Array(7).fill(item)),false);
+const config={family:'shirt',placement:'left-sleeve',finish:'colour',x:50,y:50,width:20,rotation:0};
+const configValid=async c=>(await db.query('SELECT custom_u_production.mockup_config_valid_107($1::jsonb) ok',[JSON.stringify(c)])).rows[0].ok;
+assert.equal(await configValid(config),true);assert.equal(await configValid({...config,placement:'right-sleeve'}),true);assert.equal(await configValid({...config,family:'journal'}),false);
+assert.equal(await configValid({...config,scale:{unit:'in',reference_width:8,reference_height:10,left:10,top:10,right:90,bottom:90,print_width:2}}),true);
+await db.query('INSERT INTO custom_u_production.products_105 VALUES ($1,$2,true)',[uid(2),JSON.stringify({code:'TEST'})]);
+for(const v of views)await db.query('INSERT INTO custom_u_production.mockups_107 VALUES ($1,$2,$3,true,$4)',[v.visual_id,uid(2),uid(1),JSON.stringify({sha256:v.visual_sha256,content_base64:'fixture'})]);
+const assets=async(active=true)=>(await db.query('SELECT custom_u_production.catalogue_assets_108($1::jsonb,$2::uuid,$3) data',[JSON.stringify([item]),uid(1),active])).rows[0].data;
+assert.equal(Object.keys(await assets()).length,2);
+for(const column of ['customer_id','product_id']){await db.query(`UPDATE custom_u_production.mockups_107 SET ${column}=$1 WHERE id=$2`,[uid(99),uid(12)]);assert.equal((await assets()).error,'CATALOGUE_SOURCE_UNAVAILABLE');await db.query(`UPDATE custom_u_production.mockups_107 SET ${column}=$1 WHERE id=$2`,[column==='customer_id'?uid(1):uid(2),uid(12)]);}
+await db.query('UPDATE custom_u_production.mockups_107 SET active=false WHERE id=$1',[uid(12)]);assert.equal((await assets()).error,'CATALOGUE_SOURCE_UNAVAILABLE');assert.equal(Object.keys(await assets(false)).length,2);
+const grants=(await db.query("SELECT has_function_privilege('authenticated','custom_u_production.catalogue_assets_108(jsonb,uuid,boolean)','execute') ok")).rows[0];assert.equal(grants.ok,false);
+await db.close();console.log('Branding SQL PASS: replay, old and grouped options, sleeves/inches, validation limits, cross-customer/product denial, archived retained views and private helper grants.');

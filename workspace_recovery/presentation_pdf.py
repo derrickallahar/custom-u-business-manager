@@ -6,7 +6,7 @@ from reportlab.lib.colors import HexColor, white
 from reportlab.lib.utils import ImageReader
 from branding import BRAND
 from catalogue_pdf import fonts, paragraph, photo
-from catalogue_data import validate_document, text
+from catalogue_data import validate_document, text, item_views
 from product_images import checked_bytes
 from mockup_render import configuration
 from mockup_scale import measurements
@@ -20,7 +20,7 @@ LINE = HexColor('#e5e0dd')
 PALE = HexColor('#fbf0f2')
 STONE = HexColor('#f4f2ef')
 FINISH = {'colour': 'Colour artwork / UV print', 'engraved-dark': 'Engraving concept - dark', 'engraved-light': 'Engraving concept - light'}
-PLACEMENT = {'centre': 'Centre', 'left-chest': "Left chest (wearer's left)", 'back': 'Back', 'bottom-right': 'Bottom right', 'upper-left': 'Upper left', 'front': 'Front'}
+PLACEMENT = {'centre': 'Centre', 'left-chest': "Left chest (wearer's left)", 'back': 'Back', 'bottom-right': 'Bottom right', 'upper-left': 'Upper left', 'front': 'Front', 'left-sleeve': 'Left sleeve', 'right-sleeve': 'Right sleeve'}
 
 
 def words(c, value, x, top, width, height, size=11, bold=False, color=INK):
@@ -84,7 +84,16 @@ def catalogue_option(c, d, item, raw, index, total):
     vat = (price*Decimal(item['vat_rate'])/100).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
     words(c, f'BSD {price:,.2f} / {item["unit"]}', M+15, 474, 350, 31, 19, True, RED)
     words(c, item['finish'] or 'Branding finish to be confirmed', M+390, 472, CW-405, 28, 10)
-    photo(c, raw, M+12, 177, CW-24, 252)
+    views = item_views(item)
+    if len(views)==1:
+        photo(c, raw[views[0]['visual_kind']+':'+views[0]['visual_id']], M+12, 177, CW-24, 252)
+    else:
+        cols = len(views); rows = 1
+        width = (CW-24)/cols; height = 252/rows
+        for n, view in enumerate(views):
+            x = M+12+(n%cols)*width; y = 177+(rows-1-n//cols)*height
+            photo(c, raw[view['visual_kind']+':'+view['visual_id']], x+8, y+32, width-16, height-36)
+            words(c, view['label'], x+8, y+28, width-16, 28, 9, True, MUTED)
     caption = 'BRANDING CONCEPT' if item['visual_kind']=='mockup' else 'PRODUCT VIEW'
     words(c, caption, M, 165, CW, 16, 9, True)
     c.setFillColor(STONE)
@@ -103,7 +112,7 @@ def render_catalogue_presentation(d, assets):
     total = len(d['items'])+1
     cover(c, d, raw, total)
     for index, item in enumerate(d['items'], 1):
-        catalogue_option(c, d, item, raw[item['visual_kind']+':'+item['visual_id']], index, total)
+        catalogue_option(c, d, item, raw, index, total)
     c.save()
     return out.getvalue()
 

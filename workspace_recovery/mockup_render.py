@@ -4,7 +4,7 @@ from PIL import Image,ImageOps
 from product_images import encode_image,checked_bytes
 from mockup_scale import validate_scale,render_scaled
 
-FAMILIES={'generic':('centre',),'shirt':('centre','left-chest','back'),'journal':('centre','bottom-right','upper-left'),'drinkware':('centre','front')}
+FAMILIES={'generic':('centre',),'shirt':('centre','left-chest','back','left-sleeve','right-sleeve'),'journal':('centre','bottom-right','upper-left'),'drinkware':('centre','front')}
 FINISHES=('colour','engraved-dark','engraved-light')
 
 def configuration(value):

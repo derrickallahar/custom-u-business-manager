@@ -12,26 +12,42 @@ def uid(value):require(isinstance(value,str) and UUID.fullmatch(value))
 def items_valid(items):
     require(isinstance(items,list) and 1<=len(items)<=12)
     for x in items:
-        require(isinstance(x,dict) and set(x)==ITEM_FIELDS)
+        require(isinstance(x,dict) and set(x) in (ITEM_FIELDS,ITEM_FIELDS|{'views'}))
         uid(x['product_id']);uid(x['visual_id'])
         for k,n in [('product_code',40),('name',160),('description',400),('unit',20),('finish',160),('placement',160)]:text(x[k],n,k in ('product_code','name','unit'))
         require(isinstance(x['unit_price'],str) and re.fullmatch(r'(0|[1-9][0-9]{0,5})\.[0-9]{2}',x['unit_price']))
         require(isinstance(x['vat_rate'],str) and re.fullmatch(r'(0|[1-9][0-9]?|100)\.[0-9]{2}',x['vat_rate']) and Decimal(x['vat_rate'])<=100)
         require(x['visual_kind'] in ('image','mockup') and isinstance(x['visual_sha256'],str) and re.fullmatch('[a-f0-9]{64}',x['visual_sha256']))
+        if 'views' in x:
+            views=x['views'];require(isinstance(views,list) and 1<=len(views)<=4)
+            seen=set()
+            for v in views:
+                require(isinstance(v,dict) and set(v)=={'visual_kind','visual_id','visual_sha256','label'})
+                require(v['visual_kind'] in ('image','mockup'));uid(v['visual_id']);text(v['label'],60,True)
+                require(isinstance(v['visual_sha256'],str) and re.fullmatch('[a-f0-9]{64}',v['visual_sha256']))
+                key=v['visual_kind']+':'+v['visual_id'];require(key not in seen);seen.add(key)
+            require(all(views[0][k]==x[k] for k in ('visual_kind','visual_id','visual_sha256')))
+    require(sum(len(item_views(x)) for x in items)<=12)
     return items
+
+def item_views(item):
+    return item.get('views',[{k:item[k] for k in ('visual_kind','visual_id','visual_sha256')}])
+
+def visual_items(items):
+    return [{**item,**view} for item in items for view in item_views(item)]
 
 def validate_document(d,assets):
     require(isinstance(d,dict) and {'customer_id','customer_name','title','intro','items'}<=set(d) and set(d)<={'id','customer_id','customer_name','title','intro','items','active','version','created_at','updated_at','pdf_version'})
     require(d.get('pdf_version','108')=='108');uid(d['customer_id']);text(d['customer_name'],160,True);text(d['title'],120,True);text(d['intro'],600);items_valid(d['items'])
-    keys={x['visual_kind']+':'+x['visual_id'] for x in d['items']};require(isinstance(assets,dict) and set(assets)==keys)
+    keys={x['visual_kind']+':'+x['visual_id'] for x in visual_items(d['items'])};require(isinstance(assets,dict) and set(assets)==keys)
     raw={key:checked_bytes(value) for key,value in assets.items()}
-    for x in d['items']:require(assets[x['visual_kind']+':'+x['visual_id']]['sha256']==x['visual_sha256'])
+    for x in visual_items(d['items']):require(assets[x['visual_kind']+':'+x['visual_id']]['sha256']==x['visual_sha256'])
     return raw
 
 def snapshot_assets(d,obj):
     images={x['id']:x for x in obj['product_images']};mockups={x['id']:x for x in obj['mockups']};products={x['id'] for x in obj['products']};customers={x['id'] for x in obj['crm']['records'] if x['kind']=='customer'}
     require(d['customer_id'] in customers);assets={}
-    for x in d['items']:
+    for x in visual_items(d['items']):
         require(x['product_id'] in products)
         source=(images if x['visual_kind']=='image' else mockups).get(x['visual_id']);require(source is not None and source['product_id']==x['product_id'])
         if x['visual_kind']=='mockup':require(source['customer_id']==d['customer_id'])
