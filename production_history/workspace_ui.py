@@ -37,8 +37,8 @@ def install(app, root):
             html = response.get_data(as_text=True)
             additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css">'
                          '<script src="/workspace-assets/workspace-shell.js" defer></script>'
-                         '<script src="/workspace-assets/page-navigation.js?v=121" defer></script>'
-                         '<script src="/workspace-assets/new-page.js?v=121" defer></script>'
+                         '<script src="/workspace-assets/page-navigation.js?v=121.1" defer></script>'
+                         '<script src="/workspace-assets/new-page.js?v=121.1" defer></script>'
                          '<link rel="stylesheet" href="/workspace-assets/team-chat.css?v=116.1">'
                          '<script src="/workspace-assets/team-chat.js?v=116.1" defer></script>'
                          '<script src="/team-notifications.js?v=116.1" defer></script>')

@@ -1,4 +1,4 @@
-/* Open navigation in a separate browsing context; never perform business writes. */
+/* Keep navigation in the current browsing context; never perform business writes. */
 (() => {
  'use strict';
  function navigable(a){
@@ -6,9 +6,9 @@
   if(!href||href.startsWith('#')||a.hasAttribute('download')||a.classList.contains('cu-skip'))return false;
   try{return ['http:','https:','blob:'].includes(new URL(href,location.href).protocol);}catch{return false;}
  }
- function prepare(a){if(navigable(a)){a.target='_blank';a.relList.add('noopener');}}
+ function prepare(a){if(navigable(a)){a.target='_self';a.relList.add('noopener');}}
  function scan(node){if(node.nodeType!==1)return;if(node.matches('a[href]'))prepare(node);for(const a of node.querySelectorAll('a[href]'))prepare(a);}
- function open(url){const target=new URL(url,location.origin);if(target.origin!==location.origin||!['http:','https:'].includes(target.protocol))return;window.open(target.href,'_blank','noopener');}
+ function open(url){const target=new URL(url,location.origin);if(target.origin!==location.origin||!['http:','https:'].includes(target.protocol))return;window.open(target.href,'_self');}
  window.CustomUNavigation={open};
  document.addEventListener('click',event=>{
   const anchor=event.target.closest?.('a[href]');if(anchor){prepare(anchor);return;}
