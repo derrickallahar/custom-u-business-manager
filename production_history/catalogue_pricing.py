@@ -1,5 +1,6 @@
 """Editable fixed, square-foot and exact-variant pricing. No financial writes."""
 import re
+import json
 from area_pricing import scaled, half_up, money, decimal_text
 
 
@@ -31,6 +32,26 @@ def calculate(body, product):
         rate = scaled(d['unit_price'], 2, 1000000, 'PRICING_UNAVAILABLE')
         net = half_up(w*h*count*rate, 1000000*(144 if body['dimension_unit'] == 'in' else 1))
         details = f"Size: {decimal_text(w, 3)} × {decimal_text(h, 3)} {'inches' if body['dimension_unit'] == 'in' else 'feet'}; quantity: {count} piece(s)."
+    elif p['mode'] == 'matrix':
+        if body['width'] or body['height'] or body['dimension_unit']:raise ValueError('INVALID_PRICING_REQUEST')
+        try: selected=json.loads(body['option'])
+        except (ValueError,TypeError):raise ValueError('INVALID_PRICING_REQUEST') from None
+        if not isinstance(selected,list) or len(selected)!=len(p['axes']) or not all(isinstance(v,str) for v in selected):raise ValueError('INVALID_PRICING_REQUEST')
+        details_parts=[]
+        for i,(a,v) in enumerate(zip(p['axes'],selected)):
+            if i==p['quantity_axis']:
+                if v!='':raise ValueError('INVALID_PRICING_REQUEST')
+                thresholds=sorted(int(x) for x in a['values'])
+                selected[i]=str(max((n for n in thresholds if n<=count),default=thresholds[0]))
+            else:
+                if v not in a['values']:raise ValueError('INVALID_PRICING_REQUEST')
+                if not (len(a['values'])==1 and (a['label'].startswith('Attribute ') or v in ('Price','Cost','Nil','N/A'))):details_parts.append(f"{a['label']}: {v}")
+        option=next((o for o in p['options'] if o['values']==selected),None)
+        if not option or not option['price'] or float(option['price'])<=0:raise ValueError('PRICING_UNAVAILABLE')
+        net=scaled(option['price'],2,1000000,'PRICING_UNAVAILABLE')*count
+        details_parts.append(f"{count} run(s)" if p['basis']=='run' else f"Quantity: {count}")
+        if p['basis']=='quantity':details_parts.append(f"BSD {option['price']} each")
+        details='; '.join(details_parts)+'.'
     elif p['mode'] == 'grid':
         if body['width'] or body['height'] or body['dimension_unit']:
             raise ValueError('INVALID_PRICING_REQUEST')

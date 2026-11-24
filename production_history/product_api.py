@@ -10,6 +10,8 @@ from area_pricing import calculate as calculate_area, selected_product as select
 
 
 def install(app, provider, session, enabled, root, failure):
+    from bulk_pricing_api import install as install_bulk
+    install_bulk(app,provider,session,enabled,root,failure)
     from product_csv_api import install as install_csv
     install_csv(app, provider, session, enabled, root, failure)
 

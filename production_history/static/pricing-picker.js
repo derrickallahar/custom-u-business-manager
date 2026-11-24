@@ -25,7 +25,15 @@
   for(const [b,text] of [[calculate,'Calculate price'],[add,'Add priced item'],[close,'Close pricing']]){b.type='button';b.textContent=text;root.append(b);}
   root.append(message);root.hidden=true;
   function update(){for(const i of [...Object.values(fields),calculate,close])i.disabled=!editable();add.disabled=!editable()||!result;if(editable()&&focusPending)queueMicrotask(()=>{const field=product?.data.pricing.mode==='area'?fields.width:product?.data.pricing.mode==='grid'?fields.option:fields.pieces;if(focusPending&&product&&editable()&&!field.matches(':disabled')){focusPending=false;field.focus();}});}
-  function clear(){revision++;focusPending=false;product=null;result=null;root.hidden=true;title.textContent='';help.textContent='';message.textContent='';fields.option.replaceChildren();for(const k of ['width','height','pieces'])fields[k].value='';update();}
+  function clear(){revision++;focusPending=false;product=null;result=null;root.hidden=true;title.textContent='';help.textContent='';message.textContent='';fields.option.replaceChildren();for(const k of Object.keys(fields))if(k.startsWith('axis')){fields[k].closest('label').remove();delete fields[k];}for(const k of ['width','height','pieces'])fields[k].value='';update();}
+  function matrixChoices(changed=-1){
+   const p=product?.data.pricing;if(p?.mode!=='matrix')return;
+   let choices=p.options.filter(o=>Number(o.price)>0);
+   p.axes.forEach((axis,i)=>{if(i===p.quantity_axis)return;const input=fields['axis'+i],old=input.value;
+    if(i>changed){const values=axis.values.filter(v=>choices.some(o=>o.values[i]===v));if(values.every(v=>/^\d+$/.test(v)))values.sort((a,b)=>Number(a)-Number(b));input.replaceChildren(...values.map(v=>new Option(v,v)));if(values.includes(old))input.value=old;}
+    choices=choices.filter(o=>o.values[i]===input.value);
+   });
+  }
   function open(p){
    clear();if(!p?.active||!p.data?.pricing||!editable(true))throw Error('This product is not ready for pricing.');
    product=p;root.hidden=false;title.textContent=p.data.name;
@@ -34,11 +42,15 @@
    for(const k of ['width','height','dimension_unit'])fields[k].closest('label').hidden=mode!=='area';
    fields.option.closest('label').hidden=mode!=='grid';
    fields.dimension_unit.value='in';fields.pieces.value='1';
+   if(mode==='matrix'){
+    p.data.pricing.axes.forEach((axis,i)=>{if(i===p.data.pricing.quantity_axis)return;const input=field('axis'+i,axis.label,[]);input.closest('label').hidden=axis.values.length===1;const change=input.onchange;input.oninput=input.onchange=()=>{matrixChoices(i);change();};});
+    matrixChoices();help.textContent=p.data.pricing.basis==='quantity'?'Enter the actual order quantity. The rate changes at each minimum quantity threshold; VAT is added separately.':'Choose the product options and quantity. Prices are before VAT.';
+   }
    if(mode==='grid')for(const o of p.data.pricing.options.filter(o=>Number(o.price)>0))fields.option.append(new Option(o.label+' · '+o.copies+' copies · BSD '+o.price+' per run',o.label));
-   fields.pieces.closest('label').firstChild.textContent=mode==='grid'?'Number of runs':mode==='area'?'Number of pieces':'Quantity ('+p.data.unit+')';
+   fields.pieces.closest('label').firstChild.textContent=mode==='grid'||p.data.pricing.basis==='run'?'Number of runs':mode==='area'?'Number of pieces':'Quantity ('+p.data.unit+')';
    message.textContent='Enter the order details and calculate the price.';focusPending=true;update();root.scrollIntoView?.({block:'nearest'});
   }
-  function body(){const mode=product.data.pricing.mode;return {product_id:product.id,version:product.version,width:mode==='area'?fields.width.value:'',height:mode==='area'?fields.height.value:'',dimension_unit:mode==='area'?fields.dimension_unit.value:'',pieces:fields.pieces.value,option:mode==='grid'?fields.option.value:''};}
+  function body(){const p=product.data.pricing,mode=p.mode;return {product_id:product.id,version:product.version,width:mode==='area'?fields.width.value:'',height:mode==='area'?fields.height.value:'',dimension_unit:mode==='area'?fields.dimension_unit.value:'',pieces:fields.pieces.value,option:mode==='matrix'?JSON.stringify(p.axes.map((a,i)=>i===p.quantity_axis?'':fields['axis'+i].value)):mode==='grid'?fields.option.value:''};}
   async function price(){
    const start=revision,p=product,b=body(),current=(await api('/api/products/'+p.id)).data;
    if(start!==revision||product!==p)return null;

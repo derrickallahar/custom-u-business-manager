@@ -1,6 +1,7 @@
 'use strict';
 const el=id=>document.getElementById(id);
 const fields=['code','name','category','description','unit','unit_price','vat_rate','finish','placement'];
+let matrixPricing=null;
 const supplierLimits={supplier:160,url:2048,sku:100,cost:10,currency:3,colours:800,sizes:800,specifications:4000};
 const emptySupplier=()=>Object.fromEntries(Object.keys(supplierLimits).map(k=>[k,'']));
 let me=null,record=null,supplierRecord=null,page=1,total=0,busy=false,dirty=false,importPreview=null,candidate=null,candidateObjectURL=null,uploadId=null;
@@ -29,7 +30,7 @@ function status(message,kind='info',focus=false){
  if(!el('edit').hidden){el('edit-status').textContent=message;const box=el('save-status');box.hidden=false;box.textContent=message;box.dataset.kind=kind;box.setAttribute('role',kind==='error'?'alert':'status');if(focus){box.focus();box.scrollIntoView?.({block:'nearest'});}}
  else if(focus){el('status').setAttribute('tabindex','-1');el('status').focus();el('status').scrollIntoView?.({block:'nearest'});}
 }
-function clear(){clearStarterProgress();el('starter-setup').hidden=true;fillPricing({});el('csv-import-link').hidden=true;me=null;record=null;supplierRecord=null;dirty=false;el('workspace').hidden=true;el('edit').hidden=true;el('rows').replaceChildren();for(const k of fields)el('p-'+k).value='';for(const k of Object.keys(supplierLimits))el('s-'+k).value='';el('identity').textContent='';el('heading').textContent='';el('page-heading').textContent='Products';document.title='Custom U · Products';el('internal-reference').open=false;el('revision').textContent='';el('edit-status').textContent='';el('save-status').textContent='';el('save-status').hidden=true;el('count').textContent='';el('active').checked=false;el('search').value='';clearImport();el('product-images').hidden=true;el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';el('image-status').textContent='';uploadId=null;}
+function clear(){clearStarterProgress();el('starter-setup').hidden=true;fillPricing({});el('csv-import-link').hidden=true;el('bulk-pricing-link').hidden=true;me=null;record=null;supplierRecord=null;dirty=false;el('workspace').hidden=true;el('edit').hidden=true;el('rows').replaceChildren();for(const k of fields)el('p-'+k).value='';for(const k of Object.keys(supplierLimits))el('s-'+k).value='';el('identity').textContent='';el('heading').textContent='';el('page-heading').textContent='Products';document.title='Custom U · Products';el('internal-reference').open=false;el('revision').textContent='';el('edit-status').textContent='';el('save-status').textContent='';el('save-status').hidden=true;el('count').textContent='';el('active').checked=false;el('search').value='';clearImport();el('product-images').hidden=true;el('image-gallery').replaceChildren();el('image-count').textContent='';el('image-file').value='';el('image-caption').value='';el('image-status').textContent='';uploadId=null;}
 const safeCodes=new Set([...Object.keys(errors),'INVALID_REQUEST','INVALID_PROVIDER_RESPONSE','REQUEST_FAILED','REQUEST_REJECTED','PROVIDER_REQUEST_FAILED','PROVIDER_UNAVAILABLE','RESPONSE_TOO_LARGE','CUSTOMERS_NOT_ENABLED','PLEASE_WAIT_AND_TRY_AGAIN']);
 async function api(path,body){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),path.includes('import-')||path.includes('/images')?45000:20000);
@@ -40,7 +41,7 @@ async function api(path,body){
   return d;
  }finally{clearTimeout(timer);}
 }
-function controls(){el('starter-setup').hidden=detailPage||me?.role!=='admin';pricingControls();el('csv-import-link').hidden=me?.role!=='admin';const editable=can(record?.version?'products.edit':'products.create');el('fields').disabled=busy||!editable;el('save').hidden=!editable;el('save').disabled=busy;el('new').hidden=!can('products.create');el('duplicate').hidden=!record?.version||!can('products.create');el('reload').hidden=!record?.version;el('prev').disabled=busy||page===1;el('next').disabled=busy||page*50>=total;el('backup-link').hidden=me?.role!=='admin';el('quotes-link').hidden=!can('quotes.view');el('supplier-import').hidden=!detailPage||!(can('products.create')||can('products.edit'));el('apply-import').disabled=busy||!importPreview||!editable;el('preview-image').disabled=busy||!el('candidate-list').value;el('save-candidate').disabled=busy||!candidate||!record?.version||!can('products.edit');el('image-upload-controls').hidden=!can('products.edit');el('upload-image').disabled=busy||!record?.version||!el('image-file').files?.length;}
+function controls(){el('starter-setup').hidden=detailPage||me?.role!=='admin';pricingControls();el('csv-import-link').hidden=me?.role!=='admin';el('bulk-pricing-link').hidden=me?.role!=='admin';const editable=can(record?.version?'products.edit':'products.create');el('fields').disabled=busy||!editable;el('save').hidden=!editable;el('save').disabled=busy;el('new').hidden=!can('products.create');el('duplicate').hidden=!record?.version||!can('products.create');el('reload').hidden=!record?.version;el('prev').disabled=busy||page===1;el('next').disabled=busy||page*50>=total;el('backup-link').hidden=me?.role!=='admin';el('quotes-link').hidden=!can('quotes.view');el('supplier-import').hidden=!detailPage||!(can('products.create')||can('products.edit'));el('apply-import').disabled=busy||!importPreview||!editable;el('preview-image').disabled=busy||!el('candidate-list').value;el('save-candidate').disabled=busy||!candidate||!record?.version||!can('products.edit');el('image-upload-controls').hidden=!can('products.edit');el('upload-image').disabled=busy||!record?.version||!el('image-file').files?.length;}
 async function run(fn){if(busy)return;busy=true;document.querySelectorAll('#workspace button,#workspace input,#workspace select,#workspace textarea').forEach(e=>e.disabled=true);try{await fn();}catch(e){if(/PRODUCT_CODE_EXISTS|INVALID_SUPPLIER|SUPPLIER_URL_INVALID/.test(e.message||''))el('internal-reference').open=true;status(e.message||'The action could not complete. Code: PRODUCT_ACTION_FAILED.','error',true);}finally{busy=false;el('save').textContent='Save product';document.querySelectorAll('#workspace button,#workspace input,#workspace select,#workspace textarea').forEach(e=>e.disabled=false);controls();}}
 function leave(){return !dirty||window.confirm('Discard your unsaved product changes?');}
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
@@ -48,7 +49,7 @@ async function list(){
  const r=await api('/api/products?grouped=1&q='+encodeURIComponent(el('search').value)+'&state='+el('state').value+'&page='+page);total=r.total;el('rows').replaceChildren();
  for(const p of r.data){
   const tr=document.createElement('tr'),nameCell=document.createElement('td'),name=document.createElement('a');name.className='product-link';name.href=p.group?'/products/options/'+p.group+'?'+catalogueQuery():productURL(p.id);name.textContent=p.data.name;nameCell.append(name);tr.append(nameCell);
-  for(const v of [p.data.category,p.group?'Choose options':p.data.pricing?.mode==='grid'?'Option prices':p.data.unit_price?p.data.unit_price+' / '+p.data.unit:'Price not set',p.group?'Per option':p.data.vat_rate!==''?p.data.vat_rate+'%':'Not set',p.active?'Active':p.data.pricing?'Inactive / pricing setup':'Archived']){const td=document.createElement('td');td.textContent=v;tr.append(td);}
+  for(const v of [p.data.category,p.group?'Choose options':['grid','matrix'].includes(p.data.pricing?.mode)?'Option prices':p.data.unit_price?p.data.unit_price+' / '+p.data.unit:'Price not set',p.group?'Per option':p.data.vat_rate!==''?p.data.vat_rate+'%':'Not set',p.active?'Active':p.data.pricing?'Inactive / pricing setup':'Archived']){const td=document.createElement('td');td.textContent=v;tr.append(td);}
   const td=document.createElement('td'),link=document.createElement('a');link.className='product-open';link.textContent='Open';link.href=p.group?'/products/options/'+p.group+'?'+catalogueQuery():productURL(p.id);link.setAttribute('aria-label','Open '+p.data.name);td.append(link);tr.append(td);el('rows').append(tr);
  }
  el('count').textContent=r.total+' products · Page '+page;if(!detailPage)history.replaceState(null,'',catalogueURL());controls();
@@ -74,7 +75,7 @@ function validatedProduct(){
   }
   data[k]=v;
  }
- if(pricing){data.pricing=pricing;if(pricing.mode==='grid')data.unit_price='';if(el('active').checked&&(data.vat_rate===''||pricing.minimum===''||(pricing.mode==='grid'?!pricing.options.some(o=>Number(o.price)>0):!(Number(data.unit_price)>0))))throw Error('Keep Active unchecked until VAT, minimum line price (0 for none), and a positive price are entered.');}
+ if(pricing){data.pricing=pricing;if(['grid','matrix'].includes(pricing.mode))data.unit_price='';if(el('active').checked&&(data.vat_rate===''||pricing.minimum===''||(['grid','matrix'].includes(pricing.mode)?!pricing.options.some(o=>Number(o.price)>0):!(Number(data.unit_price)>0))))throw Error('Keep Active unchecked until VAT, minimum line price (0 for none), and a positive price are entered.');}
  return data;
 }
 function savedMatches(saved,payload){
@@ -220,11 +221,11 @@ run(async()=>{const r=await api('/api/session');me=r.me;if(!r.crm_enabled||!can(
 function pricingControls(){
  const mode=el('pricing-mode').value,configured=mode!=='legacy';
  el('pricing-settings').hidden=!configured;
- el('pricing-grid').hidden=mode!=='grid';
- el('p-unit_price').closest('label').hidden=mode==='grid';
+ el('pricing-grid').hidden=!['grid','matrix'].includes(mode);el('pricing-add').hidden=mode==='matrix';
+ el('p-unit_price').closest('label').hidden=['grid','matrix'].includes(mode);
  el('price-label').textContent=mode==='area'?'Rate per square foot (BSD, before VAT)':'Selling price (BSD, before VAT)';
- el('p-unit').disabled=busy||['area','grid'].includes(mode);
- el('pricing-help').textContent=mode==='area'?'Quotes and invoices will ask for width, height, inches or feet, and number of pieces. The saved rate is per square foot.':mode==='grid'?'Each row is an exact option at a whole-run price. Put size, sides and finish in its customer-visible label. Blank or zero prices cannot be selected. No interpolation between quantities.':'Quotes and invoices will ask for a whole-number quantity. Use a custom item for fractional quantities.';
+ el('p-unit').disabled=busy||['area','grid','matrix'].includes(mode);
+ el('pricing-help').textContent=mode==='matrix'?'Edit the selling price for each combination. Quantity thresholds are minimum quantities. Below the first threshold, its rate applies. Blank and zero prices stay unavailable.':mode==='area'?'Quotes and invoices will ask for width, height, inches or feet, and number of pieces. The saved rate is per square foot.':mode==='grid'?'Each row is an exact option at a whole-run price. Put size, sides and finish in its customer-visible label. Blank or zero prices cannot be selected. No interpolation between quantities.':'Quotes and invoices will ask for a whole-number quantity. Use a custom item for fractional quantities.';
 }
 function priceOption(row={label:'',copies:'1',price:''}){
  if(el('pricing-options').children.length>=50)throw Error('Use up to 50 pricing options per product.');
@@ -236,11 +237,23 @@ function priceOption(row={label:'',copies:'1',price:''}){
  }
  const b=document.createElement('button');b.type='button';b.textContent='Remove option';b.onclick=()=>{box.remove();dirty=true;status('Unsaved pricing changes.');};box.append(b);el('pricing-options').append(box);
 }
-function fillPricing(data){el('pricing-mode').querySelector('[value=legacy]').disabled=!!data.pricing;el('pricing-mode').value=data.pricing?.mode||'legacy';el('pricing-minimum').value=data.pricing?.minimum??'';el('pricing-options').replaceChildren();for(const o of data.pricing?.options||[])priceOption(o);pricingControls();}
+function fillPricing(data){
+ matrixPricing=data.pricing?.mode==='matrix'?JSON.parse(JSON.stringify(data.pricing)):null;
+ el('pricing-mode').querySelector('[value=matrix]').disabled=!matrixPricing;
+ el('pricing-mode').querySelector('[value=legacy]').disabled=!!data.pricing;el('pricing-mode').value=data.pricing?.mode||'legacy';el('pricing-minimum').value=data.pricing?.minimum??'';el('pricing-options').replaceChildren();
+ if(matrixPricing){for(const [index,o] of matrixPricing.options.entries()){const label=document.createElement('label');label.textContent=o.values.map((v,i)=>matrixPricing.quantity_axis===i?'Quantity threshold '+v:v).join(' · ');const input=document.createElement('input');input.type='number';input.min='0';input.max='1000000';input.step='0.01';input.value=o.price;input.dataset.matrixIndex=String(index);label.append(input);el('pricing-options').append(label);}}
+ else for(const o of data.pricing?.options||[])priceOption(o);pricingControls();
+}
 function readPricing(){
  const mode=el('pricing-mode').value;if(mode==='legacy')return null;
  const minimum=el('pricing-minimum').value.trim();
  const normal=(v,label)=>{if(v==='')return '';if(!/^\d{1,7}(\.\d{1,2})?$/.test(v)||Number(v)>1000000)throw Error(label+': enter a price with at most two decimals.');return Number(v).toFixed(2);};
+ if(mode==='matrix'){
+  if(!matrixPricing)throw Error('Reload this product to review its pricing.');
+  const p=JSON.parse(JSON.stringify(matrixPricing));p.minimum=normal(minimum,'Minimum line price');
+  for(const input of el('pricing-options').querySelectorAll('[data-matrix-index]')){if(input.validity.badInput)throw Error('Enter a valid option price.');p.options[Number(input.dataset.matrixIndex)].price=normal(input.value.trim(),'Option price');}
+  return p;
+ }
  const p={mode,minimum:normal(minimum,'Minimum line price'),options:[]},seen=new Set();
  if(mode==='grid')for(const box of el('pricing-options').children){
   const o=Object.fromEntries([...box.querySelectorAll('input')].map(i=>[i.dataset.option,i.value.trim()]));
@@ -321,4 +334,4 @@ el('setup-starters').onclick=()=>run(async()=>{
 });
 
 
-function samePricing(a,b){if(!a||!b)return !a&&!b;return a.mode===b.mode&&a.minimum===b.minimum&&a.options.length===b.options.length&&a.options.every((o,i)=>['label','copies','price'].every(k=>o[k]===b.options[i][k]));}
+function samePricing(a,b){if(!a||!b)return !a&&!b;if(a.mode==='matrix'||b.mode==='matrix'){const stable=v=>Array.isArray(v)?v.map(stable):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])])):v;return JSON.stringify(stable(a))===JSON.stringify(stable(b));}return a.mode===b.mode&&a.minimum===b.minimum&&a.options.length===b.options.length&&a.options.every((o,i)=>['label','copies','price'].every(k=>o[k]===b.options[i][k]));}

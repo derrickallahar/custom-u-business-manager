@@ -4,7 +4,7 @@ from flask import request
 PAGES = frozenset(('/', '/customers', '/quotes', '/invoices', '/payments',
     '/credits', '/statements', '/jobs', '/products', '/mockups', '/catalogues',
     '/account', '/hr', '/team', '/staff', '/admin-controls', '/reminders', '/legacy-balances', '/opening-balances',
-    '/quotes/carryover', '/customers/import', '/customers/reviewed-import', '/products/csv-import',
+    '/quotes/carryover', '/customers/import', '/customers/reviewed-import', '/products/csv-import', '/products/bulk-pricing',
     '/artwork', '/email'))
 
 def install(app, root):
