@@ -46,7 +46,7 @@ def check_record(row):
             if pair['out'] is not None:need(stamp(pair['out'])>=stamp(pair['in']))
             else:need(i==len(d['intervals'])-1)
         if d['correction'] is not None:
-            c=d['correction'];need(set(c)=={'in','out','reason','by','at'} and c['reason']);uid(c['by']);stamp(c['at']);need(stamp(c['out'])>stamp(c['in']))
+            c=d['correction'];need(set(c)=={'in','out','reason','by','at'} and c['reason']);uid(c['by']);stamp(c['at']);need(stamp(c['out'])>=stamp(c['in']))
         else:need((d['intervals'][-1]['out'] is None)==(d['state']=='in'))
         shift_totals(d,max(stamp(row['updated_at']),stamp(d['intervals'][-1]['in'])))
         if 'lieu' in d:

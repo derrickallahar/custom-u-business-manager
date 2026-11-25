@@ -1,4 +1,4 @@
-/* Shared navigation only. Existing page scripts continue to own every write. */
+/* Shared navigation and the authenticated attendance panel. */
 (() => {
   'use strict';
   const logo='/workspace-assets/brand/custom-u-logo.png';
@@ -8,7 +8,7 @@
   const can=k=>session?.me?.role==='admin'||session?.me?.permissions?.[k]===true;
   const admin=()=>session?.me?.role==='admin';
   function current(href){const url=new URL(href,location.origin);return (url.pathname===location.pathname||(url.pathname==='/hr'&&location.pathname.startsWith('/hr/'))||location.pathname===url.pathname+'/new'||(url.pathname==='/products'&&location.pathname.startsWith('/products/options/'))||(url.pathname==='/quotes'&&(location.pathname==='/quotes/carryover'||location.pathname.startsWith('/quotes/shopvox/')))||(url.pathname==='/invoices'&&location.pathname.startsWith('/invoices/shopvox/'))||(url.pathname==='/products'&&/^\/products\/(?:new|[a-f0-9-]{36})$/.test(location.pathname)))&&(url.hash?url.hash===location.hash:!location.hash||!['#business-settings','#backup','#history'].includes(location.hash));}
-  function hide(){shell?.remove();mobile?.remove();document.querySelector('.cu-skip')?.remove();shell=mobile=null;document.body.classList.remove('cu-layout','cu-menu-open');}
+  function hide(){window.CustomUClock?.unmount();shell?.remove();mobile?.remove();document.querySelector('.cu-skip')?.remove();shell=mobile=null;document.body.classList.remove('cu-layout','cu-menu-open');}
   function render(){
     const page=area();if(!session||!page||page.hidden){hide();return;}
     hide();document.body.classList.add('cu-layout');
@@ -16,6 +16,7 @@
     const skip=node('a','cu-skip','Skip to content');skip.href='#'+main.id;document.body.prepend(skip);
     shell=node('aside','cu-sidebar');shell.id='cu-sidebar';shell.setAttribute('aria-label','Workspace navigation');
     const brand=node('a','cu-brand');brand.href='/';brand.setAttribute('aria-label','Custom U dashboard');const img=node('img');img.src=logo;img.alt='Custom U';brand.append(img,node('small','', 'Business Manager'));shell.append(brand);
+    if(session.crm_enabled){const clock=node('section','cu-clock');clock.id='cu-clock';clock.setAttribute('aria-label','My time clock');shell.append(clock);}
     const nav=node('nav','cu-nav');nav.setAttribute('aria-label','Main navigation');shell.append(nav);
     const enabled=!!session.crm_enabled;
     const groups=[
@@ -47,6 +48,7 @@
     const account=node('a','','My account');account.href='/account';user.append(account);
     const logout=node('button','','Sign out');logout.type='button';logout.addEventListener('click',()=>{const original=document.getElementById('logout');if(original){if(!original.disabled)original.click();}else location.assign('/');});user.append(logout);shell.append(user);document.body.prepend(shell);
     mobile=node('header','cu-mobilebar');const small=node('img');small.src=logo;small.alt='Custom U';const toggle=node('button','','☰ Menu');toggle.type='button';toggle.id='cu-menu-toggle';toggle.setAttribute('aria-controls','cu-sidebar');toggle.setAttribute('aria-expanded','false');toggle.addEventListener('click',()=>{const open=document.body.classList.toggle('cu-menu-open');toggle.setAttribute('aria-expanded',String(open));});mobile.append(small,toggle);document.body.prepend(mobile);
+    window.CustomUClock?.mount(document.getElementById('cu-clock'));
     const heading=main.querySelector(':scope > header h1');if(heading&&heading.textContent.startsWith('CUSTOM U · '))heading.textContent=heading.textContent.slice(11);
   }
   function closeMenu(){document.body.classList.remove('cu-menu-open');document.getElementById('cu-menu-toggle')?.setAttribute('aria-expanded','false');}

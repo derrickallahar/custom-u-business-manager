@@ -1,0 +1,54 @@
+import {PGlite} from '@electric-sql/pglite';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+const db=new PGlite(),admin=randomUUID(),staff=randomUUID(),manager=randomUUID();
+await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE SCHEMA custom_u_production;
+CREATE TABLE auth.users(id uuid PRIMARY KEY,email text);
+CREATE TABLE custom_u_production.staff_members(user_id uuid PRIMARY KEY,role text,active boolean);
+CREATE TABLE custom_u_production.staff_access_102(user_id uuid PRIMARY KEY,active boolean);
+CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('test.uid',true),'')::uuid $$;
+CREATE FUNCTION custom_u_production.session_access_102() RETURNS jsonb LANGUAGE sql SECURITY DEFINER SET search_path='' AS $$ SELECT jsonb_build_object('user_id',user_id,'role',role) FROM custom_u_production.staff_members WHERE user_id=auth.uid() AND active AND current_setting('test.allowed',true)='yes' $$;
+CREATE FUNCTION custom_u_production.catalogue_text_108(v jsonb,maxlen int,required boolean) RETURNS boolean LANGUAGE sql IMMUTABLE SET search_path='' AS $$ SELECT jsonb_typeof(v)='string' AND length(v#>>'{}')<=maxlen AND (NOT required OR length(btrim(v#>>'{}'))>0); $$;
+GRANT USAGE ON SCHEMA custom_u_production TO authenticated;
+`);
+await db.exec(fs.readFileSync('tests/support/hr_before_128.sql','utf8'));
+const migration=suffix=>fs.readFileSync('supabase/migrations/'+fs.readdirSync('supabase/migrations').find(x=>x.endsWith(suffix)),'utf8');
+await db.exec(migration('_hr_training_127.sql'));
+for(const [id,role] of [[admin,'admin'],[staff,'office'],[manager,'production']]){
+ await db.query('INSERT INTO auth.users VALUES($1,$2)',[id,role+'@example.invalid']);
+ await db.query('INSERT INTO custom_u_production.staff_members VALUES($1,$2,true)',[id,role]);
+ await db.query('INSERT INTO custom_u_production.staff_access_102 VALUES($1,true)',[id]);
+}
+const who=async(id,allowed='yes')=>{await db.exec('RESET ROLE');await db.query("SELECT set_config('test.uid',$1,false),set_config('test.allowed',$2,false)",[id||'',allowed]);await db.exec('SET ROLE authenticated');};
+const now=async t=>{await db.exec('RESET ROLE');await db.exec(`CREATE OR REPLACE FUNCTION custom_u_production.hr_now_115() RETURNS timestamptz LANGUAGE sql VOLATILE SET search_path='' AS $$ SELECT '${t}'::timestamptz $$;SET ROLE authenticated;`);};
+const call=async p=>(await db.query('SELECT public.custom_u_hr_115($1::jsonb) r',[JSON.stringify(p)])).rows[0].r;
+const act=p=>call({request_id:randomUUID(),...p});
+const valid=r=>{assert.ok(r.data,JSON.stringify(r));return r.data;};
+const request=(type,date,extra={})=>act({op:'leave_request',leave_type:type,start_date:date,end_date:date,reason:'Isolated test',...extra});
+const decide=(r,decision='approved')=>act({op:'leave_decide',id:r.id,version:r.version,decision,note:'Test review'});
+await who(admin);valid(await act({op:'manager_save',employee_id:manager,version:0,active:true}));
+await db.exec('RESET ROLE');await db.exec(migration('_leave_notice_128.sql'));await db.exec(migration('_clock_recovery_129.sql'));await db.exec(migration('_clock_recovery_129.sql'));
+await who(null);assert.equal((await call({op:'clock_view'})).error,'ACCESS_DENIED');
+await who(staff,'no');assert.equal((await call({op:'clock_view'})).error,'ACCESS_DENIED');
+await who(admin);await now('2026-11-22T09:34:20-05:00');const original=valid(await act({op:'clock_in'}));
+await who(staff);assert.equal((await call({op:'clock_view'})).shift,null); // No other employee's attendance.
+assert.equal((await call({op:'clock_view',employee_id:admin})).error,'INVALID_HR_DATA');
+await who(admin);await now('2026-11-25T09:00:00-05:00');assert.equal((await act({op:'clock_out'})).error,'MISSED_CLOCK_OUT');
+let view=await call({op:'clock_view'});assert.equal(view.shift.day,'2026-11-22');assert.equal(view.shift.state,'in');assert.deepEqual(Object.keys(view).sort(),['now','shift','user_id']);
+const zero={op:'shift_correct',id:original.id,version:original.version,start:original.data.intervals[0].in,end:original.data.intervals[0].in,reason:'Confirmed test clock-in; zero worked time',request_id:randomUUID()};
+await who(staff);assert.equal((await call(zero)).error,'ACCESS_DENIED');
+await who(admin);const corrected=valid(await call(zero));assert.equal(corrected.data.state,'out');assert.deepEqual(corrected.data.intervals,original.data.intervals);assert.equal(corrected.data.correction.in,corrected.data.correction.out);assert.deepEqual(valid(await call(zero)),corrected);
+assert.equal((await act({op:'lieu_decide',id:corrected.id,version:corrected.version,decision:'approved',note:'Test'})).error,'NO_ELIGIBLE_OVERTIME');
+assert.equal((await call({op:'clock_view'})).shift,null); // An old corrected shift does not block today.
+const today=valid(await act({op:'clock_in'}));assert.notEqual(today.id,original.id);await now('2026-11-25T17:15:45-05:00');const out=valid(await act({op:'clock_out'}));assert.equal(out.data.state,'out');assert.equal((await call({op:'clock_view'})).shift.state,'out');
+assert.equal((await act({op:'shift_correct',id:today.id,version:out.version,start:'2026-11-25T10:00:00-05:00',end:'2026-11-25T09:00:00-05:00',reason:'Invalid negative interval'})).error,'INVALID_HR_DATA');
+const normal=valid(await act({op:'shift_correct',id:today.id,version:out.version,start:'2026-11-25T09:00:00-05:00',end:'2026-11-25T17:00:00-05:00',reason:'Actual end confirmed'}));assert.equal((await call({op:'clock_view'})).shift.corrected,true);
+await who(manager);const own=valid(await act({op:'clock_in'}));assert.equal((await act({...zero,id:own.id,version:1,start:'2026-11-25T17:15:45-05:00',end:'2026-11-25T17:15:45-05:00',request_id:randomUUID()})).error,'SELF_APPROVAL_NOT_ALLOWED');
+await who(staff);const staffShift=valid(await act({op:'clock_in'}));await who(manager);valid(await act({...zero,id:staffShift.id,version:1,start:'2026-11-25T17:15:45-05:00',end:'2026-11-25T17:15:45-05:00',request_id:randomUUID()}));
+await db.exec('RESET ROLE');
+const audit=(await db.query('SELECT * FROM custom_u_production.hr_audit_115 WHERE record_id=$1 ORDER BY id',[original.id])).rows;assert.equal(audit.length,2);assert.deepEqual(audit[1].before_record,original);assert.deepEqual(audit[1].after_record,corrected);
+const backup={hr_people:(await db.query('SELECT a.id,a.email,s.role FROM auth.users a JOIN custom_u_production.staff_members s ON s.user_id=a.id')).rows};
+for(const name of ['records','audit','requests'])backup['hr_'+name]=(await db.query('SELECT to_jsonb(r) row FROM custom_u_production.hr_'+name+'_115 r')).rows.map(x=>x.row);
+fs.writeFileSync('/tmp/clock129_records.json',JSON.stringify(backup));
+await db.close();console.log('Clock SQL PASS: stale shift reproduction, authorised zero-time recovery, retained audit, no lieu, safe replay, regular clock-out, manager restrictions and own-only sidebar view.');

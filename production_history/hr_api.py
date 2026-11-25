@@ -38,6 +38,10 @@ def install(app,provider,session,enabled,root,failure):
         response=jsonify(result)
         if result['admin'] and not result['mobile']:device_access.ensure_cookie(response)
         return response
+    @app.get('/api/hr/clock')
+    def hr_clock():
+        # Own attendance only; the shared sidebar never downloads other HR records.
+        return jsonify(rpc({'op':'clock_view'}))
     @app.get('/api/hr/timesheet.csv')
     def hr_timesheet():
         import csv,io,json
@@ -58,7 +62,7 @@ def install(app,provider,session,enabled,root,failure):
     @app.post('/api/hr/action')
     def hr_action():
         request.max_content_length=64000;p=request.get_json()
-        if not isinstance(p,dict) or p.get('op') in ('device_save','device_check','view','audit'):raise failure('INVALID_REQUEST',400)
+        if not isinstance(p,dict) or p.get('op') in ('device_save','device_check','view','clock_view','audit'):raise failure('INVALID_REQUEST',400)
         # Human correction fields are interpreted in the shop's timezone, not the browser's.
         if p.get('op')=='shift_correct':
             from zoneinfo import ZoneInfo

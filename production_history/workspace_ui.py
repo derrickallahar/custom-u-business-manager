@@ -11,6 +11,7 @@ def install(app, root):
     assets = {
         'workspace.css': ('workspace.css', 'text/css'),
         'workspace-shell.js': ('workspace-shell.js', 'text/javascript'),
+        'workspace-clock.js': ('workspace-clock.js', 'text/javascript'),
         'team-chat.js': ('team-chat.js', 'text/javascript'),
         'team-chat.css': ('team-chat.css', 'text/css'),
         'new-page.js': ('new-page.js','text/javascript'),
@@ -35,8 +36,9 @@ def install(app, root):
     def workspace_layout(response):
         if (request.path in PAGES or request.endpoint in ('training_page','inventory_page','artwork_page', 'product_detail_page','shopvox_quote_page','shopvox_invoice_page','product_group_page','creation_page')) and response.status_code == 200 and response.mimetype == 'text/html':
             html = response.get_data(as_text=True)
-            additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css">'
-                         '<script src="/workspace-assets/workspace-shell.js" defer></script>'
+            additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css?v=129">'
+                         '<script src="/workspace-assets/workspace-shell.js?v=129" defer></script>'
+                         '<script src="/workspace-assets/workspace-clock.js?v=129" defer></script>'
                          '<script src="/workspace-assets/page-navigation.js?v=123" defer></script>'
                          '<script src="/workspace-assets/new-page.js?v=123" defer></script>'
                          '<link rel="stylesheet" href="/workspace-assets/team-chat.css?v=116.1">'

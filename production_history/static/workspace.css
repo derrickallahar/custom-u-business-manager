@@ -22,3 +22,7 @@ body.cu-home main{max-width:1600px}body.cu-home:not(.cu-layout) main{margin:0;ma
 .cu-creation-back{display:inline-block;margin:8px 0 18px;color:#b72030;font-weight:600;text-decoration:none}.cu-new-page [data-creation-list=true]{display:none!important}
 
 .cu-user>a{display:inline-block;color:#fff;margin:0 10px 8px 0;text-decoration:underline;text-underline-offset:3px}
+
+/* Attendance stays above the scrolling menu. */
+.cu-clock{flex:none;margin:10px 7px 0;padding:12px;background:#252932;border:1px solid #414752;border-radius:10px;color:#fff;font-size:11px;line-height:1.35}.cu-clock>small{display:block;font-size:9px;letter-spacing:.08em;color:#bdc5d3}.cu-clock-state{display:block;font-size:17px;margin:4px 0}.cu-clock-state[data-state=in]{color:#8ee0b3}.cu-clock>span{display:block;color:#ccd3df;font-size:10px}.cu-clock>p{margin:6px 0;font-size:10px;color:#d6dbe4}.cu-clock>button{display:block;width:100%;padding:8px 10px;border:1px solid #d83b4c;border-radius:7px;background:#b72030;color:white;font-size:13px;font-weight:650;cursor:pointer}.cu-clock>button:disabled{opacity:.65;cursor:wait}
+@media(max-width:760px){.cu-mobilebar>img{display:none}.cu-layout .cu-mobilebar{min-height:161px;height:auto;align-items:center}.cu-mobilebar .cu-clock{margin:0 12px 0 0;flex:1;max-width:330px}.cu-sidebar{top:161px;height:calc(100dvh - 161px)}}
