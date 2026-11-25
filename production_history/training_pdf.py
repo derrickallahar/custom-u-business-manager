@@ -28,7 +28,7 @@ def guide_pdf(course, answer_key=False):
         'meta':ParagraphStyle('meta',fontName='TrainingRegular',fontSize=9,leading=13,textColor=colors.HexColor('#596174'),spaceAfter=10),
         'option':ParagraphStyle('option',fontName='TrainingRegular',fontSize=10.5,leading=15,textColor=INK,leftIndent=12,spaceAfter=4)
     }
-    def p(text,style='body'):return Paragraph(escape(str(text)).replace('\n','<br/>'),styles[style])
+    def p(text,style='body'):return Paragraph(escape(str(text)).replace('→','<font name="Symbol">&#8594;</font>').replace('\n','<br/>'),styles[style])
     def page(canvas,doc):
         canvas.saveState();draw_logo(canvas,44,756,95)
         canvas.setFillColor(INK);canvas.setFont('TrainingRegular',8);canvas.drawRightString(568,741,'CUSTOM U  /  STAFF TRAINING')
@@ -51,7 +51,12 @@ def guide_pdf(course, answer_key=False):
         story.append(PageBreak())
         for n,lesson in enumerate(course['lessons'],1):
             story.append(p(f'{n:02d}  '+lesson['title'],'h1'))
-            for paragraph in lesson['body'].split('\n\n'):story.append(p(paragraph))
+            paragraphs=lesson['body'].split('\n\n')
+            for i,paragraph in enumerate(paragraphs):
+                if paragraph=='Requesting time off':
+                    story.append(KeepTogether([p(paragraph,'h2')]+[p(value) for value in paragraphs[i+1:]]))
+                    break
+                story.append(p(paragraph))
         story += [PageBreak(),p('Final knowledge test','title'),p(f'Select one answer for each question. Pass mark: {course["pass_percent"]}%. Complete the online test to record completion. Use this printed test for study or a supervised discussion.'),p('Employee name _______________________    Date _______________________','meta')]
         for n,q in enumerate(qs,1):
             block=[p(f'{n}. '+q['prompt'],'h2')]

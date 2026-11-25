@@ -1,0 +1,251 @@
+{
+  "title": "Operating Custom U Business Manager",
+  "edition": "2",
+  "summary": "A practical guide to daily work, customer documents, mockups, production handover and staff responsibilities. Read all ten lessons, then complete the final knowledge test.",
+  "pass_percent": 80,
+  "estimated_minutes": 45,
+  "lessons": [
+    {
+      "title": "Start safely and find your work",
+      "body": "Use your own Business Manager account. Staff need both an approved computer browser and an approved office network, unless an administrator has granted a network exception. Office Wi-Fi alone does not approve a computer. A new browser, private window or cleared cookies can require approval again. Administrators manage access; do not share accounts to get around a restriction.\n\nOpen My account for your account and password options. Sign out on shared computers when you finish. Signing in does not clock you in.\n\nUse the left menu to open Customers, Quotes, Invoices, Production, Products & pricing, Client mockups, Client catalogues, HR & time clock and Team hub. Only areas your account may use are shown. New records and record links open in the same tab; use the page's Back link or main menu to return. Save before leaving a form.\n\nCheck whether a document is TEST or LIVE before saving or finalising it. Practice only with a manager-approved test exercise. Never send a practice document to a customer, record a practice payment against a live invoice, or use a real customer's information in training notes."
+    },
+    {
+      "title": "Customers and product pricing",
+      "body": "Search Customers before creating a record. Open the existing customer when one is already present. Check the customer name, contact person, email, billing details and agreed payment terms. Report duplicates or conflicting details to your manager.\n\nOnly an administrator can approve discounts or apply a discount to a customer profile. Ask for approval instead of lowering a price to imitate a discount. Do not change another customer's details just to make a document fit.\n\nUse Products & pricing to review saved products. Unpriced or inactive items need manager or administrator attention before they can be used normally. Selling prices are in BSD before VAT; the configured standard rate for these products is 10%. Review the actual document's VAT setting and total before saving.\n\nFor products with options, choose the product line and then its run quantity, finish or other available choices. Quantity breaks apply at their minimum threshold: if mugs cost BSD 12.50 at 24 and BSD 12.00 at 50, an order of 25 still uses BSD 12.50 each. Do not assume every product is priced per piece.\n\nFor area-priced products, enter width and height for one piece, select inches or feet, enter the number of pieces and calculate the price. For example, 24 by 36 inches is 6 square feet; two pieces are 12 square feet. The calculator may add the result as one Job. Keep its dimensions and piece count in the description.\n\nPrint-run pricing is for the whole run. A 500-copy brochure run priced at BSD 220 is quantity 1, unit Run, price BSD 220, with 500 copies in the description. The agreed brochure specification is double-sided, 100 lb text. Production sheet size is internal and should not appear in the customer description unless specifically needed."
+    },
+    {
+      "title": "Create and check a quote",
+      "body": "Open Quotes and choose New quote. Select the intended customer and contact, enter a clear job title and select TEST or LIVE deliberately. Add saved products using their relevant options or calculators. For each line check the description, quantity, unit, price, finish, placement, VAT and any approved discount.\n\nReview the complete price, deposit requirement, notes and terms. Save the draft and confirm that the app reports success. Open its preview or PDF and check the customer's name, specifications, totals, official Custom U logo and bank details. A saved draft can still need editing.\n\nFinalising locks the reviewed document; it does not send an email. Only finalise when the saved version is correct and you have the appropriate permission. If a finalised document needs a change, ask the authorised person to use the available correction workflow. Do not invent a new document number or edit a downloaded PDF to hide a discrepancy.\n\nFor an error or timeout, a save is not confirmed. Reopen or refresh the saved record before creating another one. Give the administrator the record number and the visible error message if you cannot establish what saved."
+    },
+    {
+      "title": "Invoices and customer email",
+      "body": "Open Invoices and choose New invoice, or use the available action from a finalised quote. Confirm the source and customer. Check the invoice date, due date, document type, billing details, items, VAT, payment terms and notes. Save the draft, review the PDF, and then finalise only when correct and permitted.\n\nTo send a quote, invoice or catalogue, use its Email / history action. Review the recipient, subject, message and exact PDF attachment. Follow the preview and confirmation steps, then send once. Finalising and sending are separate actions.\n\nRead send history after sending. Accepted by Resend means the provider accepted the request; it does not prove inbox delivery or that the customer read it. A rejected result needs review. An uncertain or unconfirmed result needs an administrator to check the provider and history before another send. Do not repeatedly click Send to resolve uncertainty.\n\nCheck for a history entry for the correct document revision and recipient. If the document changes, prepare and review a fresh PDF before sending it. The bank details should identify Scotiabank, Custom U, Checking, transit 50385 at Bay St. East Branch, account 3337316. Report a mismatch to the administrator."
+    },
+    {
+      "title": "Payments and production handover",
+      "body": "Only record a payment when you have permission and evidence of the payment. Check the customer, invoice number, amount, method, date and reference against the actual receipt or bank confirmation. Check existing payments first so the same receipt is not applied twice. A sent invoice is not a paid invoice.\n\nAfter recording a payment, confirm the saved result and remaining balance. If a payment is duplicated or entered incorrectly, ask the authorised person to use the reversal or correction workflow. Do not enter another payment or a negative amount merely to force the balance to look right.\n\nOpen Production to see job stages such as Planning / approvals, In production, Ready for collection / installation, Completed and On hold. Open the saved job and review its source, specifications, due date, artwork and handover information.\n\nUse the available stage-change controls only when the work has actually reached that stage. Enter a useful reason or handover note and confirm the change. Observe the job's approval and artwork requirements; a mockup by itself is not permission to produce. Keep a blocked job On hold and explain what is needed rather than marking it complete to remove it from the board."
+    },
+    {
+      "title": "Build an accurate client mockup",
+      "body": "Open Client mockups and choose New mockup. Select the correct customer and product. Choose an existing product photo or select a new photo file, then select the customer's logo or artwork. Use clear images of the actual surface being branded.\n\nChoose the branding finish and position. Use the manual controls to move, resize and rotate the artwork. Update preview shows the result. Selecting a new product photo and pressing Update preview also uploads that selected photo when the required fields are complete. If the preview cannot proceed, read the nearby message, supply the missing information and try again.\n\nTo size a print in inches, enter the measured reference dimensions and mark the corresponding area on the photo. Set the print width and check the resulting size and fit. The measurement is only as accurate as the reference area and photograph: a perspective view, curved surface or incorrect measurement can mislead. Verify final production dimensions against the actual item or production artwork.\n\nReview the logo, finish, placement, size and customer before saving. Saved mockups are retained copies; create and save a new version for later changes. Use the presentation PDF for the customer and the production information for the team. A preview is not saved until the save action succeeds."
+    },
+    {
+      "title": "Combine branding options and create a catalogue",
+      "body": "For alternative finishes such as UV printing and engraving, use the branding-options controls in the mockup editor. Select the finishes you want the customer to compare. For a shirt, add the required placements, such as left chest and back, centre chest and back, or sleeves.\n\nConfigure each placement with its correct product photo, artwork, position and size. Update preview and choose Use this preview for that placement. Use a back photo for the back and an appropriate sleeve view for a sleeve. A front photo does not become a back photo automatically.\n\nGenerate the selected options and inspect every generated result. Save options & create catalogue retains the mockups and opens the catalogue draft. Each finish becomes a catalogue option with its selected views together. Check all views belong to the intended product and customer.\n\nEnter and review the selling price for the complete branding combination. A left-chest-and-back option has one price for the combination; do not assume a single-placement price covers both. Review the VAT, description, finish and placement for each option, preview the catalogue PDF, then save it. Send through Email / history only after the customer details, options and attachment are correct."
+    },
+    {
+      "title": "Time clock and time off",
+      "body": "Open HR & time clock, then Time clock. Click Clock in when you start work and Clock out when you stop. Signing in to Business Manager is separate. Check that each clock action is confirmed. Tell a manager about a missed or wrong event; do not create false clock entries to compensate.\n\nThe standard weekday shift is 9:00 a.m. to 5:00 p.m. Counted work before 9:00 a.m. needs an approved early start. Clocking in at 8:30 a.m. without approval does not create extra eligible time. If an approved shift starts at 8:30 a.m., eight counted hours finish at 4:30 p.m. A 9:30 a.m. start reaches eight counted hours at 5:30 p.m., if there is no clocked-out interval. No lunch deduction is automatic; time clocked out is excluded.\n\nRequesting time off\n\nSubmit planned time-off requests in Business Manager under HR → Time Off. Personal time off must be requested at least 24 hours before it starts. Vacation must be requested at least 14 calendar days before the first day of vacation. Planned requests that don’t meet these deadlines won’t be approved. Submitting a request does not mean it has been approved.\n\nIf you’re sick or have an emergency, notify your manager as soon as you can. These deadlines do not override leave entitlements under the law."
+    },
+    {
+      "title": "Team information and employee privacy",
+      "body": "Use the small chat window or Team hub to message the intended colleague. Check the recipient before sending. Use clear job numbers and useful handover details. Keep sensitive employee identifiers and documents out of team chat and public bulletins.\n\nRead published bulletin-board notices and acknowledge those that require acknowledgement. In HR, read each published policy edition before acknowledging it. Acknowledgement records the edition and date; a new edition can need a new acknowledgement.\n\nIn KPIs, review the measure, period, target and whether it is an at-least or at-most target. Update your actual result and supporting notes honestly. The manager sets the target; saving a number does not automatically verify the work.\n\nAt first sign-in, employees can submit their own requested identification details. HR managers and administrators manage the private employee records and documents, including NIB, licence, passport, emergency contact and employment information. If those details need correction, contact HR privately. Never copy them into customer documents, training answers or team messages."
+    },
+    {
+      "title": "Complete training and ask for help",
+      "body": "Open HR & time clock and select Training. Open the assigned course, read each lesson and mark it read. Progress is saved to your account so you can return later. Download the guide if you want a reading copy. A PDF download alone does not record course completion.\n\nAfter reading all lessons, complete every question in the final test and confirm that you completed the training yourself. The course displays its pass mark. This first course uses 80 percent: at least 16 of 20 answers must be correct. A pass records completion against this course edition, with the score and time. A failed attempt stays in the history; review the lessons and retake the test. Later attempts do not erase an earlier pass.\n\nHR managers and administrators can review progress and results, assign a course with an optional due date, and create future training. Save a draft, review its lessons, questions and correct answers, then publish. Published content is locked so earlier completion records keep their meaning. Use a new edition for revised material and assign that edition when retraining is needed.\n\nA knowledge test records understanding of the guide; it is not proof that every practical task has been mastered. Ask your supervisor to observe a test-mode quote, a mockup and catalogue preview, and an explanation of sending and clock-in rules. Do not send a customer email or change a live payment as a practice exercise.\n\nIf something fails, record the page, record number if any, steps and visible error. Do not share passwords or employee identification numbers in the report. Check saved state before retrying a financial or sending action, and ask the administrator for help when the outcome is uncertain."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "A staff member is on office Wi-Fi but sees “approved computer required”. What should happen?",
+      "options": [
+        "Use another employee’s account",
+        "Ask an administrator to approve that computer browser",
+        "Use a private window to bypass it"
+      ],
+      "correct_index": 1,
+      "explanation": "Office network approval and computer-browser approval are separate."
+    },
+    {
+      "prompt": "What happens when you sign in to Business Manager?",
+      "options": [
+        "You are automatically clocked in",
+        "Eight hours are credited immediately",
+        "You can use your authorised areas, but must clock in separately"
+      ],
+      "correct_index": 2,
+      "explanation": "Use the Time clock action to record work."
+    },
+    {
+      "prompt": "Who can approve a discount or apply one to a customer profile?",
+      "options": [
+        "An administrator",
+        "Any person preparing a quote",
+        "Any employee on office Wi-Fi"
+      ],
+      "correct_index": 0,
+      "explanation": "Discount approval and customer-profile discounts are administrator actions."
+    },
+    {
+      "prompt": "Mugs are BSD 12.50 each at 24 and BSD 12.00 at 50. Which rate applies to 25?",
+      "options": [
+        "BSD 12.00",
+        "BSD 12.50",
+        "An average of the two rates"
+      ],
+      "correct_index": 1,
+      "explanation": "The lower rate starts when the quantity reaches 50."
+    },
+    {
+      "prompt": "A 500-copy brochure run costs BSD 220 before VAT. Which line is correct?",
+      "options": [
+        "Quantity 500, price BSD 220 each",
+        "Quantity 1 Run, price BSD 220, description says 500 copies",
+        "Quantity 1, price BSD 0.44 for the whole job"
+      ],
+      "correct_index": 1,
+      "explanation": "Run pricing represents the whole print run."
+    },
+    {
+      "prompt": "Two pieces each measure 24 by 36 inches. What is their combined area?",
+      "options": [
+        "6 square feet",
+        "1,728 square feet",
+        "12 square feet"
+      ],
+      "correct_index": 2,
+      "explanation": "One piece is 864 square inches, or 6 square feet. Two pieces are 12 square feet."
+    },
+    {
+      "prompt": "Before finalising a live quote, what should you do?",
+      "options": [
+        "Review the saved details and PDF, including totals and customer",
+        "Assume the first calculation is correct",
+        "Remove the VAT so the total is lower"
+      ],
+      "correct_index": 0,
+      "explanation": "Check the saved version before locking it."
+    },
+    {
+      "prompt": "Does finalising an invoice automatically email it?",
+      "options": [
+        "Yes, always",
+        "No; sending uses the separate Email / history workflow",
+        "Only when a payment is due"
+      ],
+      "correct_index": 1,
+      "explanation": "Finalising and sending are separate actions."
+    },
+    {
+      "prompt": "Email history says “Accepted by Resend”. What does that prove?",
+      "options": [
+        "The customer read it",
+        "The invoice is paid",
+        "The email provider accepted the sending request"
+      ],
+      "correct_index": 2,
+      "explanation": "Provider acceptance is not proof of inbox delivery or reading."
+    },
+    {
+      "prompt": "An email result is uncertain. What is the safest next action?",
+      "options": [
+        "Keep clicking Send",
+        "Check history and ask an administrator to verify the provider before resending",
+        "Create three replacement invoices"
+      ],
+      "correct_index": 1,
+      "explanation": "Avoid duplicate customer emails while the outcome is uncertain."
+    },
+    {
+      "prompt": "You discover a payment was entered twice. What should you do?",
+      "options": [
+        "Ask the authorised person to review and reverse or correct the duplicate",
+        "Enter another payment",
+        "Change the invoice total to hide the balance"
+      ],
+      "correct_index": 0,
+      "explanation": "Review the original evidence and use the authorised correction workflow."
+    },
+    {
+      "prompt": "When should a job be marked Completed?",
+      "options": [
+        "As soon as a mockup exists",
+        "When someone asks about its status",
+        "When the work has actually reached that stage and required checks are satisfied"
+      ],
+      "correct_index": 2,
+      "explanation": "Stages must describe real work and approval state."
+    },
+    {
+      "prompt": "What makes an inch measurement on a mockup dependable?",
+      "options": [
+        "Typing any reference size",
+        "Using a measured reference area and verifying the final production dimensions",
+        "Enlarging the photo until it looks right"
+      ],
+      "correct_index": 1,
+      "explanation": "Calibration depends on the measured area and the accuracy of the photograph."
+    },
+    {
+      "prompt": "How should you prepare a left-chest-and-back mockup option?",
+      "options": [
+        "Reuse a front view and label it Back",
+        "Capture only the cheapest placement",
+        "Configure and review each placement using the correct surface photo"
+      ],
+      "correct_index": 2,
+      "explanation": "Each surface needs the correct photo, artwork, position and size."
+    },
+    {
+      "prompt": "A catalogue option has left-chest and back views. What price should you review?",
+      "options": [
+        "One selling price covering the complete combination",
+        "Only the left-chest price",
+        "A separate invoice total for each picture"
+      ],
+      "correct_index": 0,
+      "explanation": "The combined option has one price for the agreed branding combination."
+    },
+    {
+      "prompt": "An employee clocks in at 8:30 a.m. on a weekday without an approved early start. When does counted work normally begin?",
+      "options": [
+        "8:30 a.m.",
+        "9:00 a.m.",
+        "Whenever the employee signs out"
+      ],
+      "correct_index": 1,
+      "explanation": "Unapproved time before the scheduled 9:00 a.m. start does not count."
+    },
+    {
+      "prompt": "What should you do if you are sick or have an emergency?",
+      "options": [
+        "Wait until you can give 14 days of notice",
+        "Notify your manager as soon as you can; planned-leave deadlines do not override legal leave entitlements",
+        "Treat your request as automatically approved"
+      ],
+      "correct_index": 1,
+      "explanation": "Notify your manager as soon as possible. Sickness and emergencies need manager review, and these planned-leave deadlines do not override legal entitlements."
+    },
+    {
+      "prompt": "How much notice is required for planned personal time off and vacation?",
+      "options": [
+        "Personal: at least 24 hours before it starts. Vacation: at least 14 calendar days before the first day. Submission still requires approval.",
+        "Personal: the same day. Vacation: two working days.",
+        "No notice is needed if you submit the request online."
+      ],
+      "correct_index": 0,
+      "explanation": "Planned personal time off requires 24 hours of notice and vacation requires 14 calendar days. Requests missing these deadlines cannot be approved; submitting is not approval."
+    },
+    {
+      "prompt": "Where should private NIB, passport or employee-document corrections be handled?",
+      "options": [
+        "In a customer quote",
+        "Privately with HR or an administrator",
+        "On the general bulletin board"
+      ],
+      "correct_index": 1,
+      "explanation": "Keep sensitive employee details within the authorised HR workflow."
+    },
+    {
+      "prompt": "What records completion of this training course?",
+      "options": [
+        "Opening the PDF",
+        "Marking only the first lesson read",
+        "Reading all lessons, confirming your own participation and passing the final test"
+      ],
+      "correct_index": 2,
+      "explanation": "Completion is linked to the signed-in account and the published course edition."
+    }
+  ]
+}

@@ -23,3 +23,5 @@ PYTHONPATH=production_history python -m unittest discover -s tests -p 'test_trai
 ```
 
 The SQL test replays the migration in isolated PGlite, exercises real permission and scoring boundaries, and writes a temporary backup fixture for the Python validation test. The UI test loads the real training page and script in JSDOM with simulated network outcomes. Python verifies served routes, authentication, origin checks, answer-key privacy, PDF branding, CSV escaping and backup integrity. These tests create no live staff training results.
+
+Leave notice checks: `npm run test:leave --prefix tests`. The SQL suite uses an isolated copy of the prior production HR functions, tests exact deadlines and DST, request retries, approval permissions, sick/emergency handling, course-edition preservation and weekend lieu. Afterward run `PYTHONPATH=production_history python3 -m unittest discover -s tests -p test_leave_notice_128.py` for backup and printable-guide validation.

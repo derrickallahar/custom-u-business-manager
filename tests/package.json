@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "test": "cd .. && node tests/test_branding_options_125.mjs && node tests/test_branding_sql_125.mjs && node tests/test_mockup_preview_126.mjs",
-    "test:training": "cd .. && node tests/test_training_sql_127.mjs && node tests/test_training_ui_127.mjs"
+    "test:training": "cd .. && node tests/test_training_sql_127.mjs && node tests/test_training_ui_127.mjs",
+    "test:leave": "cd .. && node tests/test_leave_notice_128.mjs && node tests/test_leave_notice_ui_128.mjs"
   },
   "devDependencies": {
     "jsdom": "30.1.3",

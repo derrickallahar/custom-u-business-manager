@@ -58,6 +58,8 @@ def check_record(row):
             if credit['status']=='declined':need(credit['minutes']==0)
     elif row['kind'] in ('early','leave'):
         need(d.get('status') in ('pending','approved','declined','cancelled'))
+        if row['kind']=='leave' and 'start_time' in d:
+            need(d.get('leave_type')=='Personal' and isinstance(d['start_time'],str) and re.fullmatch(r'([01][0-9]|2[0-3]):[0-5][0-9]',d['start_time']))
         if row['kind']=='leave' and d.get('leave_type')=='Time in lieu':
             from datetime import date,timedelta
             start=date.fromisoformat(d['start_date']);end=date.fromisoformat(d['end_date']);need(0<=(end-start).days<=366)

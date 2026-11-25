@@ -2,7 +2,7 @@
 
 The live entry point is **HR & time clock → Training → Open Training** (`/hr/training`).
 
-The initial course, **Operating Custom U Business Manager**, contains ten lessons and a twenty-question test. Its pass mark is 80 percent (sixteen correct). The printable guide is generated from the same saved course as the online lessons. The official Custom U logo appears on every page. The manager answer key is a separate protected download.
+The current course, **Operating Custom U Business Manager** (edition 2), contains ten lessons and a twenty-question test. Its pass mark is 80 percent (sixteen correct). The printable guide is generated from the same saved course as the online lessons. The official Custom U logo appears on every page. The manager answer key is a separate protected download.
 
 ## For employees
 
@@ -25,3 +25,11 @@ The encrypted **HR backup** includes courses, assignments, progress, attempts, m
 This version supports text lessons and multiple-choice tests. It records knowledge-test completion and does not certify practical competence, attendance or identity beyond the signed-in staff account. Practical demonstrations remain a supervisor activity. It does not add video hosting, attachment uploads, recurring assignment automation or outbound reminders.
 
 Apply `supabase/migrations/*_hr_training_127.sql` before deploying the application files. The migration adds private tables and a gated RPC, seeds the initial course once and leaves existing HR and commercial records intact. The application uses the existing sign-in, approved-computer and office-network checks. No new runtime setting or API subscription is needed.
+
+## Planned time-off notice (edition 2)
+
+The Time off screen and current guide use the approved policy wording: planned personal leave needs at least 24 hours before its start, and vacation needs at least 14 calendar days before its first day. Sick and emergency requests remain available for manager review. Statutory entitlements can be raised with HR using the appropriate leave type and note. Submission is never approval.
+
+Personal requests capture a start time in Nassau time (09:00 by default for a full standard day). The server checks elapsed seconds for personal leave and Nassau calendar dates for vacation, always against the original server-recorded submission timestamp. Late requests can be recorded and declined or cancelled, but neither managers nor administrators can approve them. Existing approved leave is retained. Clock calculations and time-in-lieu balances are unchanged.
+
+Migration 128 publishes edition 2, carries existing assignments forward and archives edition 1 without changing its content or past results. New-edition progress starts separately. The current printable guide is generated from `production_history/training_starter_128.json`.
