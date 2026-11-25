@@ -320,6 +320,8 @@ def create_app(provider=None,origin=None,digest=None,crm_enabled=None,*,enforce_
     install_reminders(app,provider,session,crm_enabled,ROOT,Failure)
     from hr_api import install as install_hr
     install_hr(app,provider,session,crm_enabled,ROOT,Failure)
+    from training_api import install as install_training
+    install_training(app,provider,session,crm_enabled,ROOT,Failure)
     from team_api import install as install_team
     install_team(app,provider,session,crm_enabled,ROOT,Failure)
     from workspace_ui import install as install_workspace_ui

@@ -70,6 +70,8 @@ def check_record(row):
     elif row['kind']=='kpi':need(Decimal(d['target'])>=0 and Decimal(d['actual'])>=0 and d['direction'] in ('at_least','at_most'))
     if row['kind']=='device':need(re.fullmatch('[a-f0-9]{64}',d.get('digest','')) and d.get('name'))
 def validate_hr(obj):
+    from training_rules import validate_training
+    validate_training(obj)
     from team_rules import validate_team
     validate_team(obj)
     people=obj['hr_people'];need(isinstance(people,list) and len(people)<=1000);people_ids=set()

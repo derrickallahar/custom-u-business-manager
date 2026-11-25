@@ -99,6 +99,9 @@ def install(app,provider,session,enabled,root,failure):
             raw=provider.call('/rest/v1/rpc/custom_u_hr_snapshot_115',rec['token'],{},limit=MAX_BYTES)
             obj=parse(raw)
             if 'error' in obj:raise failure('ACCESS_DENIED',403)
+            training=parse(provider.call('/rest/v1/rpc/custom_u_training_127',rec['token'],{'payload':{'op':'backup'}},limit=MAX_BYTES))
+            if not isinstance(training,dict) or 'error' in training:raise failure('HR_BACKUP_VALIDATION_FAILED',409)
+            obj['training_127']=training
             try:validate_hr(obj)
             except (ValueError,KeyError,TypeError):raise failure('HR_BACKUP_VALIDATION_FAILED',409) from None
             if provider.access(rec['token']).get('role')!='admin':raise failure('ACCESS_DENIED',403)
