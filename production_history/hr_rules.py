@@ -10,7 +10,7 @@ def need(value):
 def stamp(value):
     need(isinstance(value,str));d=datetime.fromisoformat(value.replace('Z','+00:00'));need(d.tzinfo is not None);return d
 def uid(value):need(isinstance(value,str) and re.fullmatch(r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}',value))
-def shift_totals(data,as_of):
+def legacy_shift_totals(data,as_of):
     now=stamp(as_of) if isinstance(as_of,str) else as_of
     scheduled=stamp(data['scheduled_start']);pairs=[data['correction']] if data.get('correction') else data['intervals']
     seconds=Decimal(0);weekend_seconds=Decimal(0);previous=None;needs_review=False
@@ -32,13 +32,25 @@ def shift_totals(data,as_of):
     minutes=int(seconds//60)
     overtime=int((weekend_seconds+max(Decimal(0),seconds-weekend_seconds-480*60))//60)
     return {'credited_seconds':float(seconds),'worked_minutes':minutes,'regular_minutes':minutes-overtime,'overtime_minutes':overtime,'needs_review':needs_review,'provisional':data['state']=='in'}
+def shift_totals(data,as_of):
+    from attendance_rules import attendance
+    return attendance(data,as_of)
 def check_record(row):
     need(set(row)=={'id','kind','employee_id','data','version','created_at','updated_at'})
     uid(row['id']);need(row['kind'] in KINDS and type(row['version']) is int and row['version']>0)
     need(stamp(row['updated_at'])>=stamp(row['created_at']));d=row['data'];need(isinstance(d,dict))
     if row['employee_id'] is not None:uid(row['employee_id'])
     if row['kind']=='shift':
-        need(set(d)-{'lieu','time_policy'}=={'day','scheduled_start','regular_minutes','intervals','state','correction'} and d['regular_minutes']==480 and d['state'] in ('in','out'))
+        need(set(d)-{'lieu','time_policy','early_report','work_policy'}=={'day','scheduled_start','regular_minutes','intervals','state','correction'} and d['regular_minutes']==480 and d['state'] in ('in','out'))
+        if 'work_policy' in d:need(d['work_policy']=='early_review_130')
+        if 'early_report' in d:
+            report=d['early_report'];need(set(report)=={'kind','intervals','note','by','at','review'} and report['kind'] in ('work','arrival') and report['note']);uid(report['by']);stamp(report['at'])
+            need(isinstance(report['intervals'],list) and len(report['intervals'])<=20 and (bool(report['intervals'])==(report['kind']=='work')))
+            cutoff=datetime.combine(datetime.fromisoformat(d['day']).date(),time(9),ZoneInfo('America/Nassau'));previous=None
+            for pair in report['intervals']:
+                need(set(pair)=={'in','out'});start=stamp(pair['in']);end=stamp(pair['out']);need(start<end<=cutoff and start.astimezone(ZoneInfo('America/Nassau')).date()==cutoff.date() and end<=stamp(report['at']) and (previous is None or start>=previous));previous=end
+            if report['review'] is not None:
+                review=report['review'];need(set(review)=={'decision','by','at','note'} and review['decision'] in ('confirmed','clarification') and review['note']);uid(review['by']);need(stamp(review['at'])>=stamp(report['at']))
         if 'time_policy' in d:need(d['time_policy']=='weekends_1153')
         need(isinstance(d['intervals'],list) and 1<=len(d['intervals'])<=100)
         for i,pair in enumerate(d['intervals']):
@@ -54,7 +66,7 @@ def check_record(row):
             need(credit['status'] in ('approved','declined','review_required') and type(credit['minutes']) is int and credit['minutes']>=0)
             uid(credit['decided_by']);stamp(credit['decided_at']);need(isinstance(credit['note'],str) and 1<=len(credit['note'])<=1000)
             if credit['status']=='approved':
-                totals=shift_totals(d,row['updated_at']);need(d['state']=='out' and not totals['needs_review'] and credit['minutes']==totals['overtime_minutes'] and credit['minutes']>0)
+                totals=(shift_totals if d.get('work_policy')=='early_review_130' else legacy_shift_totals)(d,row['updated_at']);need(d['state']=='out' and not totals['needs_review'] and credit['minutes']==totals['overtime_minutes'] and credit['minutes']>0)
             if credit['status']=='declined':need(credit['minutes']==0)
     elif row['kind'] in ('early','leave'):
         need(d.get('status') in ('pending','approved','declined','cancelled'))

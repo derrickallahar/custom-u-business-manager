@@ -17,7 +17,7 @@ async function fixture(role='admin'){
 }
 {
  const a=await fixture();a.$('tab-leave').click();assert.equal(a.$('panel-leave').hidden,false);
- const text=a.$('leave-notice-policy').textContent;assert.match(text,/24 hours before it starts/);assert.match(text,/14 calendar days/);assert.match(text,/Submitting a request does not mean it has been approved/);assert.match(text,/do not override leave entitlements under the law/);assert.doesNotMatch(a.$('panel-leave').textContent,/overtime/i);
+ const text=a.$('leave-notice-policy').textContent;assert.match(text,/24 hours before it starts/);assert.match(text,/14 calendar days/);assert.match(text,/Submitting a request does not mean it has been approved/);assert.match(text,/do not override leave entitlements under the law/);assert.doesNotMatch(text,/overtime/i);
  const cards=[...a.$('leave-list').querySelectorAll('article')];for(const card of cards.slice(0,2)){assert.equal([...card.querySelectorAll('button')].find(b=>b.textContent==='Approve').disabled,true);assert.equal([...card.querySelectorAll('button')].find(b=>b.textContent==='Decline').disabled,false);assert.match(card.textContent,/cannot be approved/);}
  for(const card of cards.slice(2))assert.equal([...card.querySelectorAll('button')].find(b=>b.textContent==='Approve').disabled,false);
  a.type('Personal');assert.equal(a.$('personal-start-label').hidden,false);const f=a.$('leave-form');assert.equal(f.elements.start_time.required,true);f.elements.start_date.value='2026-12-01';f.elements.end_date.value='2026-12-01';f.elements.start_time.value='14:30';a.submit();await until(()=>a.writes.length===1&&!a.$('range').querySelector('button').disabled);assert.equal(a.writes[0].start_time,'14:30');

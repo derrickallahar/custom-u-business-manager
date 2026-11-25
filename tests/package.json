@@ -5,7 +5,8 @@
     "test": "cd .. && node tests/test_branding_options_125.mjs && node tests/test_branding_sql_125.mjs && node tests/test_mockup_preview_126.mjs",
     "test:training": "cd .. && node tests/test_training_sql_127.mjs && node tests/test_training_ui_127.mjs",
     "test:leave": "cd .. && node tests/test_leave_notice_128.mjs && node tests/test_leave_notice_ui_128.mjs",
-    "test:clock": "cd .. && node tests/test_clock_129.mjs && node tests/test_clock_ui_129.mjs"
+    "test:clock": "cd .. && node tests/test_clock_129.mjs && node tests/test_clock_ui_129.mjs",
+    "test:attendance": "cd .. && node tests/test_early_work_130.mjs && node tests/test_early_work_ui_130.mjs"
   },
   "devDependencies": {
     "jsdom": "30.1.3",

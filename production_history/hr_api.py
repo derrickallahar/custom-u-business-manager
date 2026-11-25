@@ -47,7 +47,7 @@ def install(app,provider,session,enabled,root,failure):
         import csv,io,json
         result=rpc({'op':'view','from':request.args.get('from',''),'to':request.args.get('to','')})
         names={p['id']:p['email'] for p in result['people']};out=io.StringIO(newline='');writer=csv.writer(out)
-        writer.writerow(['Employee','Date','Regular minutes','Overtime minutes','Counted minutes','State','Needs review','Actual clock events','Correction','Lieu approval','Lieu credited minutes'])
+        writer.writerow(['Employee','Date','Counted work minutes','Included early work minutes','Reported early work minutes','Unresolved early minutes (not yet classified as work)','Minutes above 8 hours (review indicator, not pay)','State','Manager review status','Payroll handoff status','Outside selected period','Original punches','Separate correction','Early time report and review'])
         def safe(value):
             value=str(value)
             return "'"+value if value.lstrip().startswith(('=','+','-','@')) else value
@@ -55,8 +55,22 @@ def install(app,provider,session,enabled,root,failure):
             if row['kind']!='shift':continue
             if request.args.get('employee') and row['employee_id']!=request.args['employee']:continue
             d=row['data'];totals=shift_totals(d,result['now'])
-            writer.writerow([safe(names.get(row['employee_id'],row['employee_id'])),d['day'],totals['regular_minutes'],totals['overtime_minutes'],totals['worked_minutes'],d['state'],totals['needs_review'],safe(json.dumps(d['intervals'])),safe(json.dumps(d['correction'])),d.get('lieu',{}).get('status','Not reviewed'),d.get('lieu',{}).get('minutes',0) if d.get('lieu',{}).get('status')=='approved' else 0])
+            outside=not(request.args.get('from','')<=d['day']<=request.args.get('to',''))
+            writer.writerow([safe(names.get(row['employee_id'],row['employee_id'])),d['day'],totals['worked_minutes'],totals['included_early_minutes'],totals['reported_early_minutes'],totals['unresolved_early_minutes'],totals['above_eight_hours_minutes'],d['state'],totals['early_review_status'],totals['payroll_review'],outside,safe(json.dumps(d['intervals'])),safe(json.dumps(d['correction'])),safe(json.dumps(d.get('early_report')))])
         response=make_response(out.getvalue().encode('utf-8-sig'));response.headers['Content-Type']='text/csv; charset=utf-8';response.headers['Content-Disposition']='attachment; filename="CustomU_Time_Records.csv"';return response
+    @app.get('/api/hr/time-off-credits.csv')
+    def hr_time_off_credits():
+        import csv,io,json
+        result=rpc({'op':'view','from':request.args.get('from',''),'to':request.args.get('to','')})
+        names={p['id']:p['email'] for p in result['people']};out=io.StringIO(newline='');writer=csv.writer(out)
+        writer.writerow(['Employee','Date','Time-off credit status','Time-off credit minutes','Review note','Purpose'])
+        def safe(v):
+            v=str(v);return "'"+v if v.lstrip().startswith(('=','+','-','@')) else v
+        for r in result['records']:
+            if r['kind']!='shift' or not r['data'].get('lieu'):continue
+            if request.args.get('employee') and r['employee_id']!=request.args['employee']:continue
+            c=r['data']['lieu'];writer.writerow([safe(names.get(r['employee_id'],r['employee_id'])),r['data']['day'],c['status'],c['minutes'] if c['status']=='approved' else 0,safe(c['note']),'Time-off bank only; does not reduce worked time or replace legally required overtime pay'])
+        response=make_response(out.getvalue().encode('utf-8-sig'));response.headers['Content-Type']='text/csv; charset=utf-8';response.headers['Content-Disposition']='attachment; filename="CustomU_Time_Off_Credits.csv"';return response
     @app.get('/api/hr/audit/<ident>')
     def hr_audit(ident):return jsonify(rpc({'op':'audit','id':ident}))
     @app.post('/api/hr/action')
@@ -73,6 +87,17 @@ def install(app,provider,session,enabled,root,failure):
                     dt=datetime.strptime(raw,'%Y-%m-%dT%H:%M')
                     p[field]=dt.replace(tzinfo=ZoneInfo('America/Nassau')).isoformat()
                 except (ValueError,KeyError,TypeError):raise failure('INVALID_HR_DATA',400) from None
+        if p.get('op')=='early_work_report':
+            from zoneinfo import ZoneInfo
+            try:
+                spans=p['intervals']
+                if not isinstance(spans,list) or len(spans)>20:raise ValueError()
+                for pair in spans:
+                    if not isinstance(pair,dict) or set(pair)!={'in','out'}:raise ValueError()
+                    for field in ('in','out'):
+                        if not isinstance(pair[field],str) or len(pair[field])!=16:raise ValueError()
+                        pair[field]=datetime.strptime(pair[field],'%Y-%m-%dT%H:%M').replace(tzinfo=ZoneInfo('America/Nassau')).isoformat()
+            except (ValueError,KeyError,TypeError):raise failure('INVALID_HR_DATA',400) from None
         return jsonify(rpc(p))
     @app.post('/api/hr/device')
     def hr_device():

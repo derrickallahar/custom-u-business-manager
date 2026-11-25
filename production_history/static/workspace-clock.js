@@ -18,6 +18,7 @@
     feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');host.append(feedback);
     const action=node('button',busy?'Saving…':pending?'Retry '+(pending.op==='clock_in'?'clock-in':'clock-out'):!data||error?'Refresh status':missed()||data.shift?.corrected?'Open time records':data.shift?.state==='in'?'Clock out':'Clock in');action.type='button';action.disabled=busy||reading;
     action.addEventListener('click',()=>{if(pending)retry();else if(!data||error)refresh(true);else if(missed()||data.shift?.corrected)location.assign('/hr');else act(data.shift?.state==='in'?'clock_out':'clock_in');});host.append(action);
+    if(['unreported','pending','clarification'].includes(data?.shift?.early_review_status)){const review=node('a','Early time needs review — open HR');review.href='/hr';host.append(review);}
     host.setAttribute('aria-busy',String(busy));
   }
   async function request(url,payload){
