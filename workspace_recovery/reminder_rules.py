@@ -64,6 +64,8 @@ def validate_reminders(obj):
     need(isinstance(configs,list) and len(configs)==2 and {c['mode'] for c in configs}=={'test','live'})
     need(isinstance(rows,list) and len(rows)<=2000 and isinstance(audits,list) and len(audits)<=20000)
     expected={};used=set();dates=set();members={m['user_id'] for m in obj['staff_members']}
+    from document_revisions import invoice_versions
+    historic_invoices=invoice_versions(obj)
     sources={'native':{r['id']:r for r in obj['invoices']},'legacy':{r['id']:r for r in obj['legacy_entries']}}
     customer_versions={(a['after_record']['id'],a['after_record']['version']):a['after_record'] for a in obj['crm']['audit']}
     for cfg in configs:
@@ -73,7 +75,10 @@ def validate_reminders(obj):
         need(isinstance(row,dict) and set(row)==DELIVERY);identifier(row['id']);identifier(row['actor_id']);need(row['actor_id'] in members)
         cfg=settings(row['settings_snapshot']);need(cfg['enabled'] and cfg['mode']==row['mode'] and cfg['updated_by']==row['actor_id'])
         r=invoice(row['invoice']);original=sources[r['source']].get(r['id']);need(original is not None and r['balance_cents']>0 and r['customer_active'])
-        if r['source']=='native':need(original['is_test']==(row['mode']=='test') and original['number']==r['number'] and original['details']['due_date']==r['due_date'] and original['quote_snapshot']['customer_id']==r['customer_id'])
+        if r['source']=='native':
+            original=next((i for (iid,version),i in historic_invoices.items() if iid==r['id'] and i['status']=='issued' and i['details']['due_date']==r['due_date'] and ('invoice_date' not in r or i['details']['invoice_date']==r['invoice_date'])),None)
+            need(original is not None)
+            need(original['is_test']==(row['mode']=='test') and original['number']==r['number'] and original['details']['due_date']==r['due_date'] and original['quote_snapshot']['customer_id']==r['customer_id'])
         else:need(original['mode']==row['mode'] and 'ShopVox '+original['number']==r['number'] and original['due_date']==r['due_date'] and original['customer_id']==r['customer_id'])
         if 'messages' in cfg:
             customer=customer_versions.get((r['customer_id'],r.get('customer_version')));need(customer is not None and customer['kind']=='customer' and customer['data'].get('payment_terms_days')==r['customer_terms_days'])

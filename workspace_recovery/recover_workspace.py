@@ -75,8 +75,11 @@ def validate_097(obj):
         else:
             require(after['version']==before['version']+1 and after['created_at']==before['created_at'])
             if a['entity']=='quote':
-                require(before['status']=='draft' and after['number']==before['number'] and after['serial']==before['serial'] and after['seller_snapshot']==before['seller_snapshot'])
-                if after['status']=='issued':
+                require(before['status'] in ('draft','issued') and after['number']==before['number'] and after['serial']==before['serial'] and after['seller_snapshot']==before['seller_snapshot'])
+                if before['status']=='issued':
+                    require(after['status']=='issued')
+                    require({k:v for k,v in after.items() if k not in ('data','version','updated_at')}=={k:v for k,v in before.items() if k not in ('data','version','updated_at')})
+                elif after['status']=='issued':
                     require({k:v for k,v in after.items() if k not in ('status','version','updated_at')}=={k:v for k,v in before.items() if k not in ('status','version','updated_at')})
         latest[key]=after
     require(latest==records)
@@ -88,7 +91,7 @@ def base_snapshot(obj):
 def validate_098(obj):
     if isinstance(obj,dict) and obj.get('format')=='custom-u-workspace-snapshot-097':return validate_097(obj)
     require(isinstance(obj,dict) and set(obj)=={'format','source_project','exported_at','crm','profile','quotes','audit','invoices','invoice_audit'} and obj['format']=='custom-u-workspace-snapshot-098')
-    validate_097(base_snapshot(obj));quotes={q['id']:q for q in obj['quotes']}
+    validate_097(base_snapshot(obj));quotes={(a['after_record']['id'],a['after_record']['version']):a['after_record'] for a in obj['audit'] if a['entity']=='quote'}
     require(isinstance(obj['invoices'],list) and len(obj['invoices'])<=5000 and isinstance(obj['invoice_audit'],list) and len(obj['invoice_audit'])<=100000)
     crm_versions={(a['after_record']['id'],a['after_record']['version']):a['after_record'] for a in obj['crm']['audit']}
     seller_versions={a['after_record']['version']:a['after_record'] for a in obj['audit'] if a['entity']=='profile'}
@@ -96,7 +99,10 @@ def validate_098(obj):
         require(isinstance(r,dict) and set(r)=={'id','serial','number','is_test','quote_id','quote_version','quote_snapshot','details','status','version','created_at','updated_at'})
         uid(r['id']);timestamps(r);require(type(r['serial']) is int and 1<=r['serial']<=99999999)
         require(number_ok(r['number'],r['serial'],'invoice',r['is_test']));validate_invoice_document(r)
-        if r['quote_id'] is not None:require(r['quote_id'] in quotes and r['quote_snapshot']==quotes[r['quote_id']])
+        if r['quote_id'] is not None:
+            q=dict(r['quote_snapshot'])
+            if 'original_quote_data' in q:q['data']=q.pop('original_quote_data')
+            require(q==quotes.get((r['quote_id'],r['quote_version'])))
         else:
             q=r['quote_snapshot'];c=crm_versions.get((q['customer_id'],q['customer_version']));require(c is not None and c['kind']=='customer' and c['data']==q['customer_snapshot']);party(q['customer_snapshot'],'customer')
             if q['contact_id'] is not None:
@@ -113,8 +119,16 @@ def validate_098(obj):
         require(a['invoice_id'] in records);before=a['before_record'];after=a['after_record'];require(before==latest.get(a['invoice_id']));invoice(after);require(after['id']==a['invoice_id'])
         if before is None:require(after['version']==1 and after['status']=='draft')
         else:
-            require(before['status']=='draft' and after['version']==before['version']+1)
+            require(before['status'] in ('draft','issued') and after['version']==before['version']+1)
             mutable=('details','status','version','updated_at')+ (('quote_snapshot',) if after['quote_id'] is None else ()) if after['status']=='draft' else ('status','version','updated_at')
+            if before['status']=='issued':
+                require(after['status']=='issued')
+                mutable=('details','quote_snapshot','version','updated_at')
+                bq=dict(before['quote_snapshot']);aq=dict(after['quote_snapshot'])
+                bq.pop('data');aq.pop('data')
+                if before['quote_id'] is not None:
+                    require(aq.pop('original_quote_data',None)==bq.pop('original_quote_data',before['quote_snapshot']['data']))
+                require(aq==bq)
             if after['quote_id'] is None:require(before['quote_snapshot']['seller_snapshot']==after['quote_snapshot']['seller_snapshot'] and before['quote_snapshot']['seller_version']==after['quote_snapshot']['seller_version'])
             require({k:v for k,v in before.items() if k not in mutable}=={k:v for k,v in after.items() if k not in mutable})
         latest[a['invoice_id']]=after

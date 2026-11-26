@@ -3,6 +3,7 @@ from datetime import date
 from collections import defaultdict,Counter
 import re
 from quote_rules import need,text
+from document_revisions import invoice_versions,linked_invoice,check_financial_history
 from payment_rules import ident,timestamp,integer,METHODS
 CREDIT_FIELDS={'id','serial','invoice_id','invoice_version','is_test','number','details','status','version','created_by','created_at','updated_by','updated_at'}
 REFUND_FIELDS={'id','serial','invoice_id','invoice_version','is_test','number','details','status','version','created_by','created_at','reversed_by','reversed_at','reversal_reason'}
@@ -38,18 +39,19 @@ def refund_record(r,inv):
     return r
 
 def validate_adjustments(obj):
-    invs={i['id']:i for i in obj['invoices']};records={};numbers=set();counts=Counter()
+    check_financial_history(obj,obj['credits']+obj['refunds'])
+    versions_by_invoice=invoice_versions(obj);invs={i['id']:i for i in obj['invoices']};records={};numbers=set();counts=Counter()
     for entity,name,limit,check in [('credit','credits',5000,credit_record),('refund','refunds',10000,refund_record)]:
         need(isinstance(obj[name],list) and len(obj[name])<=limit)
         for r in obj[name]:
-            need(isinstance(r,dict) and r.get('invoice_id') in invs);check(r,invs[r['invoice_id']]);k=(entity,r['id']);need(k not in records and r['number'] not in numbers);numbers.add(r['number']);records[k]=r;counts[(entity,r['invoice_id'])]+=1
+            need(isinstance(r,dict) and r.get('invoice_id') in invs);check(r,linked_invoice(r,versions_by_invoice));k=(entity,r['id']);need(k not in records and r['number'] not in numbers);numbers.add(r['number']);records[k]=r;counts[(entity,r['invoice_id'])]+=1
     need(all(n<=(200 if e=='credit' else 500) for (e,i),n in counts.items()))
     audit=obj['adjustment_audit'];need(isinstance(audit,list) and len(audit)<=100000);seen=set();latest={};groups=defaultdict(list);lastpv=defaultdict(int)
     for a in sorted(audit,key=lambda a:a.get('id',0) if isinstance(a,dict) and type(a.get('id')) is int else 0):
         need(isinstance(a,dict) and set(a)=={'id','invoice_id','entity','entity_id','operation','payment_version','actor_id','happened_at','before_record','after_record'})
         integer(a['id'],1,9007199254740991);need(a['id'] not in seen);seen.add(a['id']);ident(a['actor_id']);timestamp(a['happened_at']);integer(a['payment_version'],0,1000)
         iid=a['invoice_id'];k=(a['entity'],a['entity_id']);need(k in records and iid==records[k]['invoice_id']);need(a['payment_version']>=lastpv[iid]);lastpv[iid]=a['payment_version']
-        b=a['before_record'];r=a['after_record'];need(b==latest.get(k) and r['id']==a['entity_id']);(credit_record if a['entity']=='credit' else refund_record)(r,invs[iid])
+        b=a['before_record'];r=a['after_record'];need(b==latest.get(k) and r['id']==a['entity_id']);(credit_record if a['entity']=='credit' else refund_record)(r,linked_invoice(r,versions_by_invoice))
         if b is None:
             need(r['version']==1 and r['created_by']==a['actor_id'] and timestamp(r['created_at'])==timestamp(a['happened_at']))
             need((a['entity'],a['operation'],r['status']) in (('credit','create','draft'),('refund','record','recorded')))

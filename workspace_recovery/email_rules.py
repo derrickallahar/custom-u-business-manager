@@ -9,6 +9,8 @@ def validate_emails(obj):
     rows=obj['email_deliveries'];events=obj['email_events']
     require(isinstance(rows,list) and len(rows)<=1000 and isinstance(events,list) and len(events)<=2000)
     docs={kind:{r['id']:r for r in obj[table]} for kind,table in [('quote','quotes'),('invoice','invoices'),('catalogue','client_catalogues')]}
+    from document_revisions import invoice_versions
+    revisions={'invoice':invoice_versions(obj),'quote':{(a['after_record']['id'],a['after_record']['version']):a['after_record'] for a in obj['audit'] if a['entity']=='quote'}}
     members={m['user_id'] for m in obj['staff_members']};records={};duplicates=set()
     for row in rows:
         require(isinstance(row,dict) and set(row)==FIELDS);uid(row['id']);uid(row['document_id']);uid(row['actor_id']);require(row['actor_id'] in members)
@@ -16,7 +18,9 @@ def validate_emails(obj):
         source=docs[row['kind']][row['document_id']]
         require(type(row['document_version']) is int and 1<=row['document_version']<=source['version'])
         require(row['document_number']==source.get('number',source.get('title')))
-        if row['kind']!='catalogue':require(source['status']=='issued' and source['version']==row['document_version'])
+        if row['kind']!='catalogue':
+            source=revisions[row['kind']].get((row['document_id'],row['document_version']))
+            require(source is not None and source['status']=='issued')
         require(address(row['recipient'])==row['recipient'] and address(row['reply_to'])==row['reply_to'])
         require(clean(row['sender'],300,True)==row['sender'] and clean(row['subject'],160,True)==row['subject'] and clean(row['message'],4000)==row['message'])
         require(type(row['test_delivery']) is bool)

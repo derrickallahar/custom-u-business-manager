@@ -66,7 +66,8 @@ def render_document(kind, record):
     totals += [('VAT',d['tax_cents']),('Invoice total' if invoice else 'Quote total',d['total_cents'])]
     sums=Table([[p(k),p(money(v),'label' if i==len(totals)-1 else 'body')] for i,(k,v) in enumerate(totals)],colWidths=[150,150],hAlign='RIGHT')
     sums.setStyle(TableStyle([('LINEBELOW',(0,0),(-1,-1),.4,HexColor('#dedee4')),('VALIGN',(0,0),(-1,-1),'TOP')]))
-    summary=[sums]+([Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+d['deposit_percent']+'%): '+money(d['deposit_cents']),'small')] if not invoice or record['quote_id'] else [])
+    deposit=q.get('original_quote_data',d)
+    summary=[sums]+([Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+deposit['deposit_percent']+'%): '+money(deposit['deposit_cents']),'small')] if not invoice or record['quote_id'] else [])
     bank=[p(BANK_HEADING,'label')]+[p(label+': '+value,'bank') for label,value in BANK_DETAILS]+[Spacer(1,4),p(payment_reference(number),'small')]
     payment=Table([[bank,summary]],colWidths=[240,300],hAlign='LEFT')
     payment.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('BACKGROUND',(0,0),(0,0),HexColor('#f7f8fa')),('LINEBEFORE',(0,0),(0,0),2,RED),('LEFTPADDING',(0,0),(0,0),10),('RIGHTPADDING',(0,0),(0,0),12),('TOPPADDING',(0,0),(0,0),10),('BOTTOMPADDING',(0,0),(0,0),10),('LEFTPADDING',(1,0),(1,0),0),('RIGHTPADDING',(1,0),(1,0),0),('TOPPADDING',(1,0),(1,0),0),('BOTTOMPADDING',(1,0),(1,0),0)]))

@@ -1,6 +1,6 @@
 """Offline validation of staff access settings; never creates cloud logins."""
 from recover_crm import require,uid,date
-KEYS={'customers.view','customers.create','customers.edit','quotes.view','quotes.create','quotes.edit','quotes.approve','quotes.send','invoices.view','invoices.create','invoices.edit','invoices.issue','invoices.send','payments.view','payments.record','payments.reverse','jobs.view','jobs.create','jobs.edit','jobs.progress','artwork.view','artwork.upload','artwork.approve','products.view','products.create','products.edit','products.send'}
+KEYS={'customers.view','customers.create','customers.edit','quotes.view','quotes.create','quotes.edit','quotes.amend','quotes.approve','quotes.send','invoices.view','invoices.create','invoices.edit','invoices.amend','invoices.issue','invoices.send','payments.view','payments.record','payments.reverse','jobs.view','jobs.create','jobs.edit','jobs.progress','artwork.view','artwork.upload','artwork.approve','products.view','products.create','products.edit','products.send'}
 
 def record(r):
     require(isinstance(r,dict) and set(r)=={'user_id','registered_email','active','permissions','version','created_at','updated_at'})

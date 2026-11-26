@@ -44,7 +44,7 @@ def install(app,provider,session,enabled,root,failure):
     def quote_save():
         gate();request.max_content_length=262144
         body=request.get_json()
-        if not isinstance(body,dict) or body.get('op') not in ('save','issue','save_profile'):raise failure('INVALID_REQUEST',400)
+        if not isinstance(body,dict) or body.get('op') not in ('save','issue','save_profile','amend'):raise failure('INVALID_REQUEST',400)
         return jsonify(rpc(body))
     @app.get('/quotes/<ident>/print')
     def quote_print(ident):
@@ -96,3 +96,12 @@ def install(app,provider,session,enabled,root,failure):
             response=make_response(blob);response.headers['Content-Type']='application/octet-stream';response.headers['Content-Disposition']='attachment; filename="'+name+'"';return response
         finally:
             password=None;body=None;lock.release()
+
+    @app.get('/api/quotes/<ident>/pdf')
+    def quotes_download(ident):
+        from document_downloads import pdf_response
+        return pdf_response(app,'quote',rpc({'op':'get','id':ident})['data'])
+
+    @app.get('/document-downloads.js')
+    def document_download_script():
+        return app.response_class((root/'static/document-downloads.js').read_bytes(),mimetype='text/javascript')

@@ -1,4 +1,4 @@
-"""Invoice metadata validation; prices are immutable saved quote values."""
+"""Validate saved invoice revisions and their retained source quote."""
 from datetime import date
 from decimal import Decimal
 import re
@@ -34,7 +34,9 @@ def validate_invoice_document(r):
         else:need(isinstance(q['contact_id'],str) and re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',q['contact_id']) is not None and type(q['contact_version']) is int and q['contact_version']>0 and isinstance(q['contact_snapshot'],dict))
         need(q['data']['quote_date']==r['details']['invoice_date'] and q['data']['valid_until']==r['details']['due_date'] and q['data']['deposit_percent']=='0.00')
         need(q['data']['terms']==r['details']['terms'] and q['data']['notes']==r['details']['notes'])
-    else:need(q['status']=='issued' and r['quote_id']==q['id'] and r['quote_version']==q['version'])
+    else:
+        need(q['status'] in ('draft','issued') and r['quote_id']==q['id'] and r['quote_version']==q['version'])
+        if 'original_quote_data' in q:validate_saved_quote(q['original_quote_data'])
     need(normalize_details(r['details'],q['data'])==r['details']);need(type(r['is_test']) is bool and r['status'] in ('draft','issued'))
     if r['status']=='issued':
         need(bool(q['seller_snapshot']['tax_id'].strip()) and '' not in r['details']['tax_codes'])

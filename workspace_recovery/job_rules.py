@@ -24,13 +24,13 @@ def transition(before,after,op):
 
 def validate_jobs(obj,allow_artwork=False):
     require(isinstance(obj['jobs'],list) and len(obj['jobs'])<=10000 and isinstance(obj['job_audit'],list) and len(obj['job_audit'])<=100000)
-    quotes={q['id']:q for q in obj['quotes']};invoices={i['id']:i for i in obj['invoices']};members={m['user_id']:m for m in obj['staff_members']}
+    quotes={(a['after_record']['id'],a['after_record']['version']):a['after_record'] for a in obj['audit'] if a['entity']=='quote'};invoices={i['id']:i for i in obj['invoices']};members={m['user_id']:m for m in obj['staff_members']}
     fields={'id','serial','number','is_test','quote_id','source','details','status','version','last_reason','release_check','created_by','created_at','updated_at'}
     def record(r):
         require(isinstance(r,dict) and set(r)==fields);uid(r['id']);uid(r['quote_id']);uid(r['created_by']);require(r['created_by'] in members)
         require(type(r['serial']) is int and 1<=r['serial']<=99999999 and type(r['version']) is int and 1<=r['version']<=999999999 and type(r['is_test']) is bool)
         require(r['number']==('CU-TEST-J-' if r['is_test'] else 'CU-J-')+str(r['serial']).zfill(8) and r['status'] in STAGES)
-        require(date(r['updated_at'])>=date(r['created_at']));q=quotes[r['quote_id']];require(q['status']=='issued' and r['source']==source(q));details(r['details'])
+        require(date(r['updated_at'])>=date(r['created_at']));q=quotes[(r['quote_id'],r['source']['quote_version'])];require(q['status']=='issued' and r['source']==source(q));details(r['details'])
         require(isinstance(r['last_reason'],str) and len(r['last_reason'])<=500 and r['last_reason']==r['last_reason'].strip() and all(ord(c)>=32 for c in r['last_reason']))
         g=r['release_check']
         if g is not None:

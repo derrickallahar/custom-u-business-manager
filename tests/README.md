@@ -1,5 +1,17 @@
 Run from the repository root:
 
+Document actions 131:
+
+```sh
+node tests/test_documents_131.mjs
+node tests/test_document_ui_131.mjs
+PYTHONPATH=production_history python -m unittest discover -s tests -p test_document_api_131.py -v
+# Recovery also needs the offline_recovery directory from the existing recovery kit:
+PYTHONPATH=production_history:workspace_recovery:/path/to/offline_recovery python -m unittest discover -s tests -p test_document_recovery_131.py -v
+```
+
+The SQL test writes a synthetic fixture to `/tmp/documents131_cases.json` for the UI/Python tests. No test connects to a live database or sends email.
+
 ```sh
 python -m pip install -r production_history/requirements.txt pypdf
 PYTHONPATH=production_history python -m unittest discover -s tests -p 'test_branding_options_125.py'

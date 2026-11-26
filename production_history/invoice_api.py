@@ -51,8 +51,23 @@ def install(app,provider,session,enabled,root,failure):
     @app.post('/api/invoices/save')
     def invoice_save():
         gate();request.max_content_length=262144;body=request.get_json()
-        if isinstance(body,dict) and body.get('op') not in ('create_direct','save_direct') and request.content_length and request.content_length>32768:raise failure('INVALID_REQUEST',413)
-        if not isinstance(body,dict) or body.get('op') not in ('create','save','issue','create_direct','save_direct'):raise failure('INVALID_REQUEST',400)
+        if isinstance(body,dict) and body.get('op') not in ('create_direct','save_direct','amend') and request.content_length and request.content_length>32768:raise failure('INVALID_REQUEST',413)
+        if not isinstance(body,dict) or body.get('op') not in ('create','save','issue','create_direct','save_direct','amend','convert'):raise failure('INVALID_REQUEST',400)
+        if body.get('op')=='convert':body={**body,'terms':INVOICE_TERMS}
         return jsonify(rpc(body))
     @app.get('/invoices/<ident>/print')
     def invoice_printable(ident):return app.response_class(render_invoice(rpc({'op':'get','id':ident})['data']),mimetype='text/html')
+
+    @app.get('/api/invoices/<ident>/pdf')
+    def invoices_download(ident):
+        from document_downloads import pdf_response
+        return pdf_response(app,'invoice',rpc({'op':'get','id':ident})['data'])
+
+    @app.get('/invoices/<ident>/source-quote/print')
+    def invoice_source_printable(ident):
+        from quote_print import render_quote
+        invoice=rpc({'op':'get','id':ident})['data']
+        if invoice['quote_id'] is None:raise failure('NOT_FOUND',404)
+        quote=dict(invoice['quote_snapshot'])
+        if 'original_quote_data' in quote:quote['data']=quote.pop('original_quote_data')
+        return app.response_class(render_quote(quote),mimetype='text/html')

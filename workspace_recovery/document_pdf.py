@@ -64,7 +64,7 @@ def render_document(kind, record):
     totals += [('VAT',d['tax_cents']),('Invoice total' if invoice else 'Quote total',d['total_cents'])]
     sums=Table([[p(k),p(money(v),'label' if i==len(totals)-1 else 'body')] for i,(k,v) in enumerate(totals)],colWidths=[150,150],hAlign='RIGHT')
     sums.setStyle(TableStyle([('LINEBELOW',(0,0),(-1,-1),.4,HexColor('#dedee4')),('VALIGN',(0,0),(-1,-1),'TOP')]))
-    story += [KeepTogether([sums]+([Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+d['deposit_percent']+'%): '+money(d['deposit_cents']),'small')] if not invoice or record['quote_id'] else []))]
+    story += [KeepTogether([sums]+([Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+deposit['deposit_percent']+'%): '+money(deposit['deposit_cents']),'small')] if not invoice or record['quote_id'] else []))]
     for heading,text in [('Notes',m.get('notes') if invoice else d['notes']),('Terms',m.get('terms') if invoice else d['terms'])]:
         if text:story += [Spacer(1,12),p(heading,'label'),p(text)]
     ending=('Test document only. No amount is payable.' if test else 'Draft for review. Not an issued invoice.' if draft else 'This document states the invoice total. Payments received are acknowledged separately.') if invoice else 'This is a quotation, not a tax invoice or payment receipt.'

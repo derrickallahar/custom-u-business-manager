@@ -3,6 +3,7 @@ from datetime import date,datetime
 from collections import Counter
 import re,uuid
 from quote_rules import need,text
+from document_revisions import invoice_versions,linked_invoice,check_financial_history
 METHODS={'cash':'Cash','bank_transfer':'Bank transfer','card':'Card','cheque':'Cheque','other':'Other'}
 FIELDS={'id','serial','invoice_id','invoice_version','is_test','number','details','balance_before_cents','balance_after_cents','status','version','created_by','created_at','reversed_by','reversed_at','reversal_reason'}
 def ident(v):
@@ -30,11 +31,12 @@ def payment_record(r,inv):
     return r
 
 def validate_payments(obj):
-    invoices={i['id']:i for i in obj['invoices']};payments=obj['payments'];audit=obj['payment_audit']
+    check_financial_history(obj,obj['payments'])
+    versions_by_invoice=invoice_versions(obj);invoices={i['id']:i for i in obj['invoices']};payments=obj['payments'];audit=obj['payment_audit']
     need(isinstance(payments,list) and len(payments)<=20000 and isinstance(audit,list) and len(audit)<=40000)
     records={};numbers=set();counts=Counter()
     for r in payments:
-        need(isinstance(r,dict) and r.get('invoice_id') in invoices);payment_record(r,invoices[r['invoice_id']]);need(r['id'] not in records and r['number'] not in numbers)
+        need(isinstance(r,dict) and r.get('invoice_id') in invoices);payment_record(r,linked_invoice(r,versions_by_invoice));need(r['id'] not in records and r['number'] not in numbers)
         records[r['id']]=r;numbers.add(r['number']);counts[r['invoice_id']]+=1
     need(all(n<=500 for n in counts.values()))
     balances={i['id']:i['quote_snapshot']['data']['total_cents'] for i in obj['invoices']};versions=Counter();latest={};seen=set()
@@ -42,7 +44,7 @@ def validate_payments(obj):
         need(isinstance(a,dict) and set(a)=={'id','payment_id','invoice_id','ledger_version','operation','actor_id','happened_at','before_record','after_record','balance_before_cents','balance_after_cents'})
         integer(a['id'],1,9007199254740991);need(a['id'] not in seen);seen.add(a['id']);ident(a['actor_id']);timestamp(a['happened_at'])
         pid=a['payment_id'];iid=a['invoice_id'];need(pid in records and iid==records[pid]['invoice_id'])
-        before=a['before_record'];after=a['after_record'];need(before==latest.get(pid));payment_record(after,invoices[iid]);need(after['id']==pid)
+        before=a['before_record'];after=a['after_record'];need(before==latest.get(pid));payment_record(after,linked_invoice(after,versions_by_invoice));need(after['id']==pid)
         integer(a['ledger_version'],1,1000);need(a['ledger_version']==versions[iid]+1);versions[iid]+=1
         integer(a['balance_before_cents']);integer(a['balance_after_cents']);need(a['balance_before_cents']==balances[iid])
         amount=after['details']['amount_cents']
