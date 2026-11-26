@@ -15,10 +15,12 @@ from quote_print import money, amount
 
 RED=HexColor('#b72030'); INK=HexColor('#202530'); GREY=HexColor('#616875')
 
-def render_document(kind, record):
+def render_document(kind, record, payment_summary=None):
     if kind not in ('quote','invoice'):raise ValueError('DOCUMENT_KIND')
     invoice=kind=='invoice'
     if invoice:validate_invoice_document(record)
+    from invoice_payment_summary import payment_view
+    paid_view=payment_view(record,payment_summary) if invoice and payment_summary is not None else None
     q=record['quote_snapshot'] if invoice else record
     d=q['data'];validate_saved_quote(d);fonts()
     m=record['details'] if invoice else {}
@@ -68,13 +70,45 @@ def render_document(kind, record):
     sums.setStyle(TableStyle([('LINEBELOW',(0,0),(-1,-1),.4,HexColor('#dedee4')),('VALIGN',(0,0),(-1,-1),'TOP')]))
     deposit=q.get('original_quote_data',d)
     summary=[sums]+([Spacer(1,8),p(('Quoted deposit requirement' if invoice else 'Deposit required')+' ('+deposit['deposit_percent']+'%): '+money(deposit['deposit_cents']),'small')] if not invoice or record['quote_id'] else [])
+    compact_payments=paid_view is not None and len(paid_view['payments'])<=4
+    if compact_payments:
+        styles['payment-small']=ParagraphStyle('payment-small',parent=styles['small'],spaceAfter=0,leading=11)
+        summary += [Spacer(1,8),p('Payment status: '+paid_view['status'],'label')]
+        date_text=('Date paid: '+paid_view['date_paid']) if paid_view['date_paid'] else ('Last payment: '+paid_view['last_payment_date']) if paid_view['last_payment_date'] else ''
+        if date_text:summary.append(p(date_text,'small'))
+        if paid_view['payments']:
+            entries=Table([[p(x['date_label']+' · '+x['number'],'payment-small'),p(money(x['amount_cents']),'payment-small')] for x in paid_view['payments']],colWidths=[210,90],hAlign='RIGHT')
+            entries.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('TOPPADDING',(0,0),(-1,-1),2),('BOTTOMPADDING',(0,0),(-1,-1),2)]))
+            summary += [entries,Spacer(1,5)]
+        settlement=Table([[p(x['label']),p(money(x['amount_cents']),'label')] for x in paid_view['totals']],colWidths=[180,120],hAlign='RIGHT')
+        settlement.setStyle(TableStyle([('LINEBELOW',(0,0),(-1,-1),.4,HexColor('#dedee4'))]))
+        summary += [settlement,p(paid_view['note'],'small')]
     bank=[p(BANK_HEADING,'label')]+[p(label+': '+value,'bank') for label,value in BANK_DETAILS]+[Spacer(1,4),p(payment_reference(number),'small')]
     payment=Table([[bank,summary]],colWidths=[240,300],hAlign='LEFT')
     payment.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('BACKGROUND',(0,0),(0,0),HexColor('#f7f8fa')),('LINEBEFORE',(0,0),(0,0),2,RED),('LEFTPADDING',(0,0),(0,0),10),('RIGHTPADDING',(0,0),(0,0),12),('TOPPADDING',(0,0),(0,0),10),('BOTTOMPADDING',(0,0),(0,0),10),('LEFTPADDING',(1,0),(1,0),0),('RIGHTPADDING',(1,0),(1,0),0),('TOPPADDING',(1,0),(1,0),0),('BOTTOMPADDING',(1,0),(1,0),0)]))
     story += [KeepTogether([payment])]
+    if paid_view and not compact_payments:
+        date_text=('Date paid: '+paid_view['date_paid']) if paid_view['date_paid'] else ('Last payment: '+paid_view['last_payment_date']) if paid_view['last_payment_date'] else ''
+        heading=p('Payment status: '+paid_view['status'],'heading');heading.keepWithNext=True
+        story += [Spacer(1,16),heading]
+        if date_text:
+            date_line=p(date_text,'label');date_line.keepWithNext=True;story.append(date_line)
+        if paid_view['payments']:
+            rows=[[p(x,'head') for x in ['Payment date','Receipt','Amount received']]]
+            rows += [[p(x['date_label'],'cell'),p(x['number'],'cell'),p(money(x['amount_cents']),'cell')] for x in paid_view['payments']]
+            history=Table(rows,colWidths=[160,200,180],repeatRows=1,hAlign='LEFT',splitByRow=1)
+            history.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),HexColor('#f0f1f5')),('VALIGN',(0,0),(-1,-1),'TOP'),('LINEBELOW',(0,0),(-1,-1),.4,HexColor('#dedee4')),('TOPPADDING',(0,0),(-1,-1),6),('BOTTOMPADDING',(0,0),(-1,-1),6)]))
+            story += [history,Spacer(1,8)]
+        totals=Table([[p(x['label']),p(money(x['amount_cents']),'label')] for x in paid_view['totals']],colWidths=[180,120],hAlign='RIGHT')
+        totals.setStyle(TableStyle([('LINEBELOW',(0,0),(-1,-1),.4,HexColor('#dedee4'))]))
+        story += [KeepTogether([totals,p(paid_view['note'],'small')])]
+    elif invoice and not draft and paid_view is None:
+        story += [Spacer(1,12),p('Payment status is not included in this copy.','small')]
     for heading,text in [('Notes',m.get('notes') if invoice else d['notes']),('Terms',m.get('terms') if invoice else d['terms'])]:
-        if text:story += [Spacer(1,12),p(heading,'label'),p(text)]
-    ending=('Test document only. No amount is payable.' if test else 'Draft for review. Not an issued invoice.' if draft else 'This document states the invoice total. Payments received are acknowledged separately.') if invoice else 'This is a quotation, not a tax invoice or payment receipt.'
+        if text:
+            heading_line=p(heading,'label');heading_line.keepWithNext=True
+            story += [Spacer(1,12),heading_line,p(text)]
+    ending=('Test document only. No amount is payable.' if test else 'Draft for review. Not an issued invoice.' if draft else 'The invoice total is unchanged by payments. Payment details reflect the records included in this copy.') if invoice else 'This is a quotation, not a tax invoice or payment receipt.'
     story += [Spacer(1,14),p(ending,'small')]
     def footer(c,document):
         c.saveState();c.setStrokeColor(RED);c.line(36,45,576,45);c.setFillColor(GREY);c.setFont('CU-Regular',7)

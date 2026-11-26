@@ -6,7 +6,7 @@
   if(!href||href.startsWith('#')||a.hasAttribute('download')||a.classList.contains('cu-skip'))return false;
   try{return ['http:','https:','blob:'].includes(new URL(href,location.href).protocol);}catch{return false;}
  }
- function prepare(a){if(navigable(a)){a.target='_self';a.relList.add('noopener');}}
+ function prepare(a){if(navigable(a)){a.target=a.dataset.previewTab==='true'?'_blank':'_self';a.relList.add('noopener');if(a.dataset.previewTab==='true')a.relList.add('noreferrer');}}
  function scan(node){if(node.nodeType!==1)return;if(node.matches('a[href]'))prepare(node);for(const a of node.querySelectorAll('a[href]'))prepare(a);}
  function navigate(url){const target=new URL(url,location.origin);if(target.origin!==location.origin||!['http:','https:'].includes(target.protocol))return;window.location.assign(target.href);}
  window.CustomUNavigation={open:navigate};

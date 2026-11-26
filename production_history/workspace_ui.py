@@ -39,7 +39,7 @@ def install(app, root):
             additions = ('<link rel="stylesheet" href="/workspace-assets/workspace.css?v=130">'
                          '<script src="/workspace-assets/workspace-shell.js?v=130" defer></script>'
                          '<script src="/workspace-assets/workspace-clock.js?v=130" defer></script>'
-                         '<script src="/workspace-assets/page-navigation.js?v=123" defer></script>'
+                         '<script src="/workspace-assets/page-navigation.js?v=132" defer></script>'
                          '<script src="/workspace-assets/new-page.js?v=123" defer></script>'
                          '<link rel="stylesheet" href="/workspace-assets/team-chat.css?v=116.1">'
                          '<script src="/workspace-assets/team-chat.js?v=116.1" defer></script>'

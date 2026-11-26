@@ -1,5 +1,15 @@
 Run from the repository root:
 
+Invoice payment display and pre-send preview 132:
+
+```sh
+node tests/test_invoice_payments_132.mjs
+PYTHONPATH=production_history python -m unittest discover -s tests -p test_invoice_payments_132.py -v
+node tests/test_payment_preview_ui_132.mjs
+```
+
+Run these in order: the isolated SQL and Python tests generate synthetic fixtures in `/tmp` for the next test. They do not use the live database or send email. Then run the release 131 document regressions below.
+
 Document actions 131:
 
 ```sh

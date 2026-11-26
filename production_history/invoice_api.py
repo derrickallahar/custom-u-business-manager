@@ -4,6 +4,7 @@ from flask import request,jsonify
 from workspace_codec import parse
 from invoice_print import render_invoice
 from document_terms import INVOICE_TERMS
+from invoice_payment_summary import payment_view
 
 def install(app,provider,session,enabled,root,failure):
     def gate(payload=None,admin=False):
@@ -17,6 +18,9 @@ def install(app,provider,session,enabled,root,failure):
         if 'error' in r:raise failure(r['error'],{'ACCESS_DENIED':403,'NOT_FOUND':404,'QUOTE_NOT_FOUND':404,'INVOICE_LOCKED':409,'VERSION_CONFLICT':409,'ID_CONFLICT':409,'FINALISED_QUOTE_REQUIRED':409}.get(r['error'],400))
         me=provider.access(rec['token'])
         if not allowed(me,'invoices',payload):raise failure('ACCESS_DENIED',403)
+        if payload.get('op')=='get':
+            try:r['payment_view']=payment_view(r['data'],r['payment_summary'])
+            except (ValueError,KeyError,TypeError):raise failure('INVOICE_PAYMENTS_UNAVAILABLE',503) from None
         return r
     @app.get('/invoices')
     def invoice_page():return app.response_class((root/'static/invoices.html').read_bytes(),mimetype='text/html')
@@ -56,12 +60,15 @@ def install(app,provider,session,enabled,root,failure):
         if body.get('op')=='convert':body={**body,'terms':INVOICE_TERMS}
         return jsonify(rpc(body))
     @app.get('/invoices/<ident>/print')
-    def invoice_printable(ident):return app.response_class(render_invoice(rpc({'op':'get','id':ident})['data']),mimetype='text/html')
+    def invoice_printable(ident):
+        result=rpc({'op':'get','id':ident})
+        return app.response_class(render_invoice(result['data'],result['payment_summary']),mimetype='text/html')
 
     @app.get('/api/invoices/<ident>/pdf')
     def invoices_download(ident):
         from document_downloads import pdf_response
-        return pdf_response(app,'invoice',rpc({'op':'get','id':ident})['data'])
+        result=rpc({'op':'get','id':ident})
+        return pdf_response(app,'invoice',result['data'],result['payment_summary'])
 
     @app.get('/invoices/<ident>/source-quote/print')
     def invoice_source_printable(ident):

@@ -2,8 +2,8 @@
 import re
 from document_pdf import render_document
 
-def pdf_response(app, kind, record):
-    raw = render_document(kind, record)
+def pdf_response(app, kind, record, payment_summary=None):
+    raw = render_document(kind, record, payment_summary)
     number = re.sub(r'[^A-Za-z0-9_.-]', '_', str(record['number']))[:80]
     name = f"CustomU_{kind.title()}_{number}_r{record['version']}.pdf"
     response = app.response_class(raw, mimetype='application/pdf')

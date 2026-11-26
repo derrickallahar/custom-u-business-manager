@@ -9,8 +9,18 @@ STYLE+=' .page-stamp{display:none}@media print{.page-stamp{display:block;positio
 
 STYLE+=PAYMENT_STYLE
 
-def render_invoice(r):
+def render_invoice(r, payment_summary=None):
     validate_invoice_document(r);q=r['quote_snapshot'];d=q['data'];m=r['details'];seller=q['seller_snapshot']
+    from invoice_payment_summary import payment_view
+    view=payment_view(r,payment_summary) if payment_summary is not None else None
+    ledger=''
+    if view:
+        date_text=('Date paid: '+view['date_paid']) if view['date_paid'] else ('Last payment: '+view['last_payment_date']) if view['last_payment_date'] else ''
+        ledger='<section><h2>Payment status: '+h(view['status'])+'</h2>'+('<p>'+h(date_text)+'</p>' if date_text else '')
+        if view['payments']:
+            ledger+='<table><thead><tr><th>Payment date</th><th>Receipt</th><th>Amount received</th></tr></thead><tbody>'+''.join('<tr><td>'+h(x['date_label'])+'</td><td>'+h(x['number'])+'</td><td>'+money(x['amount_cents'])+'</td></tr>' for x in view['payments'])+'</tbody></table>'
+        ledger+='<div class="totals">'+''.join('<div><span>'+h(x['label'])+'</span><strong>'+money(x['amount_cents'])+'</strong></div>' for x in view['totals'])+'</div><p class="muted">'+h(view['note'])+'</p></section>'
+    elif r['status']=='issued':ledger='<p class="muted">Payment status is not included in this copy.</p>'
     buyer={**q['customer_snapshot'],'address':m['billing_address'],'tax_id':m['billing_tax_id']};contact=q.get('contact_snapshot') or {}
     title='VAT INVOICE' if m['document_type']=='vat_invoice' else 'VAT SALES RECEIPT'
     banner='TEST — NOT A COMMERCIAL OR TAX DOCUMENT' if r['is_test'] else 'DRAFT — NOT ISSUED' if r['status']=='draft' else ''
@@ -24,4 +34,4 @@ def render_invoice(r):
     '<div class="parties"><div><div class="label">Billed to</div><strong>'+h(buyer['name'])+'</strong><p>'+details(buyer,['address','email','phone'])+'</p>'+('<p>Customer VAT ID: '+h(buyer['tax_id'])+'</p>' if buyer.get('tax_id') else '')+'</div><div><div class="label">Contact</div><p>'+details(contact,['name','title','email','phone'])+'</p></div></div><h2>'+h(d['title'])+'</h2>'+\
     '<div class="scroll"><table><colgroup><col style="width:30%"><col style="width:12%"><col style="width:14%"><col style="width:12%"><col style="width:16%"><col style="width:16%"></colgroup><thead><tr><th>Description</th><th class="num">Quantity</th><th class="num">Unit price<br>BSD</th><th class="num">Discount<br>% / BSD</th><th class="num">Net excl. VAT<br>BSD</th><th class="num">VAT<br>% / BSD</th></tr></thead><tbody>'+''.join(rows)+'</tbody></table></div><p class="muted">T: taxable · Z: zero-rated · E: exempt.'+(' ? means classification is pending in this draft.' if '' in m['tax_codes'] else '')+'</p>'+\
     '<section class="payment-summary">'+html_payment_information(r['number'])+'<div><section class="totals">'+sums+'</section>'+('<p class="right">Quoted deposit requirement ('+h(q.get('original_quote_data',d)['deposit_percent'])+'%): '+money(q.get('original_quote_data',d)['deposit_cents'])+'</p>' if r['quote_id'] else '')+'</div></section>'+\
-    ('<section class="terms"><div class="label">Notes</div><p>'+lines_text(m['notes'])+'</p></section>' if m['notes'] else '')+'<section class="terms"><div class="label">Terms</div><p>'+lines_text(m['terms'])+'</p></section><p class="footer">'+('Test document only. No amount is payable.' if r['is_test'] else 'Draft for review. Not an issued invoice.' if r['status']=='draft' else 'This document states the invoice total. Payments received are acknowledged separately.')+'</p></main></body></html>'
+    ledger+('<section class="terms"><div class="label">Notes</div><p>'+lines_text(m['notes'])+'</p></section>' if m['notes'] else '')+'<section class="terms"><div class="label">Terms</div><p>'+lines_text(m['terms'])+'</p></section><p class="footer">'+('Test document only. No amount is payable.' if r['is_test'] else 'Draft for review. Not an issued invoice.' if r['status']=='draft' else 'The invoice total is unchanged by payments. Payment details reflect the records included in this copy.')+'</p></main></body></html>'

@@ -13,7 +13,11 @@ class Provider:
     def access(self,*a):return {'user_id':F['admin'],'email':'manager@example.invalid','role':self.role,'permissions':self.permissions}
     def call(self,path,token,body,limit=0):
         self.calls.append((path,body));p=body['payload']
-        return json.dumps({'data':F['invoice'] if 'invoice' in path else F['beforeQuote']}).encode()
+        result={'data':F['invoice'] if 'invoice' in path else F['beforeQuote']}
+        if 'invoice' in path:
+            inv=F['invoice'];paid=F['payment']['details']['amount_cents'];total=inv['quote_snapshot']['data']['total_cents']
+            result['payment_summary']={'invoice_id':inv['id'],'invoice_version':inv['version'],'ledger_version':4,'total_cents':total,'paid_cents':paid,'credit_cents':total,'refund_cents':paid,'balance_cents':0,'refund_due_cents':0,'payments':[{'number':F['payment']['number'],'date':F['payment']['details']['payment_date'],'amount_cents':paid}]}
+        return json.dumps(result).encode()
 class Documents(unittest.TestCase):
     def client(self):
         p=Provider();a=create_app(p,ORIGIN,'',True,enforce_devices=False);c=a.test_client()

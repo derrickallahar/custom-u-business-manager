@@ -1,5 +1,7 @@
 import {PGlite} from '@electric-sql/pglite';
 import fs from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 const db=new PGlite(),admin=randomUUID(),staff=randomUUID(),manager=randomUUID(),customer=randomUUID();
@@ -101,4 +103,5 @@ const table=async n=>(await db.query('SELECT to_jsonb(x) r FROM custom_u_product
 const snapshot={crmRecords:await table('crm_records_093'),profileRecord:(await table('quote_profile_097'))[0],quotes:await table('quotes_097'),audit:await table('quote_audit_097'),invoices:await table('invoices_098'),invoice_audit:await table('invoice_audit_098'),payments:await table('payments_099'),payment_audit:await table('payment_audit_099'),credits:await table('credit_notes_100'),refunds:await table('refunds_100'),adjustment_audit:await table('adjustment_audit_100')};
 fs.writeFileSync('/tmp/documents131_cases.json',JSON.stringify({admin,customer,profile,party,draft,beforeQuote,issued,paidInvoice,invoice:i,payment:p,receipt,snapshot}));
 console.log('PASS: draft/finalised conversion, retry deduplication, separate permissions, network gate, revision/audit preservation, stale edits, discount guard, payment receipt version, financial-history guard, VAT review.');
-await db.close();
+export {db,who,invoice,pay,adjust,valid,admin,staff,manager,customer,line,directDetails};
+if(process.argv[1]&&fileURLToPath(import.meta.url)===resolve(process.argv[1]))await db.close();

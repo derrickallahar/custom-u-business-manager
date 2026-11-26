@@ -55,14 +55,14 @@ def install(app,provider,session,enabled,root,failure):
         if result.get('error'):raise failure(result['error'],403 if result['error']=='ACCESS_DENIED' else 404 if result['error']=='NOT_FOUND' else 409)
         return result
     def source(rec,kind,ident,pdf=False):
-        endpoint={'quote':'custom_u_quotes_097','invoice':'custom_u_invoices_098','catalogue':'custom_u_client_catalogues_108'}[kind]
+        endpoint={'quote':'custom_u_quotes_097','invoice':'custom_u_invoices_114','catalogue':'custom_u_client_catalogues_108'}[kind]
         result=parse(provider.call('/rest/v1/rpc/'+endpoint,rec['token'],{'payload':{'op':'document' if kind=='catalogue' and pdf else 'get','id':ident}},limit=9000000))
         if not isinstance(result,dict) or not isinstance(result.get('data'),dict):raise failure(result.get('error','INVALID_PROVIDER_RESPONSE') if isinstance(result,dict) else 'INVALID_PROVIDER_RESPONSE',409)
         r=result['data'];checked(rec,kind,pdf)
         ready=r.get('active') is True if kind=='catalogue' else r.get('status')=='issued'
         if pdf and not ready:raise failure('EMAIL_DOCUMENT_NOT_READY',409)
         if not pdf:return r,ready,None
-        try:raw=render_catalogue(r,result['assets']) if kind=='catalogue' else render_document(kind,r)
+        try:raw=render_catalogue(r,result['assets']) if kind=='catalogue' else render_document(kind,r,result['payment_summary']) if kind=='invoice' else render_document(kind,r)
         except (ValueError,KeyError,TypeError,LayoutError):raise failure('EMAIL_PDF_INVALID',409) from None
         if len(raw)>MAX_PDF:raise failure('EMAIL_PDF_TOO_LARGE',409)
         return r,ready,raw
